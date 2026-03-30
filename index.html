@@ -259,6 +259,7 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -1203,11 +1204,16 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 
   <!-- SUPABASE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Cargar tienda apenas el script corre — sin esperar DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadStore());
+  } else {
+    loadStore();
+  }
 
   let currentUser = null;
   let currentProfile = null;
@@ -1587,9 +1593,6 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Cargar tienda primero — no requiere auth
-    await loadStore();
-    // Después auth y calendario
     refreshAuth();
     loadBlockedSlots();
   });
