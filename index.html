@@ -299,6 +299,7 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 <body>
 
@@ -1893,49 +1894,140 @@ async function initMercadoPago() {
   if (!email || !nombre) { alert('Completá email y nombre'); return; }
   if (!mpCurrentProduct) return;
 
-  btn.textContent = 'Procesando...'; btn.disabled = true;
+  btn.innerHTML = '<span style="opacity:.7">Procesando...</span>'; btn.disabled = true;
 
-  // Guardar orden pendiente en Supabase
-  const { data: order, error } = await sb.from('orders').insert({
-    user_id: currentUser?.id || null,
-    product_id: mpCurrentProduct.id || null,
-    nombre, email,
-    monto: mpCurrentProduct.price,
-    estado: 'pendiente'
-  }).select().single();
+  try {
+    // 1. Guardar orden pendiente en Supabase
+    const { data: order, error: orderError } = await sb.from('orders').insert({
+      user_id: currentUser?.id || null,
+      product_id: mpCurrentProduct.id || null,
+      nombre, email,
+      monto: mpCurrentProduct.price,
+      estado: 'pendiente'
+    }).select().single();
 
-  if (error) { alert('Error: ' + error.message); btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; return; }
+    if (orderError) throw orderError;
 
-  // Crear preferencia de pago en Mercado Pago
-  // IMPORTANTE: Reemplazá MP_ACCESS_TOKEN con tu token de Mercado Pago
-  const MP_PUBLIC_KEY = 'TU_PUBLIC_KEY_MP'; // Reemplazar
-  
-  // Por ahora redirige al checkout de MP con los datos
-  // Cuando tengas el access token del backend esto se conecta automático
-  const mpURL = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=pending&payer_email=${encodeURIComponent(email)}`;
-  
-  // Mostrar instrucciones de pago por ahora
-  btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false;
-  closeMPModal();
-  
-  alert(`✓ Orden registrada #${order.id.slice(0,8)}\n\nPara completar la integración de Mercado Pago necesitás tu Access Token.\n\nTe contactaremos a ${email} para confirmar el pago.`);
+    // 2. Crear preferencia de pago en Mercado Pago
+    const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
+      },
+      body: JSON.stringify({
+        items: [{
+          title: mpCurrentProduct.name,
+          quantity: 1,
+          unit_price: parseFloat(mpCurrentProduct.price),
+          currency_id: 'USD'
+        }],
+        payer: { email, name: nombre },
+        external_reference: order.id,
+        back_urls: {
+          success: window.location.origin + '?pago=ok&order=' + order.id,
+          failure: window.location.origin + '?pago=error&order=' + order.id,
+          pending: window.location.origin + '?pago=pendiente&order=' + order.id
+        },
+        auto_return: 'approved',
+        notification_url: 'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/mp-webhook'
+      })
+    });
+
+    const mpData = await mpRes.json();
+
+    if (!mpData.init_point) throw new Error(mpData.message || 'Error creando preferencia MP');
+
+    // 3. Actualizar orden con el ID de preferencia de MP
+    await sb.from('orders').update({ 
+      estado: 'pendiente',
+      mp_preference_id: mpData.id 
+    }).eq('id', order.id);
+
+    // 4. Redirigir al checkout de Mercado Pago
+    closeMPModal();
+    window.location.href = mpData.init_point;
+
+  } catch(e) {
+    console.error('MP Error:', e);
+    // Fallback — mostrar link de pago manual
+    btn.innerHTML = 'Pagar con Mercado Pago'; btn.disabled = false;
+    alert('Error al procesar el pago: ' + e.message + '\n\nContactanos a amcuoficial@gmail.com para coordinar el pago.');
+  }
+}
+
+// Verificar resultado del pago al volver de MP
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const pago = params.get('pago');
+  const orderId = params.get('order');
+  if (pago === 'ok' && orderId) {
+    // Actualizar orden como pagada
+    sb.from('orders').update({ estado: 'pagado' }).eq('id', orderId).then(() => {
+      showPaymentSuccess();
+    });
+  } else if (pago === 'error') {
+    showPaymentError();
+  }
+});
+
+function showPaymentSuccess() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:400px;">
+      <div style="font-family:var(--font-display);font-size:60px;color:#3fff2a;margin-bottom:16px;">✓</div>
+      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO EXITOSO</p>
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Revisá tu email — te enviamos el link de descarga.</p>
+      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function showPaymentError() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#050505;border:1px solid var(--red2);padding:48px;text-align:center;max-width:400px;">
+      <div style="font-family:var(--font-display);font-size:60px;color:var(--red2);margin-bottom:16px;">✗</div>
+      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO CANCELADO</p>
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Si tuviste algún problema escribinos a amcuoficial@gmail.com</p>
+      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:var(--red2);border:none;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 </script>
 
 <script>
 // ============ REPRODUCTOR PROTEGIDO ESTILO BEATPORT ============
+// Deshabilitar teclas de descarga
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
+    e.preventDefault();
+  }
+});
+// Deshabilitar arrastrar elementos de audio
+document.addEventListener('dragstart', e => {
+  if (e.target.tagName === 'AUDIO' || e.target.closest('.track-player')) e.preventDefault();
+});
 const players = {};
 
 async function initPlayer(productId, audioUrl, startSec, nombre) {
   if (players[productId]) return;
-  
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  
   try {
-    // Fetch del audio via proxy para ocultar URL
-    const res = await fetch(audioUrl);
+    // Fetch con credenciales — el blob nunca queda expuesto en el DOM
+    const res = await fetch(audioUrl, { 
+      headers: {
+        'Cache-Control': 'no-store',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
+      }
+    });
     const arrayBuffer = await res.arrayBuffer();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    // Limpiar el ArrayBuffer original para que no sea accesible
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
     
     players[productId] = {
       ctx, audioBuffer, startSec,
@@ -1987,13 +2079,16 @@ function drawWaveform(productId) {
 }
 
 function togglePlay(productId, audioUrl, startSec, nombre) {
+  // Decodificar URL desde atributo oculto en lugar de recibirla como parámetro visible
+  const srcEl = document.getElementById('src-' + productId);
+  const realUrl = srcEl ? atob(srcEl.getAttribute('data-s')) : audioUrl;
   const p = players[productId];
   
   if (!p) {
     // Primera vez — cargar el audio
     const btn = document.querySelector('#play-' + productId);
     if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="none" stroke="white" stroke-width="1.5" stroke-dasharray="8 4"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur=".8s" repeatCount="indefinite"/></circle></svg>';
-    initPlayer(productId, audioUrl, startSec, nombre).then(() => {
+    initPlayer(productId, realUrl, startSec, nombre).then(() => {
       playAudio(productId);
     });
     return;
@@ -2126,10 +2221,12 @@ function seekPlayer(productId, e) {
 }
 
 // Bloquear click derecho en toda la página para no descargar audio
-document.addEventListener('contextmenu', e => {
-  if (e.target.tagName === 'AUDIO' || e.target.closest('.track-player')) {
-    e.preventDefault();
-  }
+// Bloquear click derecho en toda la página
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Bloquear DevTools básico
+document.addEventListener('keydown', e => {
+  if (e.key === 'F12') e.preventDefault();
 });
 </script>
 
