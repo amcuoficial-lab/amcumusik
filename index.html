@@ -1230,6 +1230,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  window._sb = sb; // Exponer globalmente
   // Cargar tienda apenas el script corre — sin esperar DOMContentLoaded
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => loadStore());
@@ -1645,470 +1646,301 @@ document.addEventListener('DOMContentLoaded', async () => {
   </script>
 
 <!-- AUTH MODAL -->
-<!-- AUTH MODAL -->
-<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid var(--border);padding:0;min-width:380px;max-width:440px;width:90%;position:relative;overflow:hidden;">
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid #222;width:90%;max-width:420px;position:relative;overflow:hidden;">
     
-    <!-- Header -->
-    <div style="padding:28px 32px 0;border-bottom:1px solid var(--border);">
-      <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;line-height:1;">×</button>
-      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Acceso AMCU</p>
-      
+    <!-- Top bar -->
+    <div style="padding:24px 28px 0;border-bottom:1px solid #151515;">
+      <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555;font-size:22px;cursor:pointer;line-height:1;z-index:1;">×</button>
+      <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:18px;">// Acceso AMCU</p>
       <!-- Tabs -->
-      <div style="display:flex;gap:0;">
-        <button id="tab-login" onclick="switchTab('login')" style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Iniciar sesión</button>
-        <button id="tab-register" onclick="switchTab('register')" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Crear cuenta</button>
+      <div style="display:flex;">
+        <button id="tab-login" onclick="switchTab('login')" 
+          style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px;cursor:pointer;">
+          Iniciar sesión
+        </button>
+        <button id="tab-register" onclick="switchTab('register')"
+          style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px;cursor:pointer;">
+          Crear cuenta
+        </button>
       </div>
     </div>
 
-    <div style="padding:28px 32px;">
-      <!-- Google Login -->
-      <button onclick="loginWithGoogle()" style="width:100%;background:#fff;border:none;color:#111;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;transition:background .2s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#fff'">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    <div style="padding:24px 28px;">
+      <!-- Google -->
+      <button id="google-btn" onclick="loginWithGoogle()"
+        style="width:100%;background:#fff;border:none;color:#111;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
         Continuar con Google
       </button>
 
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="flex:1;height:1px;background:var(--border);"></div>
-        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);">O</span>
-        <div style="flex:1;height:1px;background:var(--border);"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="flex:1;height:1px;background:#1a1a1a;"></div>
+        <span style="font-family:var(--font-mono);font-size:9px;color:#333;">O</span>
+        <div style="flex:1;height:1px;background:#1a1a1a;"></div>
       </div>
 
-      <!-- Nombre (solo registro) -->
-      <div id="field-nombre" style="display:none;margin-bottom:14px;">
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
-        <input id="auth-nombre" type="text" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      <div id="field-nombre" style="display:none;margin-bottom:12px;">
+        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Nombre</label>
+        <input id="auth-nombre" type="text" placeholder="Tu nombre"
+          style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
+          onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
       </div>
 
-      <div style="margin-bottom:14px;">
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
-        <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      <div style="margin-bottom:12px;">
+        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Email</label>
+        <input id="auth-email" type="email" placeholder="tu@email.com"
+          style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
+          onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
       </div>
 
-      <div style="margin-bottom:8px;">
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Contraseña</label>
-        <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
+      <div style="margin-bottom:6px;">
+        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Contraseña</label>
+        <input id="auth-pass" type="password" placeholder="••••••••"
+          style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
+          onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'"
+          onkeydown="if(event.key==='Enter')doLogin()">
       </div>
 
-      <p id="auth-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);min-height:18px;margin:8px 0 16px;"></p>
+      <p id="auth-msg" style="font-family:var(--font-mono);font-size:10px;color:var(--red2);min-height:16px;margin:8px 0 14px;"></p>
 
-      <button id="auth-submit" onclick="doLogin()" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#ff2010'" onmouseout="this.style.background='var(--red2)'">Entrar</button>
+      <button id="auth-submit" onclick="doLogin()"
+        style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:13px;cursor:pointer;">
+        Entrar
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MERCADO PAGO MODAL -->
-<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid var(--border);padding:40px;min-width:360px;max-width:440px;width:90%;position:relative;">
-    <button onclick="closeMPModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;">×</button>
-    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:24px;">// Checkout</p>
-    <div id="mp-product-info" style="background:var(--black);border:1px solid var(--border);padding:20px;margin-bottom:24px;">
-      <p id="mp-product-name" style="font-family:var(--font-display);font-size:24px;margin-bottom:4px;"></p>
-      <p id="mp-product-price" style="font-family:var(--font-display);font-size:36px;color:var(--red2);"></p>
+<!-- MP MODAL -->
+<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid #222;padding:36px;width:90%;max-width:400px;position:relative;">
+    <button onclick="closeMPModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555;font-size:22px;cursor:pointer;">×</button>
+    <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Checkout</p>
+    <div style="background:#060606;border:1px solid #1a1a1a;padding:16px;margin-bottom:20px;">
+      <p id="mp-product-name" style="font-family:var(--font-display);font-size:22px;margin-bottom:4px;"></p>
+      <p id="mp-product-price" style="font-family:var(--font-display);font-size:32px;color:var(--red2);"></p>
     </div>
-    <div style="margin-bottom:16px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu email</label>
-      <input id="mp-email" type="email" placeholder="Para recibir tu compra" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+    <div style="margin-bottom:12px;">
+      <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Email</label>
+      <input id="mp-email" type="email" placeholder="Para recibir tu compra"
+        style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
+        onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
     </div>
-    <div style="margin-bottom:24px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu nombre</label>
-      <input id="mp-nombre" type="text" placeholder="Nombre completo" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+    <div style="margin-bottom:20px;">
+      <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Nombre</label>
+      <input id="mp-nombre" type="text" placeholder="Nombre completo"
+        style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
+        onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
     </div>
-    <!-- Botón oficial de Mercado Pago -->
-    <button onclick="initMercadoPago()" id="mp-btn" style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;" onmouseover="this.style.background='#007ab8'" onmouseout="this.style.background='#009ee3'">
-      <svg width="20" height="20" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#009ee3"/><path d="M8 20.5c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2v.5c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2v-.5z" fill="#fff"/></svg>
+    <button id="mp-btn" onclick="initMercadoPago()"
+      style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg>
       Pagar con Mercado Pago
     </button>
-    <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;margin-top:12px;">Tarjetas, débito, efectivo · Pago seguro</p>
+    <p style="font-family:var(--font-mono);font-size:9px;color:#333;text-align:center;margin-top:10px;letter-spacing:1px;">Tarjetas · Débito · Efectivo · Cuotas</p>
   </div>
 </div>
 
 <script>
-// ---- AUTH TABS ----
-let currentTab = 'login';
+// ============ AUTH COMPLETO ============
+var currentTab = 'login';
+
 function switchTab(tab) {
   currentTab = tab;
-  const isReg = tab === 'register';
-  document.getElementById('tab-login').style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)';
-  document.getElementById('tab-login').style.color = isReg ? 'var(--muted2)' : 'var(--white)';
-  document.getElementById('tab-register').style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent';
-  document.getElementById('tab-register').style.color = isReg ? 'var(--white)' : 'var(--muted2)';
-  document.getElementById('field-nombre').style.display = isReg ? 'block' : 'none';
-  document.getElementById('auth-submit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
-  document.getElementById('auth-msg').textContent = '';
+  var isReg = tab === 'register';
+  var tl = document.getElementById('tab-login');
+  var tr = document.getElementById('tab-register');
+  var fn = document.getElementById('field-nombre');
+  var sb = document.getElementById('auth-submit');
+  if(tl) { tl.style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)'; tl.style.color = isReg ? '#555' : 'var(--white)'; }
+  if(tr) { tr.style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent'; tr.style.color = isReg ? 'var(--white)' : '#555'; }
+  if(fn) fn.style.display = isReg ? 'block' : 'none';
+  if(sb) sb.textContent = isReg ? 'Crear cuenta' : 'Entrar';
+  var msg = document.getElementById('auth-msg');
+  if(msg) msg.textContent = '';
+}
+
+function openAuthModal() {
+  if (window._currentUser) { showAccountMenu(); return; }
+  var m = document.getElementById('auth-modal');
+  if(m) { m.style.display = 'flex'; }
+  setTimeout(function(){ var e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
+  var msg = document.getElementById('auth-msg');
+  if(msg) msg.textContent = '';
+}
+
+function closeAuthModal() {
+  var m = document.getElementById('auth-modal');
+  if(m) m.style.display = 'none';
 }
 
 async function loginWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin }
-  });
-  if (error) document.getElementById('auth-msg').textContent = error.message;
+  var btn = document.getElementById('google-btn');
+  if(btn) btn.textContent = 'Conectando...';
+  try {
+    var sb = window._sb;
+    if(!sb) { alert('Error: Supabase no cargó. Recargá la página.'); return; }
+    var redirectTo = window.location.origin + window.location.pathname;
+    var result = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { 
+        redirectTo: redirectTo,
+        queryParams: { access_type: 'offline', prompt: 'select_account' }
+      }
+    });
+    if(result.error) throw result.error;
+  } catch(e) {
+    console.error('Google auth error:', e);
+    var msg = document.getElementById('auth-msg');
+    if(msg) msg.textContent = 'Error con Google: ' + e.message;
+    if(btn) btn.textContent = 'Continuar con Google';
+  }
 }
 
-function toggleAuthMode() {
-  switchTab(document.getElementById('auth-mode')?.value || 'login');
+async function doLogin() {
+  var email = document.getElementById('auth-email')?.value?.trim();
+  var pass  = document.getElementById('auth-pass')?.value;
+  var msg   = document.getElementById('auth-msg');
+  var btn   = document.getElementById('auth-submit');
+  if(!email || !pass) { if(msg) msg.textContent = 'Completá email y contraseña'; return; }
+  if(msg) msg.textContent = '';
+  if(btn) { btn.textContent = 'Cargando...'; btn.disabled = true; }
+  try {
+    var sb = window._sb;
+    if(!sb) throw new Error('Supabase no cargó');
+    var result;
+    if(currentTab === 'register') {
+      var nombre = document.getElementById('auth-nombre')?.value?.trim() || '';
+      result = await sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
+      if(result.error) throw result.error;
+      if(msg) { msg.style.color = '#3fff2a'; msg.textContent = '¡Cuenta creada! Revisá tu email.'; }
+      if(btn) { btn.textContent = 'Crear cuenta'; btn.disabled = false; }
+      return;
+    } else {
+      result = await sb.auth.signInWithPassword({ email, password: pass });
+      if(result.error) throw result.error;
+      closeAuthModal();
+    }
+  } catch(e) {
+    var errMsg = e.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : e.message;
+    if(msg) { msg.style.color = 'var(--red2)'; msg.textContent = errMsg; }
+  }
+  if(btn) { btn.textContent = currentTab === 'register' ? 'Crear cuenta' : 'Entrar'; btn.disabled = false; }
 }
 
-// ---- MERCADO PAGO ----
-let mpCurrentProduct = null;
-
-function openMPModal(productName, productPrice, productId) {
-  if (!currentUser) { openAuthModal(); return; }
-  mpCurrentProduct = { name: productName, price: productPrice, id: productId };
-  document.getElementById('mp-product-name').textContent = productName;
-  document.getElementById('mp-product-price').textContent = '$' + productPrice + ' USD';
-  document.getElementById('mp-email').value = currentUser.email || '';
-  document.getElementById('mp-nombre').value = currentProfile?.nombre || '';
-  document.getElementById('mp-modal').style.display = 'flex';
+// ============ MERCADO PAGO ============
+function openMPModal(name, price, id) {
+  window.mpCurrentProduct = { name, price, id };
+  var pn = document.getElementById('mp-product-name');
+  var pp = document.getElementById('mp-product-price');
+  var pe = document.getElementById('mp-email');
+  if(pn) pn.textContent = name;
+  if(pp) pp.textContent = '$' + price + ' USD';
+  if(pe && window._currentUser) pe.value = window._currentUser.email || '';
+  var m = document.getElementById('mp-modal');
+  if(m) m.style.display = 'flex';
 }
 
 function closeMPModal() {
-  document.getElementById('mp-modal').style.display = 'none';
+  var m = document.getElementById('mp-modal');
+  if(m) m.style.display = 'none';
 }
 
 async function initMercadoPago() {
-  const email  = document.getElementById('mp-email').value.trim();
-  const nombre = document.getElementById('mp-nombre').value.trim();
-  const btn    = document.getElementById('mp-btn');
-
-  if (!email || !nombre) { alert('Completá email y nombre'); return; }
-  if (!mpCurrentProduct) return;
-
-  btn.innerHTML = '<span style="opacity:.7">Procesando...</span>'; btn.disabled = true;
-
+  var email  = document.getElementById('mp-email')?.value?.trim();
+  var nombre = document.getElementById('mp-nombre')?.value?.trim();
+  var btn    = document.getElementById('mp-btn');
+  if(!email || !nombre) { alert('Completá email y nombre'); return; }
+  if(!window.mpCurrentProduct) return;
+  if(btn) { btn.textContent = 'Procesando...'; btn.disabled = true; }
   try {
-    // 1. Guardar orden pendiente en Supabase
-    const { data: order, error: orderError } = await sb.from('orders').insert({
-      user_id: currentUser?.id || null,
-      product_id: mpCurrentProduct.id || null,
+    var sb = window._sb;
+    // Guardar orden en Supabase
+    var orderRes = await sb.from('orders').insert({
+      user_id: window._currentUser?.id || null,
+      product_id: window.mpCurrentProduct.id || null,
       nombre, email,
-      monto: mpCurrentProduct.price,
+      monto: window.mpCurrentProduct.price,
       estado: 'pendiente'
     }).select().single();
-
-    if (orderError) throw orderError;
-
-    // 2. Crear preferencia de pago en Mercado Pago
-    const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    if(orderRes.error) throw orderRes.error;
+    // Crear preferencia MP
+    var mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
       },
       body: JSON.stringify({
-        items: [{
-          title: mpCurrentProduct.name,
-          quantity: 1,
-          unit_price: parseFloat(mpCurrentProduct.price),
-          currency_id: 'USD'
-        }],
+        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: parseFloat(window.mpCurrentProduct.price), currency_id: 'USD' }],
         payer: { email, name: nombre },
-        external_reference: order.id,
+        external_reference: orderRes.data.id,
         back_urls: {
-          success: window.location.origin + '?pago=ok&order=' + order.id,
-          failure: window.location.origin + '?pago=error&order=' + order.id,
-          pending: window.location.origin + '?pago=pendiente&order=' + order.id
+          success: window.location.origin + '?pago=ok&order=' + orderRes.data.id,
+          failure: window.location.origin + '?pago=error',
+          pending: window.location.origin + '?pago=pendiente'
         },
-        auto_return: 'approved',
-        notification_url: 'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/mp-webhook'
+        auto_return: 'approved'
       })
     });
-
-    const mpData = await mpRes.json();
-
-    if (!mpData.init_point) throw new Error(mpData.message || 'Error creando preferencia MP');
-
-    // 3. Actualizar orden con el ID de preferencia de MP
-    await sb.from('orders').update({ 
-      estado: 'pendiente',
-      mp_preference_id: mpData.id 
-    }).eq('id', order.id);
-
-    // 4. Redirigir al checkout de Mercado Pago
+    var mpData = await mpRes.json();
+    if(!mpData.init_point) throw new Error(mpData.message || 'Error MP');
     closeMPModal();
     window.location.href = mpData.init_point;
-
   } catch(e) {
-    console.error('MP Error:', e);
-    // Fallback — mostrar link de pago manual
-    btn.innerHTML = 'Pagar con Mercado Pago'; btn.disabled = false;
-    alert('Error al procesar el pago: ' + e.message + '\n\nContactanos a amcuoficial@gmail.com para coordinar el pago.');
+    console.error('MP error:', e);
+    alert('Error: ' + e.message);
+    if(btn) { btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; }
   }
 }
 
-// Verificar resultado del pago al volver de MP
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const pago = params.get('pago');
-  const orderId = params.get('order');
-  if (pago === 'ok' && orderId) {
-    // Actualizar orden como pagada
-    sb.from('orders').update({ estado: 'pagado' }).eq('id', orderId).then(() => {
-      showPaymentSuccess();
-    });
-  } else if (pago === 'error') {
-    showPaymentError();
+// Verificar resultado pago al volver de MP
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var pago = params.get('pago');
+  if(!pago) return;
+  history.replaceState(null,'',window.location.pathname);
+  if(pago === 'ok') {
+    setTimeout(function(){
+      var d = document.createElement('div');
+      d.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
+      d.innerHTML='<div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:360px;"><div style="font-family:var(--font-display);font-size:56px;color:#3fff2a;margin-bottom:12px;">✓</div><p style="font-family:var(--font-display);font-size:26px;letter-spacing:2px;margin-bottom:10px;">PAGO EXITOSO</p><p style="font-family:var(--font-mono);font-size:11px;color:#666;margin-bottom:24px;">Revisá tu email — te enviamos el link de descarga.</p><button onclick="this.closest('div[style]').remove()" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;">Cerrar</button></div>';
+      document.body.appendChild(d);
+    }, 500);
   }
-});
+})();
 
-function showPaymentSuccess() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
-  modal.innerHTML = `
-    <div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:400px;">
-      <div style="font-family:var(--font-display);font-size:60px;color:#3fff2a;margin-bottom:16px;">✓</div>
-      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO EXITOSO</p>
-      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Revisá tu email — te enviamos el link de descarga.</p>
-      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
+// Cuenta menu
+function showAccountMenu() {
+  var existing = document.getElementById('account-menu');
+  if(existing){ existing.remove(); return; }
+  var btn = document.getElementById('auth-btn');
+  if(!btn) return;
+  var rect = btn.getBoundingClientRect();
+  var menu = document.createElement('div');
+  menu.id = 'account-menu';
+  menu.style.cssText = 'position:fixed;top:'+(rect.bottom+6)+'px;right:'+(window.innerWidth-rect.right)+'px;z-index:10000;background:#0a0a0a;border:1px solid #222;min-width:200px;';
+  menu.innerHTML = '<div style="padding:14px 16px;border-bottom:1px solid #151515;"><p style="font-family:var(--font-mono);font-size:10px;color:#555;">'+(window._currentUser?.email||'')+'</p>'+(window._currentProfile?.role==='admin'?'<p style="font-family:var(--font-mono);font-size:9px;color:var(--red2);margin-top:4px;letter-spacing:1px;">ADMIN</p>':'')+'</div><button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;cursor:pointer;text-align:left;">Cerrar sesión</button>';
+  document.body.appendChild(menu);
+  setTimeout(function(){ document.addEventListener('click', function rm(e){ if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',rm); } }); }, 100);
 }
 
-function showPaymentError() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
-  modal.innerHTML = `
-    <div style="background:#050505;border:1px solid var(--red2);padding:48px;text-align:center;max-width:400px;">
-      <div style="font-family:var(--font-display);font-size:60px;color:var(--red2);margin-bottom:16px;">✗</div>
-      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO CANCELADO</p>
-      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Si tuviste algún problema escribinos a amcuoficial@gmail.com</p>
-      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:var(--red2);border:none;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
+async function doLogout() {
+  var sb = window._sb;
+  if(sb) await sb.auth.signOut();
+  window._currentUser = null;
+  window._currentProfile = null;
+  var btn = document.getElementById('auth-btn');
+  if(btn) { btn.textContent = 'Iniciar sesión'; btn.style.background = 'var(--red2)'; }
+  var panel = document.getElementById('admin-panel');
+  if(panel) panel.remove();
+  window.location.reload();
 }
 </script>
-
-<script>
-// ============ REPRODUCTOR PROTEGIDO ESTILO BEATPORT ============
-// Deshabilitar teclas de descarga
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
-    e.preventDefault();
-  }
-});
-// Deshabilitar arrastrar elementos de audio
-document.addEventListener('dragstart', e => {
-  if (e.target.tagName === 'AUDIO' || e.target.closest('.track-player')) e.preventDefault();
-});
-const players = {};
-
-async function initPlayer(productId, audioUrl, startSec, nombre) {
-  if (players[productId]) return;
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  try {
-    // Fetch con credenciales — el blob nunca queda expuesto en el DOM
-    const res = await fetch(audioUrl, { 
-      headers: {
-        'Cache-Control': 'no-store',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
-      }
-    });
-    const arrayBuffer = await res.arrayBuffer();
-    // Limpiar el ArrayBuffer original para que no sea accesible
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
-    
-    players[productId] = {
-      ctx, audioBuffer, startSec,
-      source: null, playing: false,
-      startTime: 0, pausedAt: 0,
-      duration: 30 // preview de 30 segundos
-    };
-    
-    drawWaveform(productId);
-    
-  } catch(e) {
-    console.error('Error cargando audio:', e);
-  }
-}
-
-function drawWaveform(productId) {
-  const p = players[productId];
-  if (!p) return;
-  const canvas = document.getElementById('wave-' + productId);
-  if (!canvas) return;
-  const ctx2 = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 300;
-  const H = canvas.offsetHeight || 40;
-  canvas.width = W;
-  canvas.height = H;
-  
-  const buf = p.audioBuffer;
-  const data = buf.getChannelData(0);
-  
-  // Solo mostrar los 30 segundos del preview
-  const startSample = Math.floor(p.startSec * buf.sampleRate);
-  const endSample = Math.min(startSample + Math.floor(30 * buf.sampleRate), data.length);
-  const samples = endSample - startSample;
-  const step = Math.floor(samples / W);
-  
-  ctx2.clearRect(0, 0, W, H);
-  
-  for (let i = 0; i < W; i++) {
-    let max = 0;
-    for (let j = 0; j < step; j++) {
-      const idx = startSample + i * step + j;
-      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
-    }
-    const barH = Math.max(2, max * H * 0.9);
-    const y = (H - barH) / 2;
-    ctx2.fillStyle = i % 2 === 0 ? '#333' : '#2a2a2a';
-    ctx2.fillRect(i, y, 1, barH);
-  }
-}
-
-function togglePlay(productId, audioUrl, startSec, nombre) {
-  // Decodificar URL desde atributo oculto en lugar de recibirla como parámetro visible
-  const srcEl = document.getElementById('src-' + productId);
-  const realUrl = srcEl ? atob(srcEl.getAttribute('data-s')) : audioUrl;
-  const p = players[productId];
-  
-  if (!p) {
-    // Primera vez — cargar el audio
-    const btn = document.querySelector('#play-' + productId);
-    if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="none" stroke="white" stroke-width="1.5" stroke-dasharray="8 4"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur=".8s" repeatCount="indefinite"/></circle></svg>';
-    initPlayer(productId, realUrl, startSec, nombre).then(() => {
-      playAudio(productId);
-    });
-    return;
-  }
-  
-  if (p.playing) {
-    pauseAudio(productId);
-  } else {
-    playAudio(productId);
-  }
-}
-
-function playAudio(productId) {
-  const p = players[productId];
-  if (!p) return;
-  
-  // Pausar otros players
-  Object.keys(players).forEach(id => {
-    if (id !== productId && players[id].playing) pauseAudio(id);
-  });
-  
-  if (p.ctx.state === 'suspended') p.ctx.resume();
-  
-  p.source = p.ctx.createBufferSource();
-  p.source.buffer = p.audioBuffer;
-  p.source.connect(p.ctx.destination);
-  
-  const startSec = p.startSec + p.pausedAt;
-  const remaining = p.duration - p.pausedAt;
-  
-  p.source.start(0, startSec, remaining);
-  p.startTime = p.ctx.currentTime - p.pausedAt;
-  p.playing = true;
-  
-  // Actualizar UI
-  updatePlayBtn(productId, true);
-  
-  // Animación de progreso
-  p.rafId = requestAnimationFrame(() => updateProgress(productId));
-  
-  // Auto stop a los 30 segundos
-  p.source.onended = () => {
-    if (p.playing) {
-      p.playing = false;
-      p.pausedAt = 0;
-      updatePlayBtn(productId, false);
-      updateProgressBar(productId, 0);
-    }
-  };
-}
-
-function pauseAudio(productId) {
-  const p = players[productId];
-  if (!p || !p.playing) return;
-  p.pausedAt = p.ctx.currentTime - p.startTime;
-  if (p.pausedAt >= p.duration) p.pausedAt = 0;
-  p.source.stop();
-  p.playing = false;
-  cancelAnimationFrame(p.rafId);
-  updatePlayBtn(productId, false);
-}
-
-function updateProgress(productId) {
-  const p = players[productId];
-  if (!p || !p.playing) return;
-  const elapsed = p.ctx.currentTime - p.startTime;
-  const pct = Math.min(elapsed / p.duration, 1);
-  updateProgressBar(productId, pct * 100);
-  // Actualizar tiempo
-  const timeEl = document.getElementById('time-' + productId);
-  if (timeEl) {
-    const remaining = Math.max(0, p.duration - elapsed);
-    timeEl.textContent = '0:' + String(Math.ceil(remaining)).padStart(2,'0');
-  }
-  if (pct < 1) p.rafId = requestAnimationFrame(() => updateProgress(productId));
-}
-
-function updateProgressBar(productId, pct) {
-  const bar = document.getElementById('prog-' + productId);
-  if (bar) bar.style.width = pct + '%';
-  // Actualizar color de waveform
-  const canvas = document.getElementById('wave-' + productId);
-  if (!canvas) return;
-  const ctx2 = canvas.getContext('2d');
-  const W = canvas.width; const H = canvas.height;
-  const playedW = Math.floor(W * pct / 100);
-  // Repintar barras jugadas en rojo
-  const p = players[productId];
-  if (!p) return;
-  const buf = p.audioBuffer;
-  const data = buf.getChannelData(0);
-  const startSample = Math.floor(p.startSec * buf.sampleRate);
-  const endSample = Math.min(startSample + Math.floor(30 * buf.sampleRate), data.length);
-  const samples = endSample - startSample;
-  const step = Math.floor(samples / W);
-  for (let i = 0; i < Math.min(playedW, W); i++) {
-    let max = 0;
-    for (let j = 0; j < step; j++) {
-      const idx = startSample + i * step + j;
-      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
-    }
-    const barH = Math.max(2, max * H * 0.9);
-    const y = (H - barH) / 2;
-    ctx2.fillStyle = '#e01a10';
-    ctx2.fillRect(i, y, 1, barH);
-  }
-}
-
-function updatePlayBtn(productId, playing) {
-  const btn = document.getElementById('play-' + productId);
-  if (!btn) return;
-  btn.innerHTML = playing
-    ? '<svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="3" height="8" fill="white"/><rect x="7" y="2" width="3" height="8" fill="white"/></svg>'
-    : '<svg width="12" height="12" viewBox="0 0 12 12"><polygon points="3,1 11,6 3,11" fill="white"/></svg>';
-}
-
-function seekPlayer(productId, e) {
-  const p = players[productId];
-  if (!p) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pct = (e.clientX - rect.left) / rect.width;
-  p.pausedAt = pct * p.duration;
-  if (p.playing) {
-    p.source.stop();
-    p.playing = false;
-    playAudio(productId);
-  } else {
-    updateProgressBar(productId, pct * 100);
-  }
-}
-
-// Bloquear click derecho en toda la página para no descargar audio
-// Bloquear click derecho en toda la página
-// contextmenu desbloqueado
-
-// Bloquear DevTools básico
-document.addEventListener('keydown', e => {
-  // F12 desbloqueado
-});
-</script>
-
 </body>
