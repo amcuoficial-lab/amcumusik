@@ -530,39 +530,10 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     <div class="s-label reveal">// 002 — Tienda</div>
     <h2 class="s-title reveal">Sonidos que<br>hacen historia</h2>
   </div>
-  <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));">
-    <!-- PRODUCTO 1: Minimal Bass 01 -->
-    <div class="product-card">
-      <div class="p-badge">DISPONIBLE</div>
-      <div class="p-type">Sample Pack</div>
-      <div class="p-name">Minimal Bass 01<br><span style="font-size:16px;color:var(--muted2);letter-spacing:2px;">by AMCU</span></div>
-      <p class="p-desc">El primer pack oficial de AMCU. Samples de Minimal Bass diseñados para darle carácter y profundidad a tus producciones.</p>
-      <div class="p-footer">
-        <div class="p-price">$20 <span>USD</span></div>
-        <button class="btn-buy" onclick="openMPModal('Minimal Bass 01 by AMCU', 20, 'ac444f3a-582f-47cf-8633-1da9b97f6a2f')">Comprar</button>
-      </div>
-    </div>
-    <!-- PRODUCTO 2: AMCU CAITTO - JACK -->
-    <div class="product-card">
-      <div class="p-badge" style="background:var(--purple)">UNRELEASED</div>
-      <div class="p-type">Track Unreleased</div>
-      <div class="p-name">AMCU, CAITTO — JACK</div>
-      <p class="p-desc">Track unreleased exclusivo de AMCU. Sonido diseñado para destruir dancefloors.</p>
-      <div class="p-footer">
-        <div class="p-price">$5 <span>USD</span></div>
-        <button class="btn-buy" onclick="openMPModal('AMCU, CAITTO - JACK', 5, '68b844d9-5de6-4a36-b785-ac196d865fc3')">Comprar</button>
-      </div>
-    </div>
-    <!-- PRÓXIMAMENTE -->
-    <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
-      <div class="p-type">Próximamente</div>
-      <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
-      <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
-    </div>
-  </div>
+  <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></div>
 </section>
 
-<!-- CLASES -->
+
 <section id="clases" style="background:var(--black);">
   <div class="s-label reveal">// 005 — Clases</div>
   <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;margin-bottom:60px;">
@@ -1557,67 +1528,61 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   async function loadStore() {
   const grid = document.getElementById('store-grid');
   if (!grid) return;
+
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Cargando...</div>';
+
   try {
-    const { data, error } = await sb.from('products').select('*').eq('activo', true).order('created_at', {ascending: false});
-    if (error || !data || data.length === 0) return;
+    const { data, error } = await sb.from('products')
+      .select('*')
+      .eq('activo', true)
+      .order('created_at', {ascending: false});
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Próximamente — Sumate al Producer Club</div>';
+      return;
+    }
+
     const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
-    // Solo agregar productos que no estén ya en el HTML
-    const existingIds = ['ac444f3a-582f-47cf-8633-1da9b97f6a2f','68b844d9-5de6-4a36-b785-ac196d865fc3'];
-    const newProducts = data.filter(p => !existingIds.includes(p.id));
-    if (newProducts.length === 0) return;
-    const proximamente = grid.querySelector('[style*="Próximamente"]')?.closest('.product-card') || grid.lastElementChild;
-    newProducts.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.innerHTML = \`
-        <div class="p-badge">\${p.tipo === 'track_unreleased' ? 'UNRELEASED' : 'DISPONIBLE'}</div>
-        <div class="p-type">\${tipoLabel[p.tipo] || p.tipo}</div>
-        <div class="p-name">\${p.nombre}</div>
-        <p class="p-desc">\${p.descripcion || ''}</p>
+    const badgeColor = { sample_pack: 'var(--red2)', track_unreleased: 'var(--purple)', bundle: 'var(--chrome2)' };
+    const badgeText  = { sample_pack: 'DISPONIBLE', track_unreleased: 'UNRELEASED', bundle: 'BUNDLE' };
+
+    grid.innerHTML = data.map(p => `
+      <div class="product-card">
+        <div class="p-badge" style="background:${badgeColor[p.tipo] || 'var(--red2)'};">${badgeText[p.tipo] || 'NUEVO'}</div>
+        <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
+        <div class="p-name">${p.nombre}</div>
+        <p class="p-desc">${p.descripcion || ''}</p>
+        ${p.archivo_url ? `
+        <div style="margin-bottom:20px;">
+          <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-transform:uppercase;margin-bottom:6px;">// Preview</p>
+          <audio controls style="width:100%;height:36px;outline:none;" preload="none">
+            <source src="${p.archivo_url}" type="audio/wav">
+            <source src="${p.archivo_url}" type="audio/mpeg">
+          </audio>
+        </div>` : ''}
         <div class="p-footer">
-          <div class="p-price">$\${p.precio} <span>USD</span></div>
-          <button class="btn-buy" onclick="openMPModal('\${p.nombre.replace(/'/g,\"\\'\")}', \${p.precio}, '\${p.id}')">Comprar</button>
+          <div class="p-price">$${p.precio} <span>USD</span></div>
+          <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
         </div>
-      \`;
-      grid.insertBefore(card, proximamente);
-    });
-  } catch(e) { console.log('Store load error:', e); }
-  // ---- OLD CODE BELOW ----
-  const data2 = null, error2 = null;
-  if (false) {
-  
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Próximamente — Sumate al club para ser el primero en acceder</div>';
-    return;
-  }
-
-  const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
-
-  grid.innerHTML = data.map(p => `
-    <div class="product-card">
-      <div class="p-badge">${p.tipo === 'track_unreleased' ? 'UNRELEASED' : p.tipo === 'sample_pack' ? 'DISPONIBLE' : 'BUNDLE'}</div>
-      <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
-      <div class="p-name">${p.nombre}</div>
-      <p class="p-desc">${p.descripcion || ''}</p>
-      ${p.archivo_url ? `
-      <div style="margin-bottom:20px;">
-        <audio controls style="width:100%;filter:invert(1);height:32px;opacity:.7;">
-          <source src="${p.archivo_url}" type="audio/wav">
-        </audio>
-      </div>` : ''}
-      <div class="p-footer">
-        <div class="p-price">$${p.precio} <span>USD</span></div>
-        <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
       </div>
-    </div>
-  `).join('') + `
-    <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
-      <div class="p-type">Próximamente</div>
-      <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
-      <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
-    </div>
-  `;
+    `).join('') + `
+      <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
+        <div class="p-type">Próximamente</div>
+        <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
+        <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
+      </div>
+    `;
 
+    document.querySelectorAll('.product-card').forEach(el => {
+      el.addEventListener('mouseenter', () => document.getElementById('cur')?.classList.add('big'));
+      el.addEventListener('mouseleave', () => document.getElementById('cur')?.classList.remove('big'));
+    });
+
+  } catch(e) {
+    console.error('Error cargando tienda:', e);
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--red2);">Error cargando productos. Recargá la página.</div>';
   }
 }
 
