@@ -258,6 +258,45 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #050505;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+}
+.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.play-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--red2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .2s;
+}
+.play-btn:hover { background: #ff2010; }
+.play-btn svg { pointer-events: none; }
+.player-info { flex: 1; min-width: 0; }
+.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
+.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
+.waveform-container {
+  position: relative; height: 40px; cursor: pointer;
+  background: #080808; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; }
+.progress-overlay {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: rgba(224,26,16,.15); pointer-events: none;
+  transition: width .1s linear;
+}
+.preview-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
+  text-transform: uppercase;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -375,6 +414,45 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   0%   { opacity:1; transform: scale(1); }
   40%  { opacity:1; transform: scale(1.04); }
   100% { opacity:0; transform: scale(1.12); pointer-events:none; }
+}
+
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #050505;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+}
+.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.play-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--red2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .2s;
+}
+.play-btn:hover { background: #ff2010; }
+.play-btn svg { pointer-events: none; }
+.player-info { flex: 1; min-width: 0; }
+.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
+.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
+.waveform-container {
+  position: relative; height: 40px; cursor: pointer;
+  background: #080808; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; }
+.progress-overlay {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: rgba(224,26,16,.15); pointer-events: none;
+  transition: width .1s linear;
+}
+.preview-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
+  text-transform: uppercase;
 }
 </style>
 <script>
@@ -703,6 +781,45 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 .slot-btn:hover { border-color:var(--red2);color:var(--red2); }
 .slot-btn.selected { background:var(--red2);border-color:var(--red2);color:var(--white); }
 .slot-btn.booked { background:#0a0000;border-color:#1a0000;color:#333;cursor:not-allowed; }
+
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #050505;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+}
+.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.play-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--red2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .2s;
+}
+.play-btn:hover { background: #ff2010; }
+.play-btn svg { pointer-events: none; }
+.player-info { flex: 1; min-width: 0; }
+.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
+.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
+.waveform-container {
+  position: relative; height: 40px; cursor: pointer;
+  background: #080808; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; }
+.progress-overlay {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: rgba(224,26,16,.15); pointer-events: none;
+  transition: width .1s linear;
+}
+.preview-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
+  text-transform: uppercase;
+}
 </style>
 
 <script>
@@ -984,7 +1101,46 @@ document.addEventListener('DOMContentLoaded', init);
   .msg.typing .dot:nth-child(2){animation-delay:.2s}
   .msg.typing .dot:nth-child(3){animation-delay:.4s}
   @keyframes typingDot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-6px);opacity:1} }
-  </style>
+  
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #050505;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+}
+.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.play-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--red2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .2s;
+}
+.play-btn:hover { background: #ff2010; }
+.play-btn svg { pointer-events: none; }
+.player-info { flex: 1; min-width: 0; }
+.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
+.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
+.waveform-container {
+  position: relative; height: 40px; cursor: pointer;
+  background: #080808; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; }
+.progress-overlay {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: rgba(224,26,16,.15); pointer-events: none;
+  transition: width .1s linear;
+}
+.preview-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
+  text-transform: uppercase;
+}
+</style>
 
   <script>
   const AMCU_SYSTEM = `Sos AMCU, un DJ y productor de Bass House argentino con 8 años de carrera que firmó en sellos top a nivel mundial. Respondés preguntas sobre producción musical de forma directa, honesta y con tu voz propia — sin vueltas, como le hablarías a un alumno en clase.
@@ -1765,4 +1921,216 @@ async function initMercadoPago() {
   alert(`✓ Orden registrada #${order.id.slice(0,8)}\n\nPara completar la integración de Mercado Pago necesitás tu Access Token.\n\nTe contactaremos a ${email} para confirmar el pago.`);
 }
 </script>
+
+<script>
+// ============ REPRODUCTOR PROTEGIDO ESTILO BEATPORT ============
+const players = {};
+
+async function initPlayer(productId, audioUrl, startSec, nombre) {
+  if (players[productId]) return;
+  
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  try {
+    // Fetch del audio via proxy para ocultar URL
+    const res = await fetch(audioUrl);
+    const arrayBuffer = await res.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    
+    players[productId] = {
+      ctx, audioBuffer, startSec,
+      source: null, playing: false,
+      startTime: 0, pausedAt: 0,
+      duration: 30 // preview de 30 segundos
+    };
+    
+    drawWaveform(productId);
+    
+  } catch(e) {
+    console.error('Error cargando audio:', e);
+  }
+}
+
+function drawWaveform(productId) {
+  const p = players[productId];
+  if (!p) return;
+  const canvas = document.getElementById('wave-' + productId);
+  if (!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 300;
+  const H = canvas.offsetHeight || 40;
+  canvas.width = W;
+  canvas.height = H;
+  
+  const buf = p.audioBuffer;
+  const data = buf.getChannelData(0);
+  
+  // Solo mostrar los 30 segundos del preview
+  const startSample = Math.floor(p.startSec * buf.sampleRate);
+  const endSample = Math.min(startSample + Math.floor(30 * buf.sampleRate), data.length);
+  const samples = endSample - startSample;
+  const step = Math.floor(samples / W);
+  
+  ctx2.clearRect(0, 0, W, H);
+  
+  for (let i = 0; i < W; i++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) {
+      const idx = startSample + i * step + j;
+      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
+    }
+    const barH = Math.max(2, max * H * 0.9);
+    const y = (H - barH) / 2;
+    ctx2.fillStyle = i % 2 === 0 ? '#333' : '#2a2a2a';
+    ctx2.fillRect(i, y, 1, barH);
+  }
+}
+
+function togglePlay(productId, audioUrl, startSec, nombre) {
+  const p = players[productId];
+  
+  if (!p) {
+    // Primera vez — cargar el audio
+    const btn = document.querySelector('#play-' + productId);
+    if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="none" stroke="white" stroke-width="1.5" stroke-dasharray="8 4"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur=".8s" repeatCount="indefinite"/></circle></svg>';
+    initPlayer(productId, audioUrl, startSec, nombre).then(() => {
+      playAudio(productId);
+    });
+    return;
+  }
+  
+  if (p.playing) {
+    pauseAudio(productId);
+  } else {
+    playAudio(productId);
+  }
+}
+
+function playAudio(productId) {
+  const p = players[productId];
+  if (!p) return;
+  
+  // Pausar otros players
+  Object.keys(players).forEach(id => {
+    if (id !== productId && players[id].playing) pauseAudio(id);
+  });
+  
+  if (p.ctx.state === 'suspended') p.ctx.resume();
+  
+  p.source = p.ctx.createBufferSource();
+  p.source.buffer = p.audioBuffer;
+  p.source.connect(p.ctx.destination);
+  
+  const startSec = p.startSec + p.pausedAt;
+  const remaining = p.duration - p.pausedAt;
+  
+  p.source.start(0, startSec, remaining);
+  p.startTime = p.ctx.currentTime - p.pausedAt;
+  p.playing = true;
+  
+  // Actualizar UI
+  updatePlayBtn(productId, true);
+  
+  // Animación de progreso
+  p.rafId = requestAnimationFrame(() => updateProgress(productId));
+  
+  // Auto stop a los 30 segundos
+  p.source.onended = () => {
+    if (p.playing) {
+      p.playing = false;
+      p.pausedAt = 0;
+      updatePlayBtn(productId, false);
+      updateProgressBar(productId, 0);
+    }
+  };
+}
+
+function pauseAudio(productId) {
+  const p = players[productId];
+  if (!p || !p.playing) return;
+  p.pausedAt = p.ctx.currentTime - p.startTime;
+  if (p.pausedAt >= p.duration) p.pausedAt = 0;
+  p.source.stop();
+  p.playing = false;
+  cancelAnimationFrame(p.rafId);
+  updatePlayBtn(productId, false);
+}
+
+function updateProgress(productId) {
+  const p = players[productId];
+  if (!p || !p.playing) return;
+  const elapsed = p.ctx.currentTime - p.startTime;
+  const pct = Math.min(elapsed / p.duration, 1);
+  updateProgressBar(productId, pct * 100);
+  // Actualizar tiempo
+  const timeEl = document.getElementById('time-' + productId);
+  if (timeEl) {
+    const remaining = Math.max(0, p.duration - elapsed);
+    timeEl.textContent = '0:' + String(Math.ceil(remaining)).padStart(2,'0');
+  }
+  if (pct < 1) p.rafId = requestAnimationFrame(() => updateProgress(productId));
+}
+
+function updateProgressBar(productId, pct) {
+  const bar = document.getElementById('prog-' + productId);
+  if (bar) bar.style.width = pct + '%';
+  // Actualizar color de waveform
+  const canvas = document.getElementById('wave-' + productId);
+  if (!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  const W = canvas.width; const H = canvas.height;
+  const playedW = Math.floor(W * pct / 100);
+  // Repintar barras jugadas en rojo
+  const p = players[productId];
+  if (!p) return;
+  const buf = p.audioBuffer;
+  const data = buf.getChannelData(0);
+  const startSample = Math.floor(p.startSec * buf.sampleRate);
+  const endSample = Math.min(startSample + Math.floor(30 * buf.sampleRate), data.length);
+  const samples = endSample - startSample;
+  const step = Math.floor(samples / W);
+  for (let i = 0; i < Math.min(playedW, W); i++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) {
+      const idx = startSample + i * step + j;
+      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
+    }
+    const barH = Math.max(2, max * H * 0.9);
+    const y = (H - barH) / 2;
+    ctx2.fillStyle = '#e01a10';
+    ctx2.fillRect(i, y, 1, barH);
+  }
+}
+
+function updatePlayBtn(productId, playing) {
+  const btn = document.getElementById('play-' + productId);
+  if (!btn) return;
+  btn.innerHTML = playing
+    ? '<svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="3" height="8" fill="white"/><rect x="7" y="2" width="3" height="8" fill="white"/></svg>'
+    : '<svg width="12" height="12" viewBox="0 0 12 12"><polygon points="3,1 11,6 3,11" fill="white"/></svg>';
+}
+
+function seekPlayer(productId, e) {
+  const p = players[productId];
+  if (!p) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  p.pausedAt = pct * p.duration;
+  if (p.playing) {
+    p.source.stop();
+    p.playing = false;
+    playAudio(productId);
+  } else {
+    updateProgressBar(productId, pct * 100);
+  }
+}
+
+// Bloquear click derecho en toda la página para no descargar audio
+document.addEventListener('contextmenu', e => {
+  if (e.target.tagName === 'AUDIO' || e.target.closest('.track-player')) {
+    e.preventDefault();
+  }
+});
+</script>
+
 </body>
