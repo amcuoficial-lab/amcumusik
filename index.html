@@ -1381,31 +1381,40 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     return data;
   }
 
-  async function refreshAuth() {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
-      currentProfile = await loadProfile(currentUser);
-    } else {
-      currentUser = null;
-      currentProfile = null;
-    }
-    updateAuthUI();
-    if (currentProfile?.role === 'admin') renderAdminPanel();
-  }
-
+  // Auth state — unica fuente de verdad
   sb.auth.onAuthStateChange(async (event, session) => {
-    console.log('Auth event:', event);
-    if (session?.user) {
-      currentUser = session.user;
-      currentProfile = await loadProfile(currentUser);
-    } else {
+    console.log('Auth event:', event, session?.user?.email);
+    if (event === 'SIGNED_OUT' || !session) {
       currentUser = null;
       currentProfile = null;
+      const panel = document.getElementById('admin-panel');
+      if (panel) panel.remove();
+    } else if (session?.user) {
+      currentUser = session.user;
+      currentProfile = await loadProfile(currentUser);
     }
     updateAuthUI();
     if (currentProfile?.role === 'admin') renderAdminPanel();
   });
+
+  async function refreshAuth() {
+    try {
+      const { data: { session }, error } = await sb.auth.getSession();
+      if (error || !session) {
+        // Limpiar sesión corrupta
+        await sb.auth.signOut();
+        currentUser = null;
+        currentProfile = null;
+      } else if (session?.user) {
+        currentUser = session.user;
+        currentProfile = await loadProfile(currentUser);
+      }
+    } catch(e) {
+      console.log('Auth refresh error:', e);
+    }
+    updateAuthUI();
+    if (currentProfile?.role === 'admin') renderAdminPanel();
+  }
 
   function updateAuthUI() {
     const btn = document.getElementById('auth-btn');
@@ -1414,6 +1423,8 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
       const name = currentProfile?.nombre || currentUser.email?.split('@')[0] || 'Mi cuenta';
       btn.textContent = name;
       btn.style.background = currentProfile?.role === 'admin' ? '#8b0000' : 'var(--red2)';
+      // Cerrar modal si estaba abierto
+      closeAuthModal();
     } else {
       btn.textContent = 'Iniciar sesión';
       btn.style.background = 'var(--red2)';
@@ -1455,21 +1466,24 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   }
 
   async function doLogout() {
-    const { error } = await sb.auth.signOut();
-    if (error) { console.error(error); return; }
+    try {
+      await sb.auth.signOut({ scope: 'local' });
+    } catch(e) { console.log(e); }
     currentUser = null;
     currentProfile = null;
     const panel = document.getElementById('admin-panel');
     if (panel) panel.remove();
-    updateAuthUI();
     const menu = document.getElementById('account-menu');
     if (menu) menu.remove();
+    updateAuthUI();
+    // Limpiar localStorage de supabase
+    Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-')).forEach(k => localStorage.removeItem(k));
+    window.location.reload();
   }
 
   async function doLogin() {
     const email = document.getElementById('auth-email').value.trim();
     const pass  = document.getElementById('auth-pass').value;
-    const mode  = document.getElementById('auth-mode').value;
     const msg   = document.getElementById('auth-msg');
     const btn   = document.getElementById('auth-submit');
 
@@ -1478,7 +1492,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     btn.textContent = 'Cargando...';
     btn.disabled = true;
 
-    if (mode === 'login') {
+    if (currentTab === 'login') {
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
       if (error) {
         msg.textContent = error.message === 'Invalid login credentials'
