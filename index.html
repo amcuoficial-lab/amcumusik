@@ -1548,28 +1548,162 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   </script>
 
 <!-- AUTH MODAL -->
-<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid var(--border);padding:48px;min-width:360px;max-width:440px;width:90%;position:relative;">
-    <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;line-height:1;">×</button>
-    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:28px;">// Acceso AMCU</p>
-    <select id="auth-mode" onchange="toggleAuthMode()" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;padding:10px 14px;margin-bottom:20px;outline:none;letter-spacing:1px;appearance:none;">
-      <option value="login">Iniciar sesión</option>
-      <option value="register">Crear cuenta nueva</option>
-    </select>
-    <div id="auth-nombre-group" style="display:none;margin-bottom:14px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
-      <input id="auth-nombre" type="text" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+<!-- AUTH MODAL -->
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--border);padding:0;min-width:380px;max-width:440px;width:90%;position:relative;overflow:hidden;">
+    
+    <!-- Header -->
+    <div style="padding:28px 32px 0;border-bottom:1px solid var(--border);">
+      <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;line-height:1;">×</button>
+      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Acceso AMCU</p>
+      
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;">
+        <button id="tab-login" onclick="switchTab('login')" style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Iniciar sesión</button>
+        <button id="tab-register" onclick="switchTab('register')" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Crear cuenta</button>
+      </div>
     </div>
-    <div style="margin-bottom:14px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
-      <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+
+    <div style="padding:28px 32px;">
+      <!-- Google Login -->
+      <button onclick="loginWithGoogle()" style="width:100%;background:#fff;border:none;color:#111;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;transition:background .2s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#fff'">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);">O</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+
+      <!-- Nombre (solo registro) -->
+      <div id="field-nombre" style="display:none;margin-bottom:14px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
+        <input id="auth-nombre" type="text" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
+        <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Contraseña</label>
+        <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+
+      <p id="auth-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);min-height:18px;margin:8px 0 16px;"></p>
+
+      <button id="auth-submit" onclick="doLogin()" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#ff2010'" onmouseout="this.style.background='var(--red2)'">Entrar</button>
     </div>
-    <div style="margin-bottom:8px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Contraseña</label>
-      <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <p id="auth-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);margin-bottom:16px;min-height:18px;margin-top:8px;"></p>
-    <button id="auth-submit" onclick="doLogin()" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#ff2010'" onmouseout="this.style.background='var(--red2)'">Entrar</button>
   </div>
 </div>
+
+<!-- MERCADO PAGO MODAL -->
+<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--border);padding:40px;min-width:360px;max-width:440px;width:90%;position:relative;">
+    <button onclick="closeMPModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;">×</button>
+    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:24px;">// Checkout</p>
+    <div id="mp-product-info" style="background:var(--black);border:1px solid var(--border);padding:20px;margin-bottom:24px;">
+      <p id="mp-product-name" style="font-family:var(--font-display);font-size:24px;margin-bottom:4px;"></p>
+      <p id="mp-product-price" style="font-family:var(--font-display);font-size:36px;color:var(--red2);"></p>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu email</label>
+      <input id="mp-email" type="email" placeholder="Para recibir tu compra" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div style="margin-bottom:24px;">
+      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu nombre</label>
+      <input id="mp-nombre" type="text" placeholder="Nombre completo" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <!-- Botón oficial de Mercado Pago -->
+    <button onclick="initMercadoPago()" id="mp-btn" style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;" onmouseover="this.style.background='#007ab8'" onmouseout="this.style.background='#009ee3'">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#009ee3"/><path d="M8 20.5c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2v.5c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2v-.5z" fill="#fff"/></svg>
+      Pagar con Mercado Pago
+    </button>
+    <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;margin-top:12px;">Tarjetas, débito, efectivo · Pago seguro</p>
+  </div>
+</div>
+
+<script>
+// ---- AUTH TABS ----
+let currentTab = 'login';
+function switchTab(tab) {
+  currentTab = tab;
+  const isReg = tab === 'register';
+  document.getElementById('tab-login').style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)';
+  document.getElementById('tab-login').style.color = isReg ? 'var(--muted2)' : 'var(--white)';
+  document.getElementById('tab-register').style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent';
+  document.getElementById('tab-register').style.color = isReg ? 'var(--white)' : 'var(--muted2)';
+  document.getElementById('field-nombre').style.display = isReg ? 'block' : 'none';
+  document.getElementById('auth-submit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
+  document.getElementById('auth-msg').textContent = '';
+}
+
+async function loginWithGoogle() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) document.getElementById('auth-msg').textContent = error.message;
+}
+
+function toggleAuthMode() {
+  switchTab(document.getElementById('auth-mode')?.value || 'login');
+}
+
+// ---- MERCADO PAGO ----
+let mpCurrentProduct = null;
+
+function openMPModal(productName, productPrice, productId) {
+  if (!currentUser) { openAuthModal(); return; }
+  mpCurrentProduct = { name: productName, price: productPrice, id: productId };
+  document.getElementById('mp-product-name').textContent = productName;
+  document.getElementById('mp-product-price').textContent = '$' + productPrice + ' USD';
+  document.getElementById('mp-email').value = currentUser.email || '';
+  document.getElementById('mp-nombre').value = currentProfile?.nombre || '';
+  document.getElementById('mp-modal').style.display = 'flex';
+}
+
+function closeMPModal() {
+  document.getElementById('mp-modal').style.display = 'none';
+}
+
+async function initMercadoPago() {
+  const email  = document.getElementById('mp-email').value.trim();
+  const nombre = document.getElementById('mp-nombre').value.trim();
+  const btn    = document.getElementById('mp-btn');
+
+  if (!email || !nombre) { alert('Completá email y nombre'); return; }
+  if (!mpCurrentProduct) return;
+
+  btn.textContent = 'Procesando...'; btn.disabled = true;
+
+  // Guardar orden pendiente en Supabase
+  const { data: order, error } = await sb.from('orders').insert({
+    user_id: currentUser?.id || null,
+    product_id: mpCurrentProduct.id || null,
+    nombre, email,
+    monto: mpCurrentProduct.price,
+    estado: 'pendiente'
+  }).select().single();
+
+  if (error) { alert('Error: ' + error.message); btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; return; }
+
+  // Crear preferencia de pago en Mercado Pago
+  // IMPORTANTE: Reemplazá MP_ACCESS_TOKEN con tu token de Mercado Pago
+  const MP_PUBLIC_KEY = 'TU_PUBLIC_KEY_MP'; // Reemplazar
+  
+  // Por ahora redirige al checkout de MP con los datos
+  // Cuando tengas el access token del backend esto se conecta automático
+  const mpURL = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=pending&payer_email=${encodeURIComponent(email)}`;
+  
+  // Mostrar instrucciones de pago por ahora
+  btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false;
+  closeMPModal();
+  
+  alert(`✓ Orden registrada #${order.id.slice(0,8)}\n\nPara completar la integración de Mercado Pago necesitás tu Access Token.\n\nTe contactaremos a ${email} para confirmar el pago.`);
+}
+</script>
 </body>
