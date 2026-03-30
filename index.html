@@ -1538,10 +1538,18 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Cargando...</div>';
 
   try {
-    const { data, error } = await sb.from('products')
-      .select('*')
-      .eq('activo', true)
-      .order('created_at', {ascending: false});
+    // Usar fetch directo a la REST API de Supabase
+    const res = await fetch(
+      'https://anvkreqmsbzsfaepudlx.supabase.co/rest/v1/products?activo=eq.true&order=created_at.desc',
+      {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
+        }
+      }
+    );
+    const data = await res.json();
+    const error = res.ok ? null : data;
 
     if (error) throw error;
 
