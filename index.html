@@ -530,22 +530,8 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     <div class="s-label reveal">// 002 — Tienda</div>
     <h2 class="s-title reveal">Sonidos que<br>hacen historia</h2>
   </div>
-  <div class="store-grid reveal" style="grid-template-columns:1fr 1fr;">
-    <div class="product-card">
-      <div class="p-badge">DISPONIBLE</div>
-      <div class="p-type">Sample Pack</div>
-      <div class="p-name">Minimal Bass 01<br><span style="font-size:16px;color:var(--muted2);letter-spacing:2px;">by AMCU</span></div>
-      <p class="p-desc">El primer pack oficial de AMCU. Samples de Minimal Bass diseñados para darle carácter y profundidad a tus producciones. Kicks, basses, texturas y loops listos para usar en Ableton.</p>
-      <div class="p-footer">
-        <div class="p-price">$20 <span>USD</span></div>
-        <button class="btn-buy">Comprar</button>
-      </div>
-    </div>
-    <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
-      <div class="p-type">Próximamente</div>
-      <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más packs en camino</div>
-      <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder a los próximos lanzamientos.</p>
-    </div>
+  <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));">
+    <div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Cargando productos...</div>
   </div>
 </section>
 
@@ -1541,9 +1527,55 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     renderCal();
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  async function loadStore() {
+  const grid = document.getElementById('store-grid');
+  if (!grid) return;
+
+  const { data, error } = await sb.from('products').select('*').eq('activo', true).order('created_at', {ascending: false});
+  
+  if (error || !data || data.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Próximamente — Sumate al club para ser el primero en acceder</div>';
+    return;
+  }
+
+  const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
+
+  grid.innerHTML = data.map(p => `
+    <div class="product-card">
+      <div class="p-badge">${p.tipo === 'track_unreleased' ? 'UNRELEASED' : p.tipo === 'sample_pack' ? 'DISPONIBLE' : 'BUNDLE'}</div>
+      <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
+      <div class="p-name">${p.nombre}</div>
+      <p class="p-desc">${p.descripcion || ''}</p>
+      ${p.archivo_url ? `
+      <div style="margin-bottom:20px;">
+        <audio controls style="width:100%;filter:invert(1);height:32px;opacity:.7;">
+          <source src="${p.archivo_url}" type="audio/wav">
+        </audio>
+      </div>` : ''}
+      <div class="p-footer">
+        <div class="p-price">$${p.precio} <span>USD</span></div>
+        <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
+      </div>
+    </div>
+  `).join('') + `
+    <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
+      <div class="p-type">Próximamente</div>
+      <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
+      <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
+    </div>
+  `;
+
+  // Re-aplicar observer para animaciones reveal
+  document.querySelectorAll('.product-card').forEach(el => {
+    el.addEventListener('mouseenter', () => document.getElementById('cur')?.classList.add('big'));
+    el.addEventListener('mouseleave', () => document.getElementById('cur')?.classList.remove('big'));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     refreshAuth();
     loadBlockedSlots();
+    loadStore();
   });
   </script>
 
