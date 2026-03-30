@@ -500,8 +500,9 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   setTimeout(() => logo.classList.add('glowing'), 1700);
 
   // Progress bar
+  // Velocidad aumentada — termina en ~1.5 segundos
   const interval = setInterval(() => {
-    pct += Math.random() * 6 + 2;
+    pct += Math.random() * 12 + 8;
     if (pct > 100) pct = 100;
     fill.style.width = pct + '%';
 
@@ -512,10 +513,15 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     if (pct >= 100) {
       clearInterval(interval);
       label.textContent = '// enter';
-      // Small pause then exit
-      setTimeout(exitIntro, 600);
+      setTimeout(exitIntro, 400);
     }
-  }, 60);
+  }, 40);
+  
+  // Failsafe — si tarda más de 3 segundos, forzar salida
+  setTimeout(() => {
+    clearInterval(interval);
+    exitIntro();
+  }, 3000);
 
   function exitIntro() {
     intro.classList.add('exit');
@@ -2806,8 +2812,9 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   setTimeout(() => logo.classList.add('glowing'), 1700);
 
   // Progress bar
+  // Velocidad aumentada — termina en ~1.5 segundos
   const interval = setInterval(() => {
-    pct += Math.random() * 6 + 2;
+    pct += Math.random() * 12 + 8;
     if (pct > 100) pct = 100;
     fill.style.width = pct + '%';
 
@@ -2818,10 +2825,15 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     if (pct >= 100) {
       clearInterval(interval);
       label.textContent = '// enter';
-      // Small pause then exit
-      setTimeout(exitIntro, 600);
+      setTimeout(exitIntro, 400);
     }
-  }, 60);
+  }, 40);
+  
+  // Failsafe — si tarda más de 3 segundos, forzar salida
+  setTimeout(() => {
+    clearInterval(interval);
+    exitIntro();
+  }, 3000);
 
   function exitIntro() {
     intro.classList.add('exit');
