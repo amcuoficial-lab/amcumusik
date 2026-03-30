@@ -1260,7 +1260,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
       currentProfile = await loadProfile(currentUser);
     }
     updateAuthUI();
-    if (currentProfile?.role === 'admin') renderAdminPanel();
+    if (currentProfile && currentProfile.role === 'admin') renderAdminPanel();
   });
 
   async function refreshAuth() {
@@ -1279,7 +1279,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
       console.log('Auth refresh error:', e);
     }
     updateAuthUI();
-    if (currentProfile?.role === 'admin') renderAdminPanel();
+    if (currentProfile && currentProfile.role === 'admin') renderAdminPanel();
   }
 
   function updateAuthUI() {
@@ -1288,7 +1288,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     if (currentUser) {
       const name = currentProfile?.nombre || currentUser.email?.split('@')[0] || 'Mi cuenta';
       btn.textContent = name;
-      btn.style.background = currentProfile?.role === 'admin' ? '#8b0000' : 'var(--red2)';
+      btn.style.background = currentProfile && currentProfile.role === 'admin' ? '#8b0000' : 'var(--red2)';
       // Cerrar modal si estaba abierto
       closeAuthModal();
     } else {
@@ -1322,8 +1322,8 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     menu.style.cssText = `position:fixed;top:${rect.bottom+8}px;right:${window.innerWidth-rect.right}px;z-index:10000;background:#0a0a0a;border:1px solid var(--border);min-width:200px;`;
     menu.innerHTML = `
       <div style="padding:16px;border-bottom:1px solid var(--border);">
-        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser?.email}</p>
-        ${currentProfile?.role === 'admin' ? '<p style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);margin-top:4px;">ADMIN</p>' : ''}
+        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser && currentUser.email ? currentUser.email : ''}</p>
+        ${currentProfile && currentProfile.role === 'admin' ? '<p style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);margin-top:4px;">ADMIN</p>' : ''}
       </div>
       <button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
     `;
@@ -1645,6 +1645,204 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   </script>
 
+<script>
+// ============ AUTH COMPLETO ============
+var currentTab = 'login';
+
+function switchTab(tab) {
+  currentTab = tab;
+  var isReg = tab === 'register';
+  var tl = document.getElementById('tab-login');
+  var tr = document.getElementById('tab-register');
+  var fn = document.getElementById('field-nombre');
+  var sb = document.getElementById('auth-submit');
+  if(tl) { tl.style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)'; tl.style.color = isReg ? '#555' : 'var(--white)'; }
+  if(tr) { tr.style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent'; tr.style.color = isReg ? 'var(--white)' : '#555'; }
+  if(fn) fn.style.display = isReg ? 'block' : 'none';
+  if(sb) sb.textContent = isReg ? 'Crear cuenta' : 'Entrar';
+  var msg = document.getElementById('auth-msg');
+  if(msg) msg.textContent = '';
+}
+
+function openAuthModal() {
+  if (window._currentUser) { showAccountMenu(); return; }
+  var m = document.getElementById('auth-modal');
+  if(m) { m.style.display = 'flex'; }
+  setTimeout(function(){ var e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
+  var msg = document.getElementById('auth-msg');
+  if(msg) msg.textContent = '';
+}
+
+function closeAuthModal() {
+  var m = document.getElementById('auth-modal');
+  if(m) m.style.display = 'none';
+}
+
+async function loginWithGoogle() {
+  var btn = document.getElementById('google-btn');
+  if(btn) btn.textContent = 'Conectando...';
+  try {
+    var sb = window._sb;
+    if(!sb) { alert('Error: Supabase no cargó. Recargá la página.'); return; }
+    var redirectTo = window.location.origin + window.location.pathname;
+    var result = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { 
+        redirectTo: redirectTo,
+        queryParams: { access_type: 'offline', prompt: 'select_account' }
+      }
+    });
+    if(result.error) throw result.error;
+  } catch(e) {
+    console.error('Google auth error:', e);
+    var msg = document.getElementById('auth-msg');
+    if(msg) msg.textContent = 'Error con Google: ' + e.message;
+    if(btn) btn.textContent = 'Continuar con Google';
+  }
+}
+
+async function doLogin() {
+  var email = document.getElementById('auth-email')?.value?.trim();
+  var pass  = document.getElementById('auth-pass')?.value;
+  var msg   = document.getElementById('auth-msg');
+  var btn   = document.getElementById('auth-submit');
+  if(!email || !pass) { if(msg) msg.textContent = 'Completá email y contraseña'; return; }
+  if(msg) msg.textContent = '';
+  if(btn) { btn.textContent = 'Cargando...'; btn.disabled = true; }
+  try {
+    var sb = window._sb;
+    if(!sb) throw new Error('Supabase no cargó');
+    var result;
+    if(currentTab === 'register') {
+      var nombre = document.getElementById('auth-nombre')?.value?.trim() || '';
+      result = await sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
+      if(result.error) throw result.error;
+      if(msg) { msg.style.color = '#3fff2a'; msg.textContent = '¡Cuenta creada! Revisá tu email.'; }
+      if(btn) { btn.textContent = 'Crear cuenta'; btn.disabled = false; }
+      return;
+    } else {
+      result = await sb.auth.signInWithPassword({ email, password: pass });
+      if(result.error) throw result.error;
+      closeAuthModal();
+    }
+  } catch(e) {
+    var errMsg = e.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : e.message;
+    if(msg) { msg.style.color = 'var(--red2)'; msg.textContent = errMsg; }
+  }
+  if(btn) { btn.textContent = currentTab === 'register' ? 'Crear cuenta' : 'Entrar'; btn.disabled = false; }
+}
+
+// ============ MERCADO PAGO ============
+function openMPModal(name, price, id) {
+  window.mpCurrentProduct = { name: name, price: price, id: id };
+  var pn = document.getElementById('mp-product-name');
+  var pp = document.getElementById('mp-product-price');
+  var pe = document.getElementById('mp-email');
+  if(pn) pn.textContent = name;
+  if(pp) pp.textContent = '$' + price + ' USD';
+  if(pe && window._currentUser) pe.value = window._currentUser.email || '';
+  var m = document.getElementById('mp-modal');
+  if(m) m.style.display = 'flex';
+}
+
+function closeMPModal() {
+  var m = document.getElementById('mp-modal');
+  if(m) m.style.display = 'none';
+}
+
+async function initMercadoPago() {
+  var email  = document.getElementById('mp-email')?.value?.trim();
+  var nombre = document.getElementById('mp-nombre')?.value?.trim();
+  var btn    = document.getElementById('mp-btn');
+  if(!email || !nombre) { alert('Completá email y nombre'); return; }
+  if(!window.mpCurrentProduct) return;
+  if(btn) { btn.textContent = 'Procesando...'; btn.disabled = true; }
+  try {
+    var sb = window._sb;
+    // Guardar orden en Supabase
+    var orderRes = await sb.from('orders').insert({
+      user_id: window._currentUser ? window._currentUser.id : null || null,
+      product_id: window.mpCurrentProduct.id || null,
+      nombre, email,
+      monto: window.mpCurrentProduct.price,
+      estado: 'pendiente'
+    }).select().single();
+    if(orderRes.error) throw orderRes.error;
+    // Crear preferencia MP
+    var mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
+      },
+      body: JSON.stringify({
+        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: parseFloat(window.mpCurrentProduct.price), currency_id: 'USD' }],
+        payer: { email, name: nombre },
+        external_reference: orderRes.data.id,
+        back_urls: {
+          success: window.location.origin + '?pago=ok&order=' + orderRes.data.id,
+          failure: window.location.origin + '?pago=error',
+          pending: window.location.origin + '?pago=pendiente'
+        },
+        auto_return: 'approved'
+      })
+    });
+    var mpData = await mpRes.json();
+    if(!mpData.init_point) throw new Error(mpData.message || 'Error MP');
+    closeMPModal();
+    window.location.href = mpData.init_point;
+  } catch(e) {
+    console.error('MP error:', e);
+    alert('Error: ' + e.message);
+    if(btn) { btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; }
+  }
+}
+
+// Verificar resultado pago al volver de MP
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var pago = params.get('pago');
+  if(!pago) return;
+  history.replaceState(null,'',window.location.pathname);
+  if(pago === 'ok') {
+    setTimeout(function(){
+      var d = document.createElement('div');
+      d.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
+      d.innerHTML='<div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:360px;"><p style="font-family:var(--font-display);font-size:56px;color:#3fff2a;margin-bottom:12px;">OK</p><p style="font-family:var(--font-display);font-size:26px;letter-spacing:2px;margin-bottom:10px;">PAGO EXITOSO</p><p style="font-family:var(--font-mono);font-size:11px;color:#666;margin-bottom:24px;">Revisá tu email.</p></div>';
+      d.onclick = function(){ d.remove(); };
+      document.body.appendChild(d);
+    }, 500);
+  }
+})();
+
+// Cuenta menu
+function showAccountMenu() {
+  var existing = document.getElementById('account-menu');
+  if(existing){ existing.remove(); return; }
+  var btn = document.getElementById('auth-btn');
+  if(!btn) return;
+  var rect = btn.getBoundingClientRect();
+  var menu = document.createElement('div');
+  menu.id = 'account-menu';
+  menu.style.cssText = 'position:fixed;top:'+(rect.bottom+6)+'px;right:'+(window.innerWidth-rect.right)+'px;z-index:10000;background:#0a0a0a;border:1px solid #222;min-width:200px;';
+  menu.innerHTML = '<div style="padding:14px 16px;border-bottom:1px solid #151515;"><p style="font-family:var(--font-mono);font-size:10px;color:#555;">'+(window._currentUser && window._currentUser.email ? window._currentUser.email : '')+'</p>'+(window._currentProfile && window._currentProfile.role==='admin'?'<p style="font-family:var(--font-mono);font-size:9px;color:var(--red2);margin-top:4px;letter-spacing:1px;">ADMIN</p>':'')+'</div><button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;cursor:pointer;text-align:left;">Cerrar sesión</button>';
+  document.body.appendChild(menu);
+  setTimeout(function(){ document.addEventListener('click', function rm(e){ if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',rm); } }); }, 100);
+}
+
+async function doLogout() {
+  var sb = window._sb;
+  if(sb) await sb.auth.signOut();
+  window._currentUser = null;
+  window._currentProfile = null;
+  var btn = document.getElementById('auth-btn');
+  if(btn) { btn.textContent = 'Iniciar sesión'; btn.style.background = 'var(--red2)'; }
+  var panel = document.getElementById('admin-panel');
+  if(panel) panel.remove();
+  window.location.reload();
+}
+</script>
+
 <!-- AUTH MODAL -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
   <div style="background:#0a0a0a;border:1px solid #222;width:90%;max-width:420px;position:relative;overflow:hidden;">
@@ -1747,200 +1945,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   </div>
 </div>
 
-<script>
-// ============ AUTH COMPLETO ============
-var currentTab = 'login';
 
-function switchTab(tab) {
-  currentTab = tab;
-  var isReg = tab === 'register';
-  var tl = document.getElementById('tab-login');
-  var tr = document.getElementById('tab-register');
-  var fn = document.getElementById('field-nombre');
-  var sb = document.getElementById('auth-submit');
-  if(tl) { tl.style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)'; tl.style.color = isReg ? '#555' : 'var(--white)'; }
-  if(tr) { tr.style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent'; tr.style.color = isReg ? 'var(--white)' : '#555'; }
-  if(fn) fn.style.display = isReg ? 'block' : 'none';
-  if(sb) sb.textContent = isReg ? 'Crear cuenta' : 'Entrar';
-  var msg = document.getElementById('auth-msg');
-  if(msg) msg.textContent = '';
-}
-
-function openAuthModal() {
-  if (window._currentUser) { showAccountMenu(); return; }
-  var m = document.getElementById('auth-modal');
-  if(m) { m.style.display = 'flex'; }
-  setTimeout(function(){ var e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
-  var msg = document.getElementById('auth-msg');
-  if(msg) msg.textContent = '';
-}
-
-function closeAuthModal() {
-  var m = document.getElementById('auth-modal');
-  if(m) m.style.display = 'none';
-}
-
-async function loginWithGoogle() {
-  var btn = document.getElementById('google-btn');
-  if(btn) btn.textContent = 'Conectando...';
-  try {
-    var sb = window._sb;
-    if(!sb) { alert('Error: Supabase no cargó. Recargá la página.'); return; }
-    var redirectTo = window.location.origin + window.location.pathname;
-    var result = await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: { 
-        redirectTo: redirectTo,
-        queryParams: { access_type: 'offline', prompt: 'select_account' }
-      }
-    });
-    if(result.error) throw result.error;
-  } catch(e) {
-    console.error('Google auth error:', e);
-    var msg = document.getElementById('auth-msg');
-    if(msg) msg.textContent = 'Error con Google: ' + e.message;
-    if(btn) btn.textContent = 'Continuar con Google';
-  }
-}
-
-async function doLogin() {
-  var email = document.getElementById('auth-email')?.value?.trim();
-  var pass  = document.getElementById('auth-pass')?.value;
-  var msg   = document.getElementById('auth-msg');
-  var btn   = document.getElementById('auth-submit');
-  if(!email || !pass) { if(msg) msg.textContent = 'Completá email y contraseña'; return; }
-  if(msg) msg.textContent = '';
-  if(btn) { btn.textContent = 'Cargando...'; btn.disabled = true; }
-  try {
-    var sb = window._sb;
-    if(!sb) throw new Error('Supabase no cargó');
-    var result;
-    if(currentTab === 'register') {
-      var nombre = document.getElementById('auth-nombre')?.value?.trim() || '';
-      result = await sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
-      if(result.error) throw result.error;
-      if(msg) { msg.style.color = '#3fff2a'; msg.textContent = '¡Cuenta creada! Revisá tu email.'; }
-      if(btn) { btn.textContent = 'Crear cuenta'; btn.disabled = false; }
-      return;
-    } else {
-      result = await sb.auth.signInWithPassword({ email, password: pass });
-      if(result.error) throw result.error;
-      closeAuthModal();
-    }
-  } catch(e) {
-    var errMsg = e.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : e.message;
-    if(msg) { msg.style.color = 'var(--red2)'; msg.textContent = errMsg; }
-  }
-  if(btn) { btn.textContent = currentTab === 'register' ? 'Crear cuenta' : 'Entrar'; btn.disabled = false; }
-}
-
-// ============ MERCADO PAGO ============
-function openMPModal(name, price, id) {
-  window.mpCurrentProduct = { name, price, id };
-  var pn = document.getElementById('mp-product-name');
-  var pp = document.getElementById('mp-product-price');
-  var pe = document.getElementById('mp-email');
-  if(pn) pn.textContent = name;
-  if(pp) pp.textContent = '$' + price + ' USD';
-  if(pe && window._currentUser) pe.value = window._currentUser.email || '';
-  var m = document.getElementById('mp-modal');
-  if(m) m.style.display = 'flex';
-}
-
-function closeMPModal() {
-  var m = document.getElementById('mp-modal');
-  if(m) m.style.display = 'none';
-}
-
-async function initMercadoPago() {
-  var email  = document.getElementById('mp-email')?.value?.trim();
-  var nombre = document.getElementById('mp-nombre')?.value?.trim();
-  var btn    = document.getElementById('mp-btn');
-  if(!email || !nombre) { alert('Completá email y nombre'); return; }
-  if(!window.mpCurrentProduct) return;
-  if(btn) { btn.textContent = 'Procesando...'; btn.disabled = true; }
-  try {
-    var sb = window._sb;
-    // Guardar orden en Supabase
-    var orderRes = await sb.from('orders').insert({
-      user_id: window._currentUser?.id || null,
-      product_id: window.mpCurrentProduct.id || null,
-      nombre, email,
-      monto: window.mpCurrentProduct.price,
-      estado: 'pendiente'
-    }).select().single();
-    if(orderRes.error) throw orderRes.error;
-    // Crear preferencia MP
-    var mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
-      },
-      body: JSON.stringify({
-        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: parseFloat(window.mpCurrentProduct.price), currency_id: 'USD' }],
-        payer: { email, name: nombre },
-        external_reference: orderRes.data.id,
-        back_urls: {
-          success: window.location.origin + '?pago=ok&order=' + orderRes.data.id,
-          failure: window.location.origin + '?pago=error',
-          pending: window.location.origin + '?pago=pendiente'
-        },
-        auto_return: 'approved'
-      })
-    });
-    var mpData = await mpRes.json();
-    if(!mpData.init_point) throw new Error(mpData.message || 'Error MP');
-    closeMPModal();
-    window.location.href = mpData.init_point;
-  } catch(e) {
-    console.error('MP error:', e);
-    alert('Error: ' + e.message);
-    if(btn) { btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; }
-  }
-}
-
-// Verificar resultado pago al volver de MP
-(function(){
-  var params = new URLSearchParams(window.location.search);
-  var pago = params.get('pago');
-  if(!pago) return;
-  history.replaceState(null,'',window.location.pathname);
-  if(pago === 'ok') {
-    setTimeout(function(){
-      var d = document.createElement('div');
-      d.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
-      d.innerHTML='<div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:360px;"><div style="font-family:var(--font-display);font-size:56px;color:#3fff2a;margin-bottom:12px;">✓</div><p style="font-family:var(--font-display);font-size:26px;letter-spacing:2px;margin-bottom:10px;">PAGO EXITOSO</p><p style="font-family:var(--font-mono);font-size:11px;color:#666;margin-bottom:24px;">Revisá tu email — te enviamos el link de descarga.</p><button onclick="this.closest('div[style]').remove()" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;">Cerrar</button></div>';
-      document.body.appendChild(d);
-    }, 500);
-  }
-})();
-
-// Cuenta menu
-function showAccountMenu() {
-  var existing = document.getElementById('account-menu');
-  if(existing){ existing.remove(); return; }
-  var btn = document.getElementById('auth-btn');
-  if(!btn) return;
-  var rect = btn.getBoundingClientRect();
-  var menu = document.createElement('div');
-  menu.id = 'account-menu';
-  menu.style.cssText = 'position:fixed;top:'+(rect.bottom+6)+'px;right:'+(window.innerWidth-rect.right)+'px;z-index:10000;background:#0a0a0a;border:1px solid #222;min-width:200px;';
-  menu.innerHTML = '<div style="padding:14px 16px;border-bottom:1px solid #151515;"><p style="font-family:var(--font-mono);font-size:10px;color:#555;">'+(window._currentUser?.email||'')+'</p>'+(window._currentProfile?.role==='admin'?'<p style="font-family:var(--font-mono);font-size:9px;color:var(--red2);margin-top:4px;letter-spacing:1px;">ADMIN</p>':'')+'</div><button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;cursor:pointer;text-align:left;">Cerrar sesión</button>';
-  document.body.appendChild(menu);
-  setTimeout(function(){ document.addEventListener('click', function rm(e){ if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',rm); } }); }, 100);
-}
-
-async function doLogout() {
-  var sb = window._sb;
-  if(sb) await sb.auth.signOut();
-  window._currentUser = null;
-  window._currentProfile = null;
-  var btn = document.getElementById('auth-btn');
-  if(btn) { btn.textContent = 'Iniciar sesión'; btn.style.background = 'var(--red2)'; }
-  var panel = document.getElementById('admin-panel');
-  if(panel) panel.remove();
-  window.location.reload();
-}
-</script>
 </body>
