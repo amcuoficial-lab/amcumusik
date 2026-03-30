@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMCU — Bass House Producer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -322,30 +320,221 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 
 
 <!-- INTRO SCREEN -->
-<div id="intro" style="position:fixed;inset:0;z-index:99999;background:#020202;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
-  <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" style="width:280px;filter:drop-shadow(0 0 20px rgba(192,23,15,.4));" alt="AMCU">
-  <div style="width:200px;height:1px;background:#111;overflow:hidden;">
-    <div id="ibar" style="height:100%;background:linear-gradient(90deg,#e01a10,#9b6fff);width:0%;transition:width .05s;"></div>
+<div id="intro">
+  <div id="intro-bg"></div>
+  <div id="intro-lines"></div>
+  <div id="intro-content">
+    <img id="intro-logo" src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU">
+    <div id="intro-bar"><div id="intro-bar-fill"></div></div>
+    <p id="intro-label">// loading</p>
   </div>
 </div>
+<style>
+#intro {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #020202;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#intro-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, #1a0000 0%, transparent 70%);
+  animation: introPulse 2s ease-in-out infinite alternate;
+}
+@keyframes introPulse {
+  from { opacity: 0.4; transform: scale(1); }
+  to   { opacity: 1;   transform: scale(1.15); }
+}
+#intro-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(224,26,16,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(224,26,16,0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridFade 1s ease forwards;
+}
+@keyframes gridFade { from{opacity:0} to{opacity:1} }
+
+#intro-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+#intro-logo {
+  width: min(520px, 80vw);
+  opacity: 0;
+  filter: drop-shadow(0 0 0px rgba(224,26,16,0))
+          drop-shadow(0 0 0px rgba(155,111,255,0));
+  animation: logoAppear 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
+}
+@keyframes logoAppear {
+  0%   { opacity:0; transform: scale(0.6) translateY(30px);
+         filter: drop-shadow(0 0 0px rgba(224,26,16,0)) drop-shadow(0 0 0px rgba(155,111,255,0)); }
+  60%  { opacity:1; transform: scale(1.06) translateY(-4px);
+         filter: drop-shadow(0 0 40px rgba(224,26,16,.6)) drop-shadow(0 0 80px rgba(155,111,255,.4)); }
+  100% { opacity:1; transform: scale(1) translateY(0);
+         filter: drop-shadow(0 0 20px rgba(224,26,16,.35)) drop-shadow(0 0 50px rgba(155,111,255,.2)); }
+}
+
+/* logo idle glow pulse after appear */
+#intro-logo.glowing {
+  animation: logoAppear 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s forwards,
+             logoGlow 1.8s ease-in-out 1.7s infinite alternate;
+}
+@keyframes logoGlow {
+  from { filter: drop-shadow(0 0 18px rgba(224,26,16,.3)) drop-shadow(0 0 40px rgba(155,111,255,.18)); }
+  to   { filter: drop-shadow(0 0 36px rgba(224,26,16,.7)) drop-shadow(0 0 70px rgba(155,111,255,.45)) drop-shadow(0 0 100px rgba(200,245,66,.15)); }
+}
+
+#intro-bar {
+  width: min(320px, 70vw);
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  position: relative;
+  opacity: 0;
+  animation: fadeIn .4s ease 1.4s forwards;
+}
+#intro-bar-fill {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background: linear-gradient(90deg, var(--red2,#e01a10), #b388ff);
+  width: 0%;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 8px rgba(224,26,16,.8);
+}
+#intro-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  opacity: 0;
+  animation: fadeIn .4s ease 1.5s forwards;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* EXIT animation */
+#intro.exit {
+  animation: introExit 0.9s cubic-bezier(0.7,0,1,1) forwards;
+}
+@keyframes introExit {
+  0%   { opacity:1; transform: scale(1); }
+  40%  { opacity:1; transform: scale(1.04); }
+  100% { opacity:0; transform: scale(1.12); pointer-events:none; }
+}
+
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #060606;
+  border: 1px solid #1e1e1e;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.player-header {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #111;
+}
+.play-btn {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #111; border: none; border-right: 1px solid #1e1e1e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.play-btn:hover { background: var(--red2); }
+.play-btn svg { pointer-events: none; }
+.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
+.player-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
+.player-time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
+  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
+  display: flex; align-items: center;
+}
+.waveform-wrap {
+  position: relative; height: 48px; cursor: pointer;
+  background: #030303; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.waveform-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--red2); pointer-events: none;
+  box-shadow: 0 0 6px var(--red2);
+  transition: left .1s linear;
+}
+.preview-lock {
+  position: absolute; bottom: 6px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  color: #333; text-transform: uppercase; pointer-events: none;
+}
+.player-loading {
+  position: absolute; inset: 0; background: #060606;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
+}
+</style>
 <script>
 (function(){
-  var pct=0;
-  var t=setInterval(function(){
-    pct+=15;
-    if(pct>100)pct=100;
-    document.getElementById('ibar').style.width=pct+'%';
-    if(pct>=100){
-      clearInterval(t);
-      setTimeout(function(){
-        var el=document.getElementById('intro');
-        if(el){el.style.opacity='0';el.style.transition='opacity .4s';setTimeout(function(){el.style.display='none';document.body.style.overflow='';},400);}
-      },200);
+  const intro = document.getElementById('intro');
+  const logo  = document.getElementById('intro-logo');
+  const fill  = document.getElementById('intro-bar-fill');
+  const label = document.getElementById('intro-label');
+
+  const labels = ['// loading', '// initializing', '// bass house', '// amcu'];
+  let li = 0, pct = 0;
+
+  // Start glow pulse after logo appears
+  setTimeout(() => logo.classList.add('glowing'), 1700);
+
+  // Progress bar
+  const interval = setInterval(() => {
+    pct += Math.random() * 14 + 8;
+    if (pct > 100) pct = 100;
+    fill.style.width = pct + '%';
+
+    if (pct > 25 && li < 1)  { li=1; label.textContent = labels[1]; }
+    if (pct > 55 && li < 2)  { li=2; label.textContent = labels[2]; }
+    if (pct > 80 && li < 3)  { li=3; label.textContent = labels[3]; }
+
+    if (pct >= 100) {
+      clearInterval(interval);
+      label.textContent = '// enter';
+      // Small pause then exit
+      setTimeout(exitIntro, 300);
     }
-  },50);
-  // Failsafe 2s
-  setTimeout(function(){var el=document.getElementById('intro');if(el)el.style.display='none';document.body.style.overflow='';},2000);
-  document.body.style.overflow='hidden';
+  }, 40);
+  setTimeout(() => { clearInterval(interval); exitIntro(); }, 2500);
+
+  function exitIntro() {
+    intro.classList.add('exit');
+    setTimeout(() => {
+      intro.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 900);
+  }
+
+  // Also allow click to skip
+  intro.addEventListener('click', () => {
+    clearInterval(interval);
+    fill.style.width = '100%';
+    label.textContent = '// enter';
+    setTimeout(exitIntro, 300);
+  });
+
+  document.body.style.overflow = 'hidden';
 })();
 </script>
 
@@ -379,7 +568,7 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     </div>
   </div>
   <div class="hero-right">
-    <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/hero.jpg" alt="AMCU en vivo" class="hero-photo">
+    <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/hero.jpg" alt="AMCU en vivo" class="hero-photo" loading="lazy">
   </div>
   <div class="stats-bar" style="grid-column:1/-1">
     <div class="stat"><span class="stat-n">50+</span><span class="stat-l">Tracks producidos</span></div>
@@ -440,8 +629,8 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
       </div>
     </div>
     <div class="about-photos reveal">
-      <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/photo1.jpg" class="about-photo" alt="AMCU">
-      <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/photo2.jpg" class="about-photo" alt="AMCU">
+      <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/photo1.jpg" class="about-photo" loading="lazy" alt="AMCU">
+      <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/photo2.jpg" class="about-photo" loading="lazy" alt="AMCU">
     </div>
   </div>
 </section>
@@ -452,7 +641,28 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     <div class="s-label reveal">// 002 — Tienda</div>
     <h2 class="s-title reveal">Sonidos que<br>hacen historia</h2>
   </div>
-  <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></div>
+  <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));">
+    <div class="product-card" id="pc-ac444f3a-582f-47cf-8633-1da9b97f6a2f">
+      <div class="p-badge">DISPONIBLE</div>
+      <div class="p-type">Sample Pack</div>
+      <div class="p-name">Minimal Bass 01 by AMCU</div>
+      <p class="p-desc">El primer pack oficial de AMCU. Samples de Minimal Bass para darle carácter y profundidad a tus producciones.</p>
+      <div class="p-footer"><div class="p-price">$20 <span>USD</span></div><button class="btn-buy" onclick="openMPModal('Minimal Bass 01 by AMCU',20,'ac444f3a-582f-47cf-8633-1da9b97f6a2f')">Comprar</button></div>
+    </div>
+    <div class="product-card" id="pc-68b844d9-5de6-4a36-b785-ac196d865fc3">
+      <div class="p-badge" style="background:var(--purple)">UNRELEASED</div>
+      <div class="p-type">Track Unreleased</div>
+      <div class="p-name">AMCU, CAITTO — JACK</div>
+      <p class="p-desc">Track unreleased exclusivo de AMCU. Sonido diseñado para destruir dancefloors.</p>
+      <div id="player-zone-68b844d9-5de6-4a36-b785-ac196d865fc3"></div>
+      <div class="p-footer"><div class="p-price">$5 <span>USD</span></div><button class="btn-buy" onclick="openMPModal('AMCU, CAITTO - JACK',5,'68b844d9-5de6-4a36-b785-ac196d865fc3')">Comprar</button></div>
+    </div>
+    <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
+      <div class="p-type">Próximamente</div>
+      <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
+      <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
+    </div>
+  </div>
 </section>
 
 
@@ -1034,7 +1244,6 @@ Reglas:
 - Máximo 150 palabras por respuesta — conciso y al punto
 - Si la pregunta no es de producción musical, redirigís al tema`;
 
-  const GROQ_KEY = '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';
   let chatHistory = [];
 
   async function sendChat() {
@@ -1045,25 +1254,22 @@ Reglas:
     input.value = '';
     document.getElementById('chat-send').disabled = true;
 
+    // Agregar mensaje usuario
     addMsg(msg, 'u');
     chatHistory.push({ role: 'user', content: msg });
 
+    // Typing indicator
     const typingId = addTyping();
 
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + GROQ_KEY
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 300,
-          messages: [
-            { role: 'system', content: AMCU_SYSTEM },
-            ...chatHistory
-          ]
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: AMCU_SYSTEM,
+          messages: chatHistory
         })
       });
 
@@ -2618,9 +2824,8 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   setTimeout(() => logo.classList.add('glowing'), 1700);
 
   // Progress bar
-  // Velocidad aumentada — termina en ~1.5 segundos
   const interval = setInterval(() => {
-    pct += Math.random() * 12 + 8;
+    pct += Math.random() * 14 + 8;
     if (pct > 100) pct = 100;
     fill.style.width = pct + '%';
 
@@ -2631,15 +2836,11 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     if (pct >= 100) {
       clearInterval(interval);
       label.textContent = '// enter';
-      setTimeout(exitIntro, 400);
+      // Small pause then exit
+      setTimeout(exitIntro, 300);
     }
   }, 40);
-  
-  // Failsafe — si tarda más de 3 segundos, forzar salida
-  setTimeout(() => {
-    clearInterval(interval);
-    exitIntro();
-  }, 3000);
+  setTimeout(() => { clearInterval(interval); exitIntro(); }, 2500);
 
   function exitIntro() {
     intro.classList.add('exit');
@@ -2660,1776 +2861,5 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   document.body.style.overflow = 'hidden';
 })();
 </script>
-
-<div class="cursor" id="cur"></div>
-
-<!-- NAV -->
-<nav id="nav">
-  <a href="#" class="nav-logo">
-    <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU">
-  </a>
-  <ul class="nav-links">
-    <li><a href="#about">Sobre mí</a></li>
-    <li><a href="#musica">Música</a></li>
-    <li><a href="#store">Tienda</a></li>
-    <li><a href="#ghost">Ghost</a></li>
-    <li><a href="#membership">Membresía</a></li>
-    <li><a href="#clases">Clases</a></li>
-  </ul>
-  <button class="nav-cta" id="auth-btn" onclick="openAuthModal()">Iniciar sesión</button>
-</nav>
-
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-left">
-    <p class="hero-tag">// <span>Bass House</span> · Ghost Producer · DJ</p>
-    <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU" class="hero-logo">
-    <p class="hero-desc">Tracks, sample packs y producción personalizada. Sonidos diseñados para destruir dancefloors y elevar tu carrera.</p>
-    <div class="hero-actions">
-      <button class="btn-main">Ver tienda</button>
-      <button class="btn-outline">Producer Club</button>
-    </div>
-  </div>
-  <div class="hero-right">
-    <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/hero.jpg" alt="AMCU en vivo" class="hero-photo">
-  </div>
-  <div class="stats-bar" style="grid-column:1/-1">
-    <div class="stat"><span class="stat-n">50+</span><span class="stat-l">Tracks producidos</span></div>
-    <div class="stat"><span class="stat-n">130</span><span class="stat-l">BPM promedio</span></div>
-    <div class="stat"><span class="stat-n">∞</span><span class="stat-l">Horas en el estudio</span></div>
-  </div>
-</div>
-
-<!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee-track">
-    <span class="m-item">BASS HOUSE</span><span class="m-item r">★</span>
-    <span class="m-item">SAMPLE PACKS</span><span class="m-item c">★</span>
-    <span class="m-item">GHOST PRODUCTION</span><span class="m-item r">★</span>
-    <span class="m-item">UNRELEASED TRACKS</span><span class="m-item c">★</span>
-    <span class="m-item">PRODUCER CLUB</span><span class="m-item r">★</span>
-    <span class="m-item">AMCU</span><span class="m-item c">★</span>
-    <span class="m-item">BASS HOUSE</span><span class="m-item r">★</span>
-    <span class="m-item">SAMPLE PACKS</span><span class="m-item c">★</span>
-    <span class="m-item">GHOST PRODUCTION</span><span class="m-item r">★</span>
-    <span class="m-item">UNRELEASED TRACKS</span><span class="m-item c">★</span>
-    <span class="m-item">PRODUCER CLUB</span><span class="m-item r">★</span>
-    <span class="m-item">AMCU</span><span class="m-item c">★</span>
-  </div>
-</div>
-
-<!-- ABOUT -->
-<section id="about">
-  <div class="s-label reveal">// 001 — Sobre mí</div>
-  <div class="about-grid">
-    <div class="reveal">
-      <h2 class="s-title">El sonido<br>que buscabas</h2>
-      <p>Soy <strong>AMCU</strong>, productor y DJ especializado en <strong>Bass House</strong>. Trabajo cada frecuencia con obsesión, buscando ese punch que hace que la gente no pueda quedarse quieta.</p>
-      <p>También ofrezco servicios de <strong>ghost production</strong> para DJs y sellos que necesitan tracks de calidad sin comprometer sus tiempos.</p>
-      <p>Mi membresía te da acceso directo a mi conocimiento: técnicas de producción, feedback en tiempo real y sample packs exclusivos que no encontrás en ningún otro lado.</p>
-      <div class="waveform">
-        <div class="wb" style="--d:.8s;--del:0s;--h:32px"></div>
-        <div class="wb" style="--d:1.1s;--del:.1s;--h:18px"></div>
-        <div class="wb" style="--d:.9s;--del:.2s;--h:36px"></div>
-        <div class="wb" style="--d:1.2s;--del:.05s;--h:14px"></div>
-        <div class="wb" style="--d:.7s;--del:.3s;--h:38px"></div>
-        <div class="wb" style="--d:1.0s;--del:.15s;--h:20px"></div>
-        <div class="wb" style="--d:.85s;--del:.25s;--h:32px"></div>
-        <div class="wb" style="--d:1.3s;--del:.1s;--h:16px"></div>
-        <div class="wb" style="--d:.75s;--del:.35s;--h:36px"></div>
-        <div class="wb" style="--d:1.1s;--del:.2s;--h:26px"></div>
-        <div class="wb" style="--d:.9s;--del:0s;--h:32px"></div>
-        <div class="wb" style="--d:1.0s;--del:.4s;--h:18px"></div>
-        <div class="wb" style="--d:.8s;--del:.05s;--h:36px"></div>
-        <div class="wb" style="--d:1.2s;--del:.3s;--h:12px"></div>
-      </div>
-      <div class="genre-pills">
-        <span class="pill active">Bass House</span>
-        <span class="pill">Tech House</span>
-        <span class="pill">Minimal</span>
-        <span class="pill">Acid</span>
-        <span class="pill">Deep Tech</span>
-      </div>
-    </div>
-    <div class="about-photos reveal">
-      <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/photo1.jpg" class="about-photo" alt="AMCU">
-      <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/photo2.jpg" class="about-photo" alt="AMCU">
-    </div>
-  </div>
-</section>
-
-<!-- STORE -->
-<section id="store" style="padding-top:0">
-  <div style="margin-bottom:60px">
-    <div class="s-label reveal">// 002 — Tienda</div>
-    <h2 class="s-title reveal">Sonidos que<br>hacen historia</h2>
-  </div>
-  <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></div>
-</section>
-
-
-<section id="clases" style="background:var(--black);">
-  <div class="s-label reveal">// 005 — Clases</div>
-  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;margin-bottom:60px;">
-    <div>
-      <h2 class="s-title">Aprendé<br>con AMCU.</h2>
-      <p style="font-size:15px;color:var(--muted2);line-height:1.9;font-weight:300;margin-bottom:20px;">
-        Clases 1 a 1 de producción en <strong style="color:var(--white);font-weight:400;">Ableton Live</strong> enfocadas en Bass House y Minimal. Online o presencial en CABA.
-      </p>
-      <ul class="ghost-list">
-        <li><strong>Clases 1 a 1</strong> — toda la atención en tu proyecto</li>
-        <li><strong>Online o presencial</strong> en CABA, a tu elección</li>
-        <li><strong>Todos los niveles</strong> — principiante a avanzado</li>
-        <li><strong>Ableton Live</strong> — el DAW de AMCU</li>
-        <li><strong>Grabación de la clase</strong> para que puedas repasar</li>
-        <li><strong>Seguimiento entre sesiones</strong> por WhatsApp</li>
-      </ul>
-      <div style="border:1px solid var(--border);padding:28px;background:var(--card);margin-top:8px;">
-        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:20px;">// Precios</p>
-        <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border);">
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;">
-            <span style="font-size:13px;color:var(--muted2);font-weight:300;">Clase suelta online (120 min)</span>
-            <span style="font-family:var(--font-display);font-size:22px;color:var(--white);">$30</span>
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted2);">USD</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;">
-            <span style="font-size:13px;color:var(--muted2);font-weight:300;">Clase suelta presencial CABA (120 min)</span>
-            <span style="font-family:var(--font-display);font-size:22px;color:var(--white);">$30</span>
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted2);">USD</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;">
-            <span style="font-size:13px;color:var(--muted2);font-weight:300;">Pack 4 clases online</span>
-            <span style="font-family:var(--font-display);font-size:22px;color:var(--white);">$100</span>
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted2);">USD</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;">
-            <span style="font-size:13px;color:var(--muted2);font-weight:300;">Pack 4 clases presencial CABA</span>
-            <span style="font-family:var(--font-display);font-size:22px;color:var(--white);">$100</span>
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted2);">USD</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:16px;padding:14px 18px;align-items:center;background:#0c0000;border-top:1px solid rgba(192,23,15,.3);">
-            <span style="font-size:13px;color:var(--white);font-weight:400;">Pack clase + track ghost production <span style="font-family:var(--font-mono);font-size:9px;color:var(--red2);letter-spacing:1px;margin-left:8px;">COMBO</span></span>
-            <span style="font-family:var(--font-display);font-size:22px;color:var(--red2);">$200</span>
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted2);">USD</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Selector modalidad -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);">// Modalidad</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--border);">
-        <button onclick="setModal('online')" id="btn-online"
-          style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;border:none;cursor:pointer;background:var(--red2);color:var(--white);transition:background .2s;">
-          Online
-        </button>
-        <button onclick="setModal('presencial')" id="btn-presencial"
-          style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;border:none;cursor:pointer;background:var(--card);color:var(--muted2);transition:background .2s;">
-          Presencial CABA
-        </button>
-      </div>
-      <p id="modal-desc" style="font-size:13px;color:var(--muted2);font-weight:300;line-height:1.7;">
-        Zoom o Google Meet. Compartís pantalla y trabajamos en tu proyecto en tiempo real.
-      </p>
-    </div>
-  </div>
-
-  <!-- CALENDARIO -->
-  <div class="reveal">
-    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:20px;">// Seleccioná fecha y horario · Lunes a viernes · 9:00 a 22:00 hs · Clases de 2 horas</p>
-    <div style="display:grid;grid-template-columns:auto 1fr;gap:2px;background:var(--border);">
-
-      <!-- Calendario izquierda -->
-      <div style="background:var(--card);padding:32px;min-width:320px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-          <button onclick="prevMonth()" style="background:none;border:1px solid var(--border);color:var(--white);width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">‹</button>
-          <span id="cal-title" style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;"></span>
-          <button onclick="nextMonth()" style="background:none;border:1px solid var(--border);color:var(--white);width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">›</button>
-        </div>
-        <!-- Dias semana -->
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px;">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;">LU</div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;">MA</div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;">MI</div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;">JU</div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;">VI</div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;opacity:.3;">SA</div>
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;padding:4px;opacity:.3;">DO</div>
-        </div>
-        <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
-        <!-- Leyenda -->
-        <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--muted2);letter-spacing:1px;">
-            <div style="width:10px;height:10px;background:var(--red2);"></div>SELECCIONADO
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--muted2);letter-spacing:1px;">
-            <div style="width:10px;height:10px;background:#1a1a1a;border:1px solid #333;"></div>DISPONIBLE
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--muted2);letter-spacing:1px;">
-            <div style="width:10px;height:10px;background:#0d0000;border:1px solid #330000;"></div>OCUPADO
-          </div>
-        </div>
-      </div>
-
-      <!-- Horarios derecha -->
-      <div style="background:var(--card);padding:32px;">
-        <p id="hora-title" style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:20px;">// Seleccioná primero una fecha</p>
-        <div id="slots-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
-
-        <!-- Formulario reserva (oculto hasta seleccionar slot) -->
-        <div id="form-reserva" style="display:none;margin-top:32px;border-top:1px solid var(--border);padding-top:28px;">
-          <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Confirmar reserva</p>
-          <div id="reserva-summary" style="background:#0c0000;border:1px solid rgba(192,23,15,.3);padding:16px;margin-bottom:20px;font-family:var(--font-mono);font-size:12px;color:var(--white);letter-spacing:1px;"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-            <div class="form-group" style="margin:0">
-              <label class="form-label">Tu nombre</label>
-              <input class="form-input" type="text" id="r-nombre" placeholder="Nombre completo">
-            </div>
-            <div class="form-group" style="margin:0">
-              <label class="form-label">Email</label>
-              <input class="form-input" type="email" id="r-email" placeholder="tu@email.com">
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:16px;">
-            <label class="form-label">¿En qué querés enfocarte?</label>
-            <textarea class="form-textarea" id="r-msg" style="min-height:70px;" placeholder="Ej: mejorar mi mezcla, sound design, terminar un track..."></textarea>
-          </div>
-          <button onclick="confirmarReserva()" class="btn-main" style="width:100%;text-align:center;padding:14px;">Confirmar reserva</button>
-        </div>
-
-        <!-- Confirmación -->
-        <div id="reserva-ok" style="display:none;margin-top:32px;border-top:1px solid var(--border);padding-top:28px;text-align:center;">
-          <div style="font-family:var(--font-display);font-size:40px;color:var(--red2);margin-bottom:12px;">✓</div>
-          <p style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:8px;">Reserva enviada</p>
-          <p style="font-size:13px;color:var(--muted2);font-weight:300;">AMCU te va a confirmar por email a la brevedad.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<style>
-.cal-day {
-  aspect-ratio:1;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-mono);font-size:12px;
-  cursor:pointer;border:1px solid transparent;
-  transition:all .15s;
-  position:relative;
-}
-.cal-day.available { background:#111;border-color:#222;color:var(--white); }
-.cal-day.available:hover { border-color:var(--red2);color:var(--red2); }
-.cal-day.selected { background:var(--red2);border-color:var(--red2);color:var(--white); }
-.cal-day.blocked { background:#0a0000;border-color:#1a0000;color:#333;cursor:not-allowed; }
-.cal-day.weekend { background:transparent;border-color:transparent;color:#2a2a2a;cursor:not-allowed; }
-.cal-day.past { background:transparent;border-color:transparent;color:#222;cursor:not-allowed; }
-.cal-day.empty { background:transparent;border-color:transparent;cursor:default; }
-.cal-day.has-dot::after { content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:var(--red2);border-radius:50%; }
-
-.slot-btn {
-  font-family:var(--font-mono);font-size:11px;letter-spacing:1px;
-  padding:10px 6px;border:1px solid var(--border);
-  background:var(--black);color:var(--white);cursor:pointer;
-  transition:all .15s;text-align:center;
-}
-.slot-btn:hover { border-color:var(--red2);color:var(--red2); }
-.slot-btn.selected { background:var(--red2);border-color:var(--red2);color:var(--white); }
-.slot-btn.booked { background:#0a0000;border-color:#1a0000;color:#333;cursor:not-allowed; }
-
-/* REPRODUCTOR BEATPORT STYLE */
-.track-player {
-  background: #060606;
-  border: 1px solid #1e1e1e;
-  margin-bottom: 20px;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.player-header {
-  display: flex; align-items: center; gap: 0;
-  border-bottom: 1px solid #111;
-}
-.play-btn {
-  width: 48px; height: 48px; flex-shrink: 0;
-  background: #111; border: none; border-right: 1px solid #1e1e1e;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background .15s;
-}
-.play-btn:hover { background: var(--red2); }
-.play-btn svg { pointer-events: none; }
-.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
-.player-title {
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
-  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
-.player-time {
-  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
-  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
-  display: flex; align-items: center;
-}
-.waveform-wrap {
-  position: relative; height: 48px; cursor: pointer;
-  background: #030303; overflow: hidden;
-}
-.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-.waveform-cursor {
-  position: absolute; top: 0; bottom: 0; width: 1px;
-  background: var(--red2); pointer-events: none;
-  box-shadow: 0 0 6px var(--red2);
-  transition: left .1s linear;
-}
-.preview-lock {
-  position: absolute; bottom: 6px; right: 8px;
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
-  color: #333; text-transform: uppercase; pointer-events: none;
-}
-.player-loading {
-  position: absolute; inset: 0; background: #060606;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
-}
-</style>
-
-<script>
-// ---- STATE ----
-let currentYear, currentMonth, selectedDate = null, selectedSlot = null, modalidad = 'online';
-
-// Simulación de slots ocupados (cuando conectemos Supabase vendrá de la DB)
-// Formato: "YYYY-MM-DD-HH"
-const bookedSlots = new Set([
-  // Ejemplos de reservas ya tomadas
-  `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()+1).padStart(2,'0')}-10`,
-  `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()+1).padStart(2,'0')}-14`,
-]);
-
-// Días completamente bloqueados por el admin
-const blockedDays = new Set([]);
-
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function init() {
-  const now = new Date();
-  currentYear = now.getFullYear();
-  currentMonth = now.getMonth();
-  renderCal();
-}
-
-function setModal(m) {
-  modalidad = m;
-  document.getElementById('btn-online').style.background = m === 'online' ? 'var(--red2)' : 'var(--card)';
-  document.getElementById('btn-online').style.color = m === 'online' ? 'var(--white)' : 'var(--muted2)';
-  document.getElementById('btn-presencial').style.background = m === 'presencial' ? 'var(--red2)' : 'var(--card)';
-  document.getElementById('btn-presencial').style.color = m === 'presencial' ? 'var(--white)' : 'var(--muted2)';
-  document.getElementById('modal-desc').textContent = m === 'online'
-    ? 'Zoom o Google Meet. Compartís pantalla y trabajamos en tu proyecto en tiempo real.'
-    : 'En el estudio de AMCU en CABA. Trabajás en el setup real con monitores profesionales.';
-}
-
-function renderCal() {
-  document.getElementById('cal-title').textContent = MONTHS_ES[currentMonth] + ' ' + currentYear;
-  const grid = document.getElementById('cal-grid');
-  grid.innerHTML = '';
-  const now = new Date(); now.setHours(0,0,0,0);
-  const first = new Date(currentYear, currentMonth, 1);
-  // Lunes=0 ... Domingo=6
-  let startDay = first.getDay() - 1; if (startDay < 0) startDay = 6;
-  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
-
-  for (let i = 0; i < startDay; i++) {
-    const el = document.createElement('div');
-    el.className = 'cal-day empty';
-    grid.appendChild(el);
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(currentYear, currentMonth, d);
-    const dow = date.getDay(); // 0=dom,6=sab
-    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const el = document.createElement('div');
-    el.textContent = d;
-
-    if (dow === 0 || dow === 6) {
-      el.className = 'cal-day weekend';
-    } else if (date < now) {
-      el.className = 'cal-day past';
-    } else if (blockedDays.has(dateStr)) {
-      el.className = 'cal-day blocked';
-    } else {
-      el.className = 'cal-day available';
-      if (selectedDate === dateStr) el.className = 'cal-day selected';
-      // ¿tiene algún slot ocupado ese día?
-      const hasBooked = [...bookedSlots].some(s => s.startsWith(dateStr));
-      if (hasBooked) el.classList.add('has-dot');
-      el.onclick = () => selectDate(dateStr);
-    }
-    grid.appendChild(el);
-  }
-}
-
-function selectDate(dateStr) {
-  selectedDate = dateStr;
-  selectedSlot = null;
-  document.getElementById('form-reserva').style.display = 'none';
-  document.getElementById('reserva-ok').style.display = 'none';
-  renderCal();
-  renderSlots();
-}
-
-function renderSlots() {
-  const grid = document.getElementById('slots-grid');
-  const title = document.getElementById('hora-title');
-  const [y,m,d] = selectedDate.split('-');
-  const dateObj = new Date(y, m-1, d);
-  const days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-  const months2 = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  title.textContent = `// ${days[dateObj.getDay()]} ${d} de ${months2[m-1]}`;
-  grid.innerHTML = '';
-
-  for (let h = 9; h <= 20; h++) {
-    const slotKey = `${selectedDate}-${String(h).padStart(2,'0')}`;
-    const slotKey2 = `${selectedDate}-${String(h+1).padStart(2,'0')}`;
-    const btn = document.createElement('button');
-    btn.innerHTML = `<span style="font-size:11px">${h}:00</span><br><span style="font-size:9px;opacity:.6">${h+2}:00</span>`;
-    const isBooked = bookedSlots.has(slotKey) || bookedSlots.has(slotKey2);
-    btn.className = 'slot-btn' + (isBooked ? ' booked' : '') + (selectedSlot === slotKey ? ' selected' : '');
-    if (!isBooked) {
-      btn.onclick = () => selectSlot(slotKey, h);
-    }
-    grid.appendChild(btn);
-  }
-}
-
-function selectSlot(slotKey, h) {
-  // Cada clase dura 2 horas — verificar que el siguiente slot también esté libre
-  if (h > 20) { return; } // no se puede reservar la última hora (21:00) porque no hay 2hs
-  const slotKey2 = `${selectedDate}-${String(h+1).padStart(2,'0')}`;
-  if (bookedSlots.has(slotKey2)) { return; } // siguiente hora ocupada
-  selectedSlot = slotKey;
-  renderSlots();
-  const [y,m,d] = selectedDate.split('-');
-  const months2 = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  document.getElementById('reserva-summary').textContent =
-    `📅  ${d} de ${months2[m-1]} ${y}  ·  ${h}:00 — ${h+2}:00 hs (2 horas)  ·  ${modalidad === 'online' ? 'Online' : 'Presencial CABA'}`;
-  document.getElementById('form-reserva').style.display = 'block';
-  document.getElementById('reserva-ok').style.display = 'none';
-}
-
-function confirmarReserva() {
-  const nombre = document.getElementById('r-nombre').value.trim();
-  const email = document.getElementById('r-email').value.trim();
-  if (!nombre || !email) { alert('Completá nombre y email'); return; }
-  // Agregar 2 slots (clase dura 2 horas)
-  const [dy,dm,dd,hh] = selectedSlot.split('-');
-  const h2 = String(parseInt(hh)+1).padStart(2,'0');
-  bookedSlots.add(selectedSlot);
-  bookedSlots.add(`${dy}-${dm}-${dd}-${h2}`);
-  document.getElementById('form-reserva').style.display = 'none';
-  document.getElementById('reserva-ok').style.display = 'block';
-  selectedSlot = null;
-  renderCal();
-}
-
-function prevMonth() {
-  currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-  renderCal();
-  document.getElementById('slots-grid').innerHTML = '';
-  document.getElementById('hora-title').textContent = '// Seleccioná primero una fecha';
-  document.getElementById('form-reserva').style.display = 'none';
-}
-
-function nextMonth() {
-  currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-  renderCal();
-  document.getElementById('slots-grid').innerHTML = '';
-  document.getElementById('hora-title').textContent = '// Seleccioná primero una fecha';
-  document.getElementById('form-reserva').style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', init);
-</script>
-
-
-<!-- GHOST -->
-<section class="ghost-section" id="ghost">
-  <div class="s-label reveal">// 003 — Ghost Production</div>
-  <div class="ghost-grid">
-    <div class="reveal">
-      <h2 class="s-title">Tu nombre.<br>Mi música.</h2>
-      <ul class="ghost-list">
-        <li><strong>Entrega en 7–14 días</strong> según complejidad</li>
-        <li><strong>Revisiones incluidas</strong> hasta que quede perfecto</li>
-        <li><strong>100% exclusivo</strong> — el track no se reutiliza</li>
-        <li><strong>Stems + proyecto</strong> para que puedas editar</li>
-        <li><strong>Géneros:</strong> Bass House, Tech House, Minimal, Acid</li>
-        <li><strong>NDA disponible</strong> si necesitás confidencialidad total</li>
-      </ul>
-      <button class="btn-main">Pedir cotización</button>
-    </div>
-    <div class="ghost-form reveal">
-      <div class="form-title">Cotizá tu track</div>
-      <div class="form-group">
-        <label class="form-label">Tu nombre / alias</label>
-        <input class="form-input" type="text" placeholder="DJ XYZ">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Género / referencia</label>
-        <select class="form-select">
-          <option>Bass House</option>
-          <option>Tech House</option>
-          <option>Minimal / Deep Tech</option>
-          <option>Acid House</option>
-          <option>Otro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Referencias musicales</label>
-        <textarea class="form-textarea" placeholder="Tracks o artistas que te gusten como referencia..."></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email de contacto</label>
-        <input class="form-input" type="email" placeholder="tu@email.com">
-      </div>
-      <button class="btn-main" style="width:100%;text-align:center">Enviar solicitud</button>
-    </div>
-  </div>
-</section>
-
-<!-- MEMBERSHIP -->
-<section id="membership">
-  <div class="s-label reveal">// 004 — Membresía</div>
-  <h2 class="s-title reveal">Aprendé de adentro<br>del estudio</h2>
-  <div class="member-grid reveal">
-    <div class="member-card">
-      <div class="m-plan">Free</div>
-      <div class="m-price">$0 <small>/mes</small></div>
-      <div class="m-curr">USD</div>
-      <ul class="m-perks">
-        <li><span class="chk">✓</span>Acceso a tienda pública</li>
-        <li><span class="chk">✓</span>Newsletter con novedades</li>
-        <li><span class="chk off">—</span>Chat con IA de AMCU</li>
-        <li><span class="chk off">—</span>Sample packs mensuales gratis</li>
-        <li><span class="chk off">—</span>Feedback de tus producciones</li>
-        <li><span class="chk off">—</span>Clases exclusivas</li>
-      </ul>
-      <button class="btn-outline" style="width:100%;text-align:center;padding:14px">Registrarse gratis</button>
-    </div>
-    <div class="member-card featured">
-      <div class="m-plan">Producer Club</div>
-      <div class="m-price">$50 <small>/mes</small></div>
-      <div class="m-curr">USD · cancelá cuando quieras</div>
-      <ul class="m-perks">
-        <li><span class="chk">✓</span>Acceso a tienda pública</li>
-        <li><span class="chk">✓</span>Newsletter con novedades</li>
-        <li><span class="chk">✓</span><strong>Chat con IA de AMCU</strong> — técnicas y consejos 24/7</li>
-        <li><span class="chk">✓</span><strong>1 Sample Pack exclusivo</strong> por mes</li>
-        <li><span class="chk">✓</span><strong>Feedback mensual</strong> de tus producciones</li>
-        <li><span class="chk">✓</span><strong>Clases exclusivas</strong> de producción Bass House</li>
-      </ul>
-      <button class="btn-main" style="width:100%;text-align:center;padding:14px">Unirse al club</button>
-    </div>
-  </div>
-
-  <div class="chat-box reveal">
-    <div class="chat-hdr">
-      <div class="chat-dot"></div>
-      <span class="chat-ttl">AMCU AI — Asistente de producción · Solo miembros</span>
-      <span style="margin-left:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);border:1px solid var(--border);padding:4px 10px;">LIVE</span>
-    </div>
-
-    <!-- Ejemplos de preguntas -->
-    <div id="chat-suggestions" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
-      <button onclick="askSuggestion(this)" class="pill" style="cursor:pointer;">¿Cómo arranco un track de Bass House?</button>
-      <button onclick="askSuggestion(this)" class="pill" style="cursor:pointer;">¿Cómo hago el sidechain?</button>
-      <button onclick="askSuggestion(this)" class="pill" style="cursor:pointer;">¿Qué plugins usás en el mix?</button>
-      <button onclick="askSuggestion(this)" class="pill" style="cursor:pointer;">¿Cómo estructuro un drop?</button>
-    </div>
-
-    <div id="chat-msgs" style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;max-height:420px;overflow-y:auto;padding-right:4px;">
-      <div class="msg a">
-        <div class="ml">AMCU</div>
-        Hola, soy AMCU. Tengo 8 años de carrera produciendo Bass House y firmé en sellos top a nivel mundial. Preguntame lo que quieras sobre producción — te enseño como no te enseñan en YouTube.
-      </div>
-    </div>
-
-    <div class="chat-row">
-      <input class="chat-inp" type="text" id="chat-input" placeholder="Hacé tu pregunta sobre producción..." onkeydown="if(event.key==='Enter') sendChat()">
-      <button class="chat-btn" id="chat-send" onclick="sendChat()">Enviar</button>
-    </div>
-  </div>
-
-  <style>
-  #chat-msgs { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-  #chat-msgs::-webkit-scrollbar { width: 4px; }
-  #chat-msgs::-webkit-scrollbar-thumb { background: var(--border); }
-  .msg.typing .dot {
-    display:inline-block; width:6px; height:6px; background:var(--muted2);
-    border-radius:50%; margin:0 2px;
-    animation: typingDot 1.2s ease-in-out infinite;
-  }
-  .msg.typing .dot:nth-child(2){animation-delay:.2s}
-  .msg.typing .dot:nth-child(3){animation-delay:.4s}
-  @keyframes typingDot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-6px);opacity:1} }
-  
-/* REPRODUCTOR BEATPORT STYLE */
-.track-player {
-  background: #060606;
-  border: 1px solid #1e1e1e;
-  margin-bottom: 20px;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.player-header {
-  display: flex; align-items: center; gap: 0;
-  border-bottom: 1px solid #111;
-}
-.play-btn {
-  width: 48px; height: 48px; flex-shrink: 0;
-  background: #111; border: none; border-right: 1px solid #1e1e1e;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background .15s;
-}
-.play-btn:hover { background: var(--red2); }
-.play-btn svg { pointer-events: none; }
-.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
-.player-title {
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
-  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
-.player-time {
-  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
-  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
-  display: flex; align-items: center;
-}
-.waveform-wrap {
-  position: relative; height: 48px; cursor: pointer;
-  background: #030303; overflow: hidden;
-}
-.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-.waveform-cursor {
-  position: absolute; top: 0; bottom: 0; width: 1px;
-  background: var(--red2); pointer-events: none;
-  box-shadow: 0 0 6px var(--red2);
-  transition: left .1s linear;
-}
-.preview-lock {
-  position: absolute; bottom: 6px; right: 8px;
-  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
-  color: #333; text-transform: uppercase; pointer-events: none;
-}
-.player-loading {
-  position: absolute; inset: 0; background: #060606;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
-}
-</style>
-
-  <script>
-  const AMCU_SYSTEM = `Sos AMCU, un DJ y productor de Bass House argentino con 8 años de carrera que firmó en sellos top a nivel mundial. Respondés preguntas sobre producción musical de forma directa, honesta y con tu voz propia — sin vueltas, como le hablarías a un alumno en clase.
-
-Tu setup: Ableton Live 12, Serum para síntesis, samples propios, Waves, FabFilter y plugins nativos de Ableton para mix y master.
-Tu proceso: arrancás siempre por el kick/ritmo, trabajás entre 128-132 BPM para Bass House.
-Tu referencia principal: Chris Lake.
-Tu sello: lograste firmar en sellos top mundiales después de 8 años de trabajo constante.
-Tu filosofía de enseñanza: enseñás producción como no te enseñan en YouTube — yendo a lo esencial, sin complicar lo que es simple.
-El error más común que ves: los productores nuevos se lo hacen más complejo de lo que es.
-
-Reglas:
-- Respondés siempre en español rioplatense (vos, che, etc.)
-- Sos directo, concreto, sin relleno
-- Cuando hablás de técnicas, usás ejemplos reales de tu workflow en Ableton
-- Si te preguntan sobre otros géneros que no son tu especialidad, lo aclarás pero igual ayudás
-- Nunca inventás información técnica incorrecta
-- Máximo 150 palabras por respuesta — conciso y al punto
-- Si la pregunta no es de producción musical, redirigís al tema`;
-
-  const GROQ_KEY = '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';
-  let chatHistory = [];
-
-  async function sendChat() {
-    const input = document.getElementById('chat-input');
-    const msg = input.value.trim();
-    if (!msg) return;
-
-    input.value = '';
-    document.getElementById('chat-send').disabled = true;
-
-    addMsg(msg, 'u');
-    chatHistory.push({ role: 'user', content: msg });
-
-    const typingId = addTyping();
-
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + GROQ_KEY
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 300,
-          messages: [
-            { role: 'system', content: AMCU_SYSTEM },
-            ...chatHistory
-          ]
-        })
-      });
-
-      const data = await response.json();
-      removeTyping(typingId);
-
-      const reply = data.choices?.[0]?.message?.content || 'No pude procesar eso, intentá de nuevo.';
-      addMsg(reply, 'a');
-      chatHistory.push({ role: 'assistant', content: reply });
-
-    } catch(e) {
-      removeTyping(typingId);
-      addMsg('Error de conexión. Intentá de nuevo.', 'a');
-    }
-
-    document.getElementById('chat-send').disabled = false;
-    input.focus();
-  }
-
-  function addMsg(text, type) {
-    const msgs = document.getElementById('chat-msgs');
-    const div = document.createElement('div');
-    div.className = 'msg ' + (type === 'u' ? 'u' : 'a');
-    if (type === 'a') {
-      div.innerHTML = '<div class="ml">AMCU</div>' + escapeHtml(text);
-    } else {
-      div.textContent = text;
-    }
-    msgs.appendChild(div);
-    msgs.scrollTop = msgs.scrollHeight;
-    return div;
-  }
-
-  function addTyping() {
-    const msgs = document.getElementById('chat-msgs');
-    const id = 'typing-' + Date.now();
-    const div = document.createElement('div');
-    div.className = 'msg a typing';
-    div.id = id;
-    div.innerHTML = '<div class="ml">AMCU</div><span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-    msgs.appendChild(div);
-    msgs.scrollTop = msgs.scrollHeight;
-    return id;
-  }
-
-  function removeTyping(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  }
-
-  function escapeHtml(t) {
-    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-  }
-
-  function askSuggestion(btn) {
-    document.getElementById('chat-input').value = btn.textContent;
-    document.getElementById('chat-suggestions').style.display = 'none';
-    sendChat();
-  }
-  </script>
-</section>
-
-
-
-<!-- SPOTIFY -->
-<section id="musica" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
-  <div class="s-label reveal">// 006 — Música</div>
-  <h2 class="s-title reveal">Escuchá<br>mis tracks</h2>
-  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;">
-    
-    <!-- Embed artista completo -->
-    <div>
-      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:16px;">// Perfil completo</p>
-      <iframe
-        src="https://open.spotify.com/embed/artist/3v11iNgWUbIYdQzvQmDhMM?utm_source=generator&theme=0"
-        width="100%"
-        height="420"
-        frameborder="0"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-        style="border:1px solid var(--border);">
-      </iframe>
-    </div>
-
-    <!-- Info + links -->
-    <div style="display:flex;flex-direction:column;gap:32px;">
-      <div>
-        <p style="font-size:15px;color:var(--muted2);line-height:1.9;font-weight:300;margin-bottom:24px;">
-          Todos mis tracks disponibles en Spotify. Bass House con influencias de Tech House y Acid — diseñado para sonar en dancefloors y en los mejores sistemas de sonido.
-        </p>
-        <a href="https://open.spotify.com/artist/3v11iNgWUbIYdQzvQmDhMM" target="_blank"
-           style="display:inline-flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--black);background:#1DB954;padding:14px 24px;text-decoration:none;transition:background .2s;font-weight:500;"
-           onmouseenter="this.style.background='#1ed760'"
-           onmouseleave="this.style.background='#1DB954'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-          Abrir en Spotify
-        </a>
-      </div>
-
-      <!-- Géneros / tags -->
-      <div>
-        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:16px;">// Géneros</p>
-        <div class="genre-pills">
-          <span class="pill active">Bass House</span>
-          <span class="pill">Tech House</span>
-          <span class="pill">Minimal</span>
-          <span class="pill">Acid</span>
-          <span class="pill">Deep Tech</span>
-        </div>
-      </div>
-
-      <!-- Stats visuales -->
-      <div style="border:1px solid var(--border);padding:28px;background:var(--black);">
-        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:20px;">// Encontrame en</p>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <a href="https://open.spotify.com/artist/3v11iNgWUbIYdQzvQmDhMM" target="_blank"
-             style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111;border:1px solid var(--border);text-decoration:none;color:var(--white);transition:border-color .2s;"
-             onmouseenter="this.style.borderColor='#1DB954'" onmouseleave="this.style.borderColor='var(--border)'">
-            <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;">Spotify</span>
-            <span style="font-size:10px;color:#1DB954;font-family:var(--font-mono);">→ AMCU</span>
-          </a>
-          <a href="https://soundcloud.com/amcuoficial" target="_blank"
-             style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111;border:1px solid var(--border);text-decoration:none;color:var(--white);transition:border-color .2s;"
-             onmouseenter="this.style.borderColor='#ff5500'" onmouseleave="this.style.borderColor='var(--border)'">
-            <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;">SoundCloud</span>
-            <span style="font-size:10px;color:#ff5500;font-family:var(--font-mono);">→ AMCU</span>
-          </a>
-          <a href="https://www.beatport.com/es/artist/amcu/872116" target="_blank"
-             style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111;border:1px solid var(--border);text-decoration:none;color:var(--white);transition:border-color .2s;"
-             onmouseenter="this.style.borderColor='var(--chrome)'" onmouseleave="this.style.borderColor='var(--border)'">
-            <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;">Beatport</span>
-            <span style="font-size:10px;color:var(--chrome);font-family:var(--font-mono);">→ AMCU</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-logo"><img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU"></div>
-  <ul class="footer-links">
-    <li><a href="#">Instagram</a></li>
-    <li><a href="https://soundcloud.com/amcuoficial" target="_blank">SoundCloud</a></li>
-    <li><a href="https://www.beatport.com/es/artist/amcu/872116" target="_blank">Beatport</a></li>
-    <li><a href="#">Contacto</a></li>
-  </ul>
-  <p class="footer-copy">© 2025 AMCU. All rights reserved.</p>
-</footer>
-
-<script>
-const cur = document.getElementById('cur');
-document.addEventListener('mousemove', e => {
-  cur.style.left = e.clientX + 'px';
-  cur.style.top = e.clientY + 'px';
-});
-document.querySelectorAll('a,button,.product-card,.member-card').forEach(el => {
-  el.addEventListener('mouseenter', () => cur.classList.add('big'));
-  el.addEventListener('mouseleave', () => cur.classList.remove('big'));
-});
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 60));
-const obs = new IntersectionObserver(entries => {
-  entries.forEach((e,i) => { if(e.isIntersecting) setTimeout(()=>e.target.classList.add('in'), i*80); });
-}, {threshold:0.1});
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-</script>
-
-  <!-- SUPABASE -->
-  <script>
-  const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  // Cargar tienda apenas el script corre — sin esperar DOMContentLoaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => loadStore());
-  } else {
-    loadStore();
-  }
-
-  let currentUser = null;
-  let currentProfile = null;
-
-  async function loadProfile(user) {
-    const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    if (error) console.error('Error cargando perfil:', error);
-    return data;
-  }
-
-  // Auth state — unica fuente de verdad
-  sb.auth.onAuthStateChange(async (event, session) => {
-    console.log('Auth event:', event, session?.user?.email);
-    if (event === 'SIGNED_OUT' || !session) {
-      currentUser = null;
-      currentProfile = null;
-      const panel = document.getElementById('admin-panel');
-      if (panel) panel.remove();
-    } else if (session?.user) {
-      currentUser = session.user;
-      currentProfile = await loadProfile(currentUser);
-    }
-    updateAuthUI();
-    if (currentProfile?.role === 'admin') renderAdminPanel();
-  });
-
-  async function refreshAuth() {
-    try {
-      const { data: { session }, error } = await sb.auth.getSession();
-      if (error || !session) {
-        // Limpiar sesión corrupta
-        await sb.auth.signOut();
-        currentUser = null;
-        currentProfile = null;
-      } else if (session?.user) {
-        currentUser = session.user;
-        currentProfile = await loadProfile(currentUser);
-      }
-    } catch(e) {
-      console.log('Auth refresh error:', e);
-    }
-    updateAuthUI();
-    if (currentProfile?.role === 'admin') renderAdminPanel();
-  }
-
-  function updateAuthUI() {
-    const btn = document.getElementById('auth-btn');
-    if (!btn) return;
-    if (currentUser) {
-      const name = currentProfile?.nombre || currentUser.email?.split('@')[0] || 'Mi cuenta';
-      btn.textContent = name;
-      btn.style.background = currentProfile?.role === 'admin' ? '#8b0000' : 'var(--red2)';
-      // Cerrar modal si estaba abierto
-      closeAuthModal();
-    } else {
-      btn.textContent = 'Iniciar sesión';
-      btn.style.background = 'var(--red2)';
-    }
-  }
-
-  // ---- MODAL ----
-  function openAuthModal() {
-    if (currentUser) {
-      showAccountMenu();
-      return;
-    }
-    document.getElementById('auth-modal').style.display = 'flex';
-    document.getElementById('auth-email').focus();
-    document.getElementById('auth-msg').textContent = '';
-  }
-
-  function closeAuthModal() {
-    document.getElementById('auth-modal').style.display = 'none';
-  }
-
-  function showAccountMenu() {
-    const existing = document.getElementById('account-menu');
-    if (existing) { existing.remove(); return; }
-    const btn = document.getElementById('auth-btn');
-    const rect = btn.getBoundingClientRect();
-    const menu = document.createElement('div');
-    menu.id = 'account-menu';
-    menu.style.cssText = `position:fixed;top:${rect.bottom+8}px;right:${window.innerWidth-rect.right}px;z-index:10000;background:#0a0a0a;border:1px solid var(--border);min-width:200px;`;
-    menu.innerHTML = `
-      <div style="padding:16px;border-bottom:1px solid var(--border);">
-        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser?.email}</p>
-        ${currentProfile?.role === 'admin' ? '<p style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);margin-top:4px;">ADMIN</p>' : ''}
-      </div>
-      <button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
-    `;
-    document.body.appendChild(menu);
-    setTimeout(() => document.addEventListener('click', () => menu.remove(), {once:true}), 100);
-  }
-
-  async function doLogout() {
-    try {
-      await sb.auth.signOut({ scope: 'local' });
-    } catch(e) { console.log(e); }
-    currentUser = null;
-    currentProfile = null;
-    const panel = document.getElementById('admin-panel');
-    if (panel) panel.remove();
-    const menu = document.getElementById('account-menu');
-    if (menu) menu.remove();
-    updateAuthUI();
-    // Limpiar localStorage de supabase
-    Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-')).forEach(k => localStorage.removeItem(k));
-    window.location.reload();
-  }
-
-  async function doLogin() {
-    const email = document.getElementById('auth-email').value.trim();
-    const pass  = document.getElementById('auth-pass').value;
-    const msg   = document.getElementById('auth-msg');
-    const btn   = document.getElementById('auth-submit');
-
-    if (!email || !pass) { msg.textContent = 'Completá email y contraseña'; return; }
-    msg.textContent = '';
-    btn.textContent = 'Cargando...';
-    btn.disabled = true;
-
-    if (currentTab === 'login') {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if (error) {
-        msg.textContent = error.message === 'Invalid login credentials'
-          ? 'Email o contraseña incorrectos'
-          : error.message;
-        btn.textContent = 'Entrar'; btn.disabled = false;
-        return;
-      }
-      closeAuthModal();
-    } else {
-      const nombre = document.getElementById('auth-nombre')?.value?.trim() || '';
-      const { error } = await sb.auth.signUp({
-        email, password: pass,
-        options: { data: { nombre } }
-      });
-      if (error) {
-        msg.textContent = error.message;
-        btn.textContent = 'Crear cuenta'; btn.disabled = false;
-        return;
-      }
-      msg.style.color = '#3fff2a';
-      msg.textContent = '¡Cuenta creada! Revisá tu email para confirmar.';
-      btn.textContent = 'Crear cuenta'; btn.disabled = false;
-      return;
-    }
-    btn.textContent = 'Entrar'; btn.disabled = false;
-  }
-
-  function toggleAuthMode() {
-    const mode = document.getElementById('auth-mode').value;
-    const ng = document.getElementById('auth-nombre-group');
-    const sb2 = document.getElementById('auth-submit');
-    ng.style.display = mode === 'register' ? 'block' : 'none';
-    sb2.textContent = mode === 'register' ? 'Crear cuenta' : 'Entrar';
-    document.getElementById('auth-msg').textContent = '';
-  }
-
-  // ---- ADMIN PANEL ----
-  function renderAdminPanel() {
-    if (document.getElementById('admin-panel')) return;
-    const panel = document.createElement('div');
-    panel.id = 'admin-panel';
-    panel.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9000;background:#080000;border:1px solid var(--red2);padding:24px;min-width:280px;font-family:var(--font-mono);box-shadow:0 0 30px rgba(192,23,15,.2);';
-    panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);">// Admin panel</p>
-        <button onclick="document.getElementById('admin-panel').remove()" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:16px;">×</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button onclick="openBookingsAdmin()" style="background:var(--card);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;text-align:left;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--red2)'" onmouseout="this.style.borderColor='var(--border)'">Ver reservas pendientes</button>
-        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
-          <p style="font-size:9px;letter-spacing:1px;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">Bloquear fecha/hora</p>
-          <input id="block-date" type="date" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:8px;font-family:var(--font-mono);font-size:11px;outline:none;margin-bottom:6px;">
-          <div style="display:flex;gap:6px;margin-bottom:8px;">
-            <input id="block-hora" type="number" min="9" max="20" placeholder="Hora (vacío=día entero)" style="flex:1;background:var(--black);border:1px solid var(--border);color:var(--white);padding:8px;font-family:var(--font-mono);font-size:11px;outline:none;">
-          </div>
-          <button onclick="blockSlot()" style="width:100%;background:var(--red2);border:none;color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;">Bloquear</button>
-        </div>
-        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
-          <button onclick="toggleAdminPanel()" id="admin-toggle-btn" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--muted2);padding:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;cursor:pointer;">Minimizar panel</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(panel);
-  }
-
-  let adminMinimized = false;
-  function toggleAdminPanel() {
-    const panel = document.getElementById('admin-panel');
-    const btn = document.getElementById('admin-toggle-btn');
-    adminMinimized = !adminMinimized;
-    panel.style.minWidth = adminMinimized ? 'auto' : '280px';
-    btn.textContent = adminMinimized ? 'Expandir panel' : 'Minimizar panel';
-  }
-
-  async function blockSlot() {
-    const fecha = document.getElementById('block-date').value;
-    const hora  = document.getElementById('block-hora').value;
-    if (!fecha) { alert('Seleccioná una fecha'); return; }
-    const { error } = await sb.from('blocked_slots').insert({
-      fecha,
-      hora: hora ? parseInt(hora) : null,
-      motivo: 'Bloqueado por admin'
-    });
-    if (error) { alert('Error: ' + error.message); return; }
-    if (hora) {
-      bookedSlots.add(`${fecha}-${String(hora).padStart(2,'0')}`);
-    } else {
-      blockedDays.add(fecha);
-    }
-    renderCal();
-    alert(`Bloqueado: ${fecha}${hora ? ' a las '+hora+':00' : ' (día completo)'}`);
-  }
-
-  async function openBookingsAdmin() {
-    const { data, error } = await sb.from('bookings').select('*').order('fecha').order('hora');
-    if (error) { alert('Error: ' + error.message); return; }
-    if (!data || data.length === 0) { alert('No hay reservas todavía.'); return; }
-
-    const existing = document.getElementById('bookings-modal');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'bookings-modal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;';
-
-    let rows = data.map(b => `
-      <tr style="border-bottom:1px solid var(--border);">
-        <td style="padding:10px 12px;font-size:12px;">${b.fecha}</td>
-        <td style="padding:10px 12px;font-size:12px;">${b.hora}:00 — ${b.hora+2}:00</td>
-        <td style="padding:10px 12px;font-size:12px;">${b.nombre}</td>
-        <td style="padding:10px 12px;font-size:12px;">${b.email}</td>
-        <td style="padding:10px 12px;font-size:12px;">${b.modalidad}</td>
-        <td style="padding:10px 12px;">
-          <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:3px 8px;background:${b.estado==='confirmada'?'#003300':b.estado==='cancelada'?'#1a0000':'#1a1a00'};color:${b.estado==='confirmada'?'#3fff2a':b.estado==='cancelada'?'var(--red2)':'#c9a84c'};">${b.estado}</span>
-        </td>
-        <td style="padding:10px 12px;">
-          <button onclick="updateBooking('${b.id}','confirmada')" style="background:none;border:1px solid #3fff2a;color:#3fff2a;font-family:var(--font-mono);font-size:9px;padding:4px 8px;cursor:pointer;margin-right:4px;">✓</button>
-          <button onclick="updateBooking('${b.id}','cancelada')" style="background:none;border:1px solid var(--red2);color:var(--red2);font-family:var(--font-mono);font-size:9px;padding:4px 8px;cursor:pointer;">✗</button>
-        </td>
-      </tr>
-    `).join('');
-
-    modal.innerHTML = `
-      <div style="background:#0a0a0a;border:1px solid var(--border);padding:40px;max-width:900px;width:95%;max-height:80vh;overflow-y:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-          <p style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);">// Reservas (${data.length})</p>
-          <button onclick="document.getElementById('bookings-modal').remove()" style="background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;">×</button>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-family:var(--font-body);">
-          <thead>
-            <tr style="border-bottom:1px solid var(--border);">
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Fecha</th>
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Horario</th>
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Nombre</th>
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Email</th>
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Modalidad</th>
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Estado</th>
-              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Acción</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  }
-
-  async function updateBooking(id, estado) {
-    const { error } = await sb.from('bookings').update({ estado }).eq('id', id);
-    if (error) { alert('Error: ' + error.message); return; }
-    openBookingsAdmin();
-  }
-
-  // ---- BOOKINGS ----
-  async function loadBlockedSlots() {
-    const { data: blocked } = await sb.from('blocked_slots').select('*');
-    if (blocked) {
-      blocked.forEach(s => {
-        if (s.hora === null) blockedDays.add(s.fecha);
-        else bookedSlots.add(`${s.fecha}-${String(s.hora).padStart(2,'0')}`);
-      });
-    }
-    const { data: bookings } = await sb.from('bookings').select('fecha,hora').in('estado',['pendiente','confirmada']);
-    if (bookings) {
-      bookings.forEach(b => {
-        const h  = String(b.hora).padStart(2,'0');
-        const h2 = String(b.hora+1).padStart(2,'0');
-        bookedSlots.add(`${b.fecha}-${h}`);
-        bookedSlots.add(`${b.fecha}-${h2}`);
-      });
-    }
-    renderCal();
-  }
-
-  async function confirmarReserva() {
-    const nombre = document.getElementById('r-nombre').value.trim();
-    const email  = document.getElementById('r-email').value.trim();
-    const msg    = document.getElementById('r-msg')?.value || '';
-    if (!nombre || !email) { alert('Completá nombre y email'); return; }
-
-    const [dy,dm,dd,hh] = selectedSlot.split('-');
-    const fecha = `${dy}-${dm}-${dd}`;
-    const hora  = parseInt(hh);
-
-    const btn = document.querySelector('#form-reserva .btn-main');
-    if (btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
-
-    const { error } = await sb.from('bookings').insert({
-      fecha, hora, modalidad,
-      nombre, email, mensaje: msg,
-      user_id: currentUser?.id || null
-    });
-
-    if (error) {
-      alert('Error: ' + error.message);
-      if (btn) { btn.textContent = 'Confirmar reserva'; btn.disabled = false; }
-      return;
-    }
-
-    const h2 = String(hora+1).padStart(2,'0');
-    bookedSlots.add(selectedSlot);
-    bookedSlots.add(`${dy}-${dm}-${dd}-${h2}`);
-    document.getElementById('form-reserva').style.display = 'none';
-    document.getElementById('reserva-ok').style.display = 'block';
-    selectedSlot = null;
-    renderCal();
-  }
-
-  async function loadStore() {
-  const grid = document.getElementById('store-grid');
-  if (!grid) return;
-
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Cargando...</div>';
-
-  try {
-    // Usar fetch directo a la REST API de Supabase
-    const res = await fetch(
-      'https://anvkreqmsbzsfaepudlx.supabase.co/rest/v1/products?activo=eq.true&order=created_at.desc',
-      {
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
-        }
-      }
-    );
-    const data = await res.json();
-    const error = res.ok ? null : data;
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Próximamente — Sumate al Producer Club</div>';
-      return;
-    }
-
-    const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
-    const badgeColor = { sample_pack: 'var(--red2)', track_unreleased: 'var(--purple)', bundle: 'var(--chrome2)' };
-    const badgeText  = { sample_pack: 'DISPONIBLE', track_unreleased: 'UNRELEASED', bundle: 'BUNDLE' };
-
-    grid.innerHTML = data.map(p => `
-      <div class="product-card">
-        <div class="p-badge" style="background:${badgeColor[p.tipo] || 'var(--red2)'};">${badgeText[p.tipo] || 'NUEVO'}</div>
-        <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
-        <div class="p-name">${p.nombre}</div>
-        <p class="p-desc">${p.descripcion || ''}</p>
-        ${p.archivo_url ? `
-        <div style="margin-bottom:20px;">
-          <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-transform:uppercase;margin-bottom:6px;">// Preview</p>
-          <audio controls style="width:100%;height:36px;outline:none;" preload="none">
-            <source src="${p.archivo_url}" type="audio/wav">
-            <source src="${p.archivo_url}" type="audio/mpeg">
-          </audio>
-        </div>` : ''}
-        <div class="p-footer">
-          <div class="p-price">$${p.precio} <span>USD</span></div>
-          <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
-        </div>
-      </div>
-    `).join('') + `
-      <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
-        <div class="p-type">Próximamente</div>
-        <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
-        <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
-      </div>
-    `;
-
-    document.querySelectorAll('.product-card').forEach(el => {
-      el.addEventListener('mouseenter', () => document.getElementById('cur')?.classList.add('big'));
-      el.addEventListener('mouseleave', () => document.getElementById('cur')?.classList.remove('big'));
-    });
-
-  } catch(e) {
-    console.error('Error cargando tienda:', e);
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--red2);">Error cargando productos. Recargá la página.</div>';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    refreshAuth();
-    loadBlockedSlots();
-  });
-  </script>
-
-<!-- AUTH MODAL -->
-<!-- AUTH MODAL -->
-<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid var(--border);padding:0;min-width:380px;max-width:440px;width:90%;position:relative;overflow:hidden;">
-    
-    <!-- Header -->
-    <div style="padding:28px 32px 0;border-bottom:1px solid var(--border);">
-      <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;line-height:1;">×</button>
-      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Acceso AMCU</p>
-      
-      <!-- Tabs -->
-      <div style="display:flex;gap:0;">
-        <button id="tab-login" onclick="switchTab('login')" style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Iniciar sesión</button>
-        <button id="tab-register" onclick="switchTab('register')" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Crear cuenta</button>
-      </div>
-    </div>
-
-    <div style="padding:28px 32px;">
-      <!-- Google Login -->
-      <button onclick="loginWithGoogle()" style="width:100%;background:#fff;border:none;color:#111;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;transition:background .2s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#fff'">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continuar con Google
-      </button>
-
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div style="flex:1;height:1px;background:var(--border);"></div>
-        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);">O</span>
-        <div style="flex:1;height:1px;background:var(--border);"></div>
-      </div>
-
-      <!-- Nombre (solo registro) -->
-      <div id="field-nombre" style="display:none;margin-bottom:14px;">
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
-        <input id="auth-nombre" type="text" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-
-      <div style="margin-bottom:14px;">
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
-        <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-
-      <div style="margin-bottom:8px;">
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Contraseña</label>
-        <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-
-      <p id="auth-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);min-height:18px;margin:8px 0 16px;"></p>
-
-      <button id="auth-submit" onclick="doLogin()" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#ff2010'" onmouseout="this.style.background='var(--red2)'">Entrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MERCADO PAGO MODAL -->
-<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid var(--border);padding:40px;min-width:360px;max-width:440px;width:90%;position:relative;">
-    <button onclick="closeMPModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;">×</button>
-    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:24px;">// Checkout</p>
-    <div id="mp-product-info" style="background:var(--black);border:1px solid var(--border);padding:20px;margin-bottom:24px;">
-      <p id="mp-product-name" style="font-family:var(--font-display);font-size:24px;margin-bottom:4px;"></p>
-      <p id="mp-product-price" style="font-family:var(--font-display);font-size:36px;color:var(--red2);"></p>
-    </div>
-    <div style="margin-bottom:16px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu email</label>
-      <input id="mp-email" type="email" placeholder="Para recibir tu compra" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
-    </div>
-    <div style="margin-bottom:24px;">
-      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu nombre</label>
-      <input id="mp-nombre" type="text" placeholder="Nombre completo" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
-    </div>
-    <!-- Botón oficial de Mercado Pago -->
-    <button onclick="initMercadoPago()" id="mp-btn" style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;" onmouseover="this.style.background='#007ab8'" onmouseout="this.style.background='#009ee3'">
-      <svg width="20" height="20" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#009ee3"/><path d="M8 20.5c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2v.5c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2v-.5z" fill="#fff"/></svg>
-      Pagar con Mercado Pago
-    </button>
-    <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;margin-top:12px;">Tarjetas, débito, efectivo · Pago seguro</p>
-  </div>
-</div>
-
-<script>
-// ---- AUTH TABS ----
-let currentTab = 'login';
-function switchTab(tab) {
-  currentTab = tab;
-  const isReg = tab === 'register';
-  document.getElementById('tab-login').style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)';
-  document.getElementById('tab-login').style.color = isReg ? 'var(--muted2)' : 'var(--white)';
-  document.getElementById('tab-register').style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent';
-  document.getElementById('tab-register').style.color = isReg ? 'var(--white)' : 'var(--muted2)';
-  document.getElementById('field-nombre').style.display = isReg ? 'block' : 'none';
-  document.getElementById('auth-submit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
-  document.getElementById('auth-msg').textContent = '';
-}
-
-async function loginWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin }
-  });
-  if (error) document.getElementById('auth-msg').textContent = error.message;
-}
-
-function toggleAuthMode() {
-  switchTab(document.getElementById('auth-mode')?.value || 'login');
-}
-
-// ---- MERCADO PAGO ----
-let mpCurrentProduct = null;
-
-function openMPModal(productName, productPrice, productId) {
-  if (!currentUser) { openAuthModal(); return; }
-  mpCurrentProduct = { name: productName, price: productPrice, id: productId };
-  document.getElementById('mp-product-name').textContent = productName;
-  document.getElementById('mp-product-price').textContent = '$' + productPrice + ' USD';
-  document.getElementById('mp-email').value = currentUser.email || '';
-  document.getElementById('mp-nombre').value = currentProfile?.nombre || '';
-  document.getElementById('mp-modal').style.display = 'flex';
-}
-
-function closeMPModal() {
-  document.getElementById('mp-modal').style.display = 'none';
-}
-
-async function initMercadoPago() {
-  const email  = document.getElementById('mp-email').value.trim();
-  const nombre = document.getElementById('mp-nombre').value.trim();
-  const btn    = document.getElementById('mp-btn');
-
-  if (!email || !nombre) { alert('Completá email y nombre'); return; }
-  if (!mpCurrentProduct) return;
-
-  btn.innerHTML = '<span style="opacity:.7">Procesando...</span>'; btn.disabled = true;
-
-  try {
-    // 1. Guardar orden pendiente en Supabase
-    const { data: order, error: orderError } = await sb.from('orders').insert({
-      user_id: currentUser?.id || null,
-      product_id: mpCurrentProduct.id || null,
-      nombre, email,
-      monto: mpCurrentProduct.price,
-      estado: 'pendiente'
-    }).select().single();
-
-    if (orderError) throw orderError;
-
-    // 2. Crear preferencia de pago en Mercado Pago
-    const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
-      },
-      body: JSON.stringify({
-        items: [{
-          title: mpCurrentProduct.name,
-          quantity: 1,
-          unit_price: parseFloat(mpCurrentProduct.price),
-          currency_id: 'USD'
-        }],
-        payer: { email, name: nombre },
-        external_reference: order.id,
-        back_urls: {
-          success: window.location.origin + '?pago=ok&order=' + order.id,
-          failure: window.location.origin + '?pago=error&order=' + order.id,
-          pending: window.location.origin + '?pago=pendiente&order=' + order.id
-        },
-        auto_return: 'approved',
-        notification_url: 'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/mp-webhook'
-      })
-    });
-
-    const mpData = await mpRes.json();
-
-    if (!mpData.init_point) throw new Error(mpData.message || 'Error creando preferencia MP');
-
-    // 3. Actualizar orden con el ID de preferencia de MP
-    await sb.from('orders').update({ 
-      estado: 'pendiente',
-      mp_preference_id: mpData.id 
-    }).eq('id', order.id);
-
-    // 4. Redirigir al checkout de Mercado Pago
-    closeMPModal();
-    window.location.href = mpData.init_point;
-
-  } catch(e) {
-    console.error('MP Error:', e);
-    // Fallback — mostrar link de pago manual
-    btn.innerHTML = 'Pagar con Mercado Pago'; btn.disabled = false;
-    alert('Error al procesar el pago: ' + e.message + '\n\nContactanos a amcuoficial@gmail.com para coordinar el pago.');
-  }
-}
-
-// Verificar resultado del pago al volver de MP
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const pago = params.get('pago');
-  const orderId = params.get('order');
-  if (pago === 'ok' && orderId) {
-    // Actualizar orden como pagada
-    sb.from('orders').update({ estado: 'pagado' }).eq('id', orderId).then(() => {
-      showPaymentSuccess();
-    });
-  } else if (pago === 'error') {
-    showPaymentError();
-  }
-});
-
-function showPaymentSuccess() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
-  modal.innerHTML = `
-    <div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:400px;">
-      <div style="font-family:var(--font-display);font-size:60px;color:#3fff2a;margin-bottom:16px;">✓</div>
-      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO EXITOSO</p>
-      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Revisá tu email — te enviamos el link de descarga.</p>
-      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-function showPaymentError() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
-  modal.innerHTML = `
-    <div style="background:#050505;border:1px solid var(--red2);padding:48px;text-align:center;max-width:400px;">
-      <div style="font-family:var(--font-display);font-size:60px;color:var(--red2);margin-bottom:16px;">✗</div>
-      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO CANCELADO</p>
-      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Si tuviste algún problema escribinos a amcuoficial@gmail.com</p>
-      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:var(--red2);border:none;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-</script>
-
-<script>
-// ============ REPRODUCTOR PROTEGIDO ESTILO BEATPORT ============
-// Deshabilitar teclas de descarga
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
-    e.preventDefault();
-  }
-});
-// Deshabilitar arrastrar elementos de audio
-document.addEventListener('dragstart', e => {
-  if (e.target.tagName === 'AUDIO' || e.target.closest('.track-player')) e.preventDefault();
-});
-const players = {};
-
-async function initPlayer(productId, audioUrl, startSec, nombre) {
-  if (players[productId]) return;
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  try {
-    // Fetch con credenciales — el blob nunca queda expuesto en el DOM
-    const res = await fetch(audioUrl, { 
-      headers: {
-        'Cache-Control': 'no-store',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
-      }
-    });
-    const arrayBuffer = await res.arrayBuffer();
-    // Limpiar el ArrayBuffer original para que no sea accesible
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
-    
-    players[productId] = {
-      ctx, audioBuffer, startSec,
-      source: null, playing: false,
-      startTime: 0, pausedAt: 0,
-      duration: 30 // preview de 30 segundos
-    };
-    
-    drawWaveform(productId);
-    
-  } catch(e) {
-    console.error('Error cargando audio:', e);
-  }
-}
-
-function drawWaveform(productId) {
-  const p = players[productId];
-  if (!p) return;
-  const canvas = document.getElementById('wave-' + productId);
-  if (!canvas) return;
-  const ctx2 = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 300;
-  const H = canvas.offsetHeight || 40;
-  canvas.width = W;
-  canvas.height = H;
-  
-  const buf = p.audioBuffer;
-  const data = buf.getChannelData(0);
-  
-  // Solo mostrar los 30 segundos del preview
-  const startSample = Math.floor(p.startSec * buf.sampleRate);
-  const endSample = Math.min(startSample + Math.floor(30 * buf.sampleRate), data.length);
-  const samples = endSample - startSample;
-  const step = Math.floor(samples / W);
-  
-  ctx2.clearRect(0, 0, W, H);
-  
-  for (let i = 0; i < W; i++) {
-    let max = 0;
-    for (let j = 0; j < step; j++) {
-      const idx = startSample + i * step + j;
-      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
-    }
-    const barH = Math.max(2, max * H * 0.9);
-    const y = (H - barH) / 2;
-    ctx2.fillStyle = i % 2 === 0 ? '#333' : '#2a2a2a';
-    ctx2.fillRect(i, y, 1, barH);
-  }
-}
-
-function togglePlay(productId, audioUrl, startSec, nombre) {
-  // Decodificar URL desde atributo oculto en lugar de recibirla como parámetro visible
-  const srcEl = document.getElementById('src-' + productId);
-  const realUrl = srcEl ? atob(srcEl.getAttribute('data-s')) : audioUrl;
-  const p = players[productId];
-  
-  if (!p) {
-    // Primera vez — cargar el audio
-    const btn = document.querySelector('#play-' + productId);
-    if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="none" stroke="white" stroke-width="1.5" stroke-dasharray="8 4"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur=".8s" repeatCount="indefinite"/></circle></svg>';
-    initPlayer(productId, realUrl, startSec, nombre).then(() => {
-      playAudio(productId);
-    });
-    return;
-  }
-  
-  if (p.playing) {
-    pauseAudio(productId);
-  } else {
-    playAudio(productId);
-  }
-}
-
-function playAudio(productId) {
-  const p = players[productId];
-  if (!p) return;
-  
-  // Pausar otros players
-  Object.keys(players).forEach(id => {
-    if (id !== productId && players[id].playing) pauseAudio(id);
-  });
-  
-  if (p.ctx.state === 'suspended') p.ctx.resume();
-  
-  p.source = p.ctx.createBufferSource();
-  p.source.buffer = p.audioBuffer;
-  p.source.connect(p.ctx.destination);
-  
-  const startSec = p.startSec + p.pausedAt;
-  const remaining = p.duration - p.pausedAt;
-  
-  p.source.start(0, startSec, remaining);
-  p.startTime = p.ctx.currentTime - p.pausedAt;
-  p.playing = true;
-  
-  // Actualizar UI
-  updatePlayBtn(productId, true);
-  
-  // Animación de progreso
-  p.rafId = requestAnimationFrame(() => updateProgress(productId));
-  
-  // Auto stop a los 30 segundos
-  p.source.onended = () => {
-    if (p.playing) {
-      p.playing = false;
-      p.pausedAt = 0;
-      updatePlayBtn(productId, false);
-      updateProgressBar(productId, 0);
-    }
-  };
-}
-
-function pauseAudio(productId) {
-  const p = players[productId];
-  if (!p || !p.playing) return;
-  p.pausedAt = p.ctx.currentTime - p.startTime;
-  if (p.pausedAt >= p.duration) p.pausedAt = 0;
-  p.source.stop();
-  p.playing = false;
-  cancelAnimationFrame(p.rafId);
-  updatePlayBtn(productId, false);
-}
-
-function updateProgress(productId) {
-  const p = players[productId];
-  if (!p || !p.playing) return;
-  const elapsed = p.ctx.currentTime - p.startTime;
-  const pct = Math.min(elapsed / p.duration, 1);
-  updateProgressBar(productId, pct * 100);
-  // Actualizar tiempo
-  const timeEl = document.getElementById('time-' + productId);
-  if (timeEl) {
-    const remaining = Math.max(0, p.duration - elapsed);
-    timeEl.textContent = '0:' + String(Math.ceil(remaining)).padStart(2,'0');
-  }
-  if (pct < 1) p.rafId = requestAnimationFrame(() => updateProgress(productId));
-}
-
-function updateProgressBar(productId, pct) {
-  const bar = document.getElementById('prog-' + productId);
-  if (bar) bar.style.width = pct + '%';
-  // Actualizar color de waveform
-  const canvas = document.getElementById('wave-' + productId);
-  if (!canvas) return;
-  const ctx2 = canvas.getContext('2d');
-  const W = canvas.width; const H = canvas.height;
-  const playedW = Math.floor(W * pct / 100);
-  // Repintar barras jugadas en rojo
-  const p = players[productId];
-  if (!p) return;
-  const buf = p.audioBuffer;
-  const data = buf.getChannelData(0);
-  const startSample = Math.floor(p.startSec * buf.sampleRate);
-  const endSample = Math.min(startSample + Math.floor(30 * buf.sampleRate), data.length);
-  const samples = endSample - startSample;
-  const step = Math.floor(samples / W);
-  for (let i = 0; i < Math.min(playedW, W); i++) {
-    let max = 0;
-    for (let j = 0; j < step; j++) {
-      const idx = startSample + i * step + j;
-      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
-    }
-    const barH = Math.max(2, max * H * 0.9);
-    const y = (H - barH) / 2;
-    ctx2.fillStyle = '#e01a10';
-    ctx2.fillRect(i, y, 1, barH);
-  }
-}
-
-function updatePlayBtn(productId, playing) {
-  const btn = document.getElementById('play-' + productId);
-  if (!btn) return;
-  btn.innerHTML = playing
-    ? '<svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="3" height="8" fill="white"/><rect x="7" y="2" width="3" height="8" fill="white"/></svg>'
-    : '<svg width="12" height="12" viewBox="0 0 12 12"><polygon points="3,1 11,6 3,11" fill="white"/></svg>';
-}
-
-function seekPlayer(productId, e) {
-  const p = players[productId];
-  if (!p) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pct = (e.clientX - rect.left) / rect.width;
-  p.pausedAt = pct * p.duration;
-  if (p.playing) {
-    p.source.stop();
-    p.playing = false;
-    playAudio(productId);
-  } else {
-    updateProgressBar(productId, pct * 100);
-  }
-}
-
-// Bloquear click derecho en toda la página para no descargar audio
-// Bloquear click derecho en toda la página
-document.addEventListener('contextmenu', e => e.preventDefault());
-
-// Bloquear DevTools básico
-document.addEventListener('keydown', e => {
-  if (e.key === 'F12') e.preventDefault();
-});
-</script>
-
 </body>
+</html>
