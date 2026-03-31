@@ -290,14 +290,6 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-// Inicializar Supabase INMEDIATAMENTE — antes que cualquier otra cosa
-window._sb = supabase.createClient(
-  'https://anvkreqmsbzsfaepudlx.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
-);
-console.log('Supabase inicializado:', !!window._sb);
-</script>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 <body>
@@ -1138,6 +1130,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  window._sb = sb;
   window._sb = sb;
 
   let currentUser = null;
