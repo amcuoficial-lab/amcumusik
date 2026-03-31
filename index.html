@@ -352,13 +352,18 @@ function closeAuthModal() {
   if(m) m.style.display = 'none'; 
 }
 function openMPModal(name, price, id) {
+  window.mpCurrentProduct = { name: name, price: price, id: id };
+  var pn = document.getElementById('mp-product-name');
+  var pp = document.getElementById('mp-product-price');
+  var pe = document.getElementById('mp-email');
+  var pn2 = document.getElementById('mp-nombre');
+  if(pn) pn.textContent = name;
+  if(pp) pp.textContent = '$' + price + ' USD';
+  if(pe && window._currentUser) pe.value = window._currentUser.email || '';
+  if(pn2 && window._currentProfile) pn2.value = window._currentProfile.nombre || '';
   var m = document.getElementById('mp-modal');
-  if(!m) return;
-  document.getElementById('mp-product-name').textContent = name;
-  document.getElementById('mp-product-price').textContent = '$'+price+' USD';
-  m._product = {name:name, price:price, id:id};
-  window.mpCurrentProduct = {name:name, price:price, id:id};
-  m.style.display = 'flex';
+  if(m) m.style.display = 'flex';
+  else console.error('mp-modal no encontrado');
 }
 function closeMPModal() {
   var m = document.getElementById('mp-modal');
@@ -1602,48 +1607,49 @@ function closeMPModal(){
 }
 
 async function initMercadoPago(){
-  var email=document.getElementById('mp-email')?.value?.trim();
-  var nombre=document.getElementById('mp-nombre')?.value?.trim();
-  var btn=document.getElementById('mp-btn');
-  if(!email||!nombre){alert('Completá email y nombre');return;}
+  var email  = document.getElementById('mp-email')?.value?.trim();
+  var nombre = document.getElementById('mp-nombre')?.value?.trim();
+  var btn    = document.getElementById('mp-btn');
+  if(!email||!nombre){ alert('Completá email y nombre'); return; }
   if(!window.mpCurrentProduct) return;
-  if(btn){btn.textContent='Procesando...';btn.disabled=true;}
+  if(btn){ btn.textContent='Procesando...'; btn.disabled=true; }
   try {
-    var sb=window._sb;
-    var productId=window.mpCurrentProduct.id;
-    var insertData={
-      nombre,email,
-      monto:window.mpCurrentProduct.price,
-      estado:'pendiente',
-      user_id:window._currentUser?.id||null
-    };
-    if(productId && productId!='null') insertData.product_id=productId;
-    var orderRes=await sb.from('orders').insert(insertData).select().single();
-    if(orderRes.error) throw orderRes.error;
+    // 1. Guardar orden en Supabase
+    var sb = window._sb;
+    var insertData = { nombre, email, monto: window.mpCurrentProduct.price, estado: 'pendiente', user_id: window._currentUser?.id||null };
+    var pid = window.mpCurrentProduct.id;
+    if(pid && pid !== 'null') insertData.product_id = pid;
+    var { data: order, error: orderErr } = await sb.from('orders').insert(insertData).select().single();
+    if(orderErr) throw orderErr;
 
-    var mpRes=await fetch('https://api.mercadopago.com/checkout/preferences',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'},
-      body:JSON.stringify({
-        items:[{title:window.mpCurrentProduct.name,quantity:1,unit_price:parseFloat(window.mpCurrentProduct.price),currency_id:'USD'}],
-        payer:{email,name:nombre},
-        external_reference:orderRes.data.id,
-        back_urls:{
-          success:window.location.origin+'?pago=ok&order='+orderRes.data.id,
-          failure:window.location.origin+'?pago=error',
-          pending:window.location.origin+'?pago=pendiente'
+    // 2. Crear preferencia Mercado Pago
+    var mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
+      },
+      body: JSON.stringify({
+        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: parseFloat(window.mpCurrentProduct.price), currency_id: 'USD' }],
+        payer: { email: email, name: nombre },
+        external_reference: order.id,
+        back_urls: {
+          success: window.location.origin + '?pago=ok&order=' + order.id,
+          failure: window.location.origin + '?pago=error',
+          pending: window.location.origin + '?pago=pendiente'
         },
-        auto_return:'approved'
+        auto_return: 'approved'
       })
     });
-    var mpData=await mpRes.json();
-    if(!mpData.init_point) throw new Error(mpData.message||'Error MP');
+    var mpData = await mpRes.json();
+    console.log('MP response:', mpData);
+    if(!mpData.init_point) throw new Error(mpData.message || JSON.stringify(mpData));
     closeMPModal();
-    window.location.href=mpData.init_point;
+    window.location.href = mpData.init_point;
   } catch(e) {
-    console.error('MP error:',e);
-    alert('Error: '+e.message);
-    if(btn){btn.textContent='Pagar con Mercado Pago';btn.disabled=false;}
+    console.error('MP error:', e);
+    alert('Error Mercado Pago: ' + e.message);
+    if(btn){ btn.textContent='Pagar con Mercado Pago'; btn.disabled=false; }
   }
 }
 
