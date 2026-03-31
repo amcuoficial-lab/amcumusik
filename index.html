@@ -1239,20 +1239,46 @@ document.addEventListener('DOMContentLoaded', init);
     const grid = document.getElementById('store-grid');
     const proximamente = grid?.lastElementChild;
     try {
-      const res = const { data, error: storeErr } = await sb.from('products')
+      // CORRECCIÓN AQUÍ: Se eliminó el "const res =" sobrante
+      const { data, error: storeErr } = await sb.from('products')
         .select('*').eq('activo', true).order('created_at', { ascending: false });
+        
       if (storeErr) throw storeErr;
       if (!Array.isArray(data)) return;
-      // Agregar reproductor al track que tiene archivo
-      data.forEach(p => {
-        if (p.archivo_url) {
-          const zone = document.getElementById('player-zone-' + p.id);
-          if (zone && zone.innerHTML === '') {
-            zone.innerHTML = renderPlayer(p.id, p.nombre, p.preview_start || 0);
-            zone.insertAdjacentHTML('afterend', `<span id="asrc-${p.id}" style="display:none;position:absolute;" data-e="${btoa(unescape(encodeURIComponent(p.archivo_url)))}"></span>`);
-          }
-        }
-      });
+
+      // Agregar productos nuevos al grid
+      if (grid && proximamente) {
+        const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
+        const badgeColor = { sample_pack: 'var(--red2)', track_unreleased: 'var(--purple)', bundle: 'var(--chrome2)' };
+        const badgeText  = { sample_pack: 'DISPONIBLE', track_unreleased: 'UNRELEASED', bundle: 'BUNDLE' };
+        
+        data.filter(p => !STATIC_IDS.includes(p.id)).forEach(p => {
+          if (document.getElementById('pc-' + p.id)) return;
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.id = 'pc-' + p.id;
+          
+          // Usamos Template Literals (acentos graves) para evitar errores de comillas
+          card.innerHTML = `
+            <div class="p-badge" style="background:${badgeColor[p.tipo] || 'var(--red2)'}">${badgeText[p.tipo] || 'NUEVO'}</div>
+            <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
+            <div class="p-name">${p.nombre}</div>
+            <p class="p-desc">${p.descripcion || ''}</p>
+            <div class="p-footer">
+              <div class="p-price">$${p.precio} <span>USD</span></div>
+              <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g, "\\'")}',${p.precio},'${p.id}')">Comprar</button>
+            </div>
+          `;
+          grid.insertBefore(card, proximamente);
+        });
+      }
+    } catch(e) {
+      console.error('Store error:', e);
+      if (grid && grid.children.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Error cargando productos. Recargá la página.</div>';
+      }
+    }
+  }
       // Agregar productos nuevos
       if (grid && proximamente) {
         const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
