@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AMCU — Bass House Producer</title>
+
+  <meta name="description" content="AMCU — DJ y productor de Bass House. Sample packs, tracks unreleased, clases de producción y membresía exclusiva.">
+  <meta property="og:title" content="AMCU — Bass House Producer">
+  <meta property="og:description" content="Sample packs, tracks unreleased, clases online y presencial en CABA.">
+  <meta property="og:image" content="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG">
+  <meta property="og:url" content="https://amcustore.vercel.app">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG">
+  <title>AMCU — Bass House Producer</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -285,6 +293,29 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
   text-transform: uppercase;
 }
+
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .hero-left { padding: 100px 24px 120px; }
+  .hero-logo { width: 80%; }
+  .about-grid, .ghost-grid, .member-grid { grid-template-columns: 1fr; gap: 40px; }
+  .store-grid { grid-template-columns: 1fr !important; }
+  .stats-bar { grid-template-columns: repeat(3,1fr); }
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  section { padding: 80px 24px; }
+  .block-grid { grid-template-columns: 1fr; }
+  .about-photos { grid-template-columns: 1fr 1fr; }
+  .layout { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 20px; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
+}
+@media (max-width: 480px) {
+  .hero-title { font-size: clamp(60px, 18vw, 100px); }
+  .stats-bar { grid-template-columns: 1fr; }
+  .stat { border-right: none; border-bottom: 1px solid var(--border); }
+}
 </style>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -353,10 +384,7 @@ function openMPModal(name, price, id) {
   window.mpCurrentProduct = {name:name, price:price, id:id};
   m.style.display = 'flex';
 }
-function closeMPModal() {
-  var m = document.getElementById('mp-modal');
-  if(m) m.style.display = 'none';
-}
+
 </script>
 <nav id="nav">
   <a href="#" class="nav-logo">
@@ -1117,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', init);
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   window._sb = sb;
   window._supabase_ready = true;
-  window._sb = sb;
+  
 
   let currentUser = null;
   let currentProfile = null;
@@ -1211,11 +1239,8 @@ document.addEventListener('DOMContentLoaded', init);
     const grid = document.getElementById('store-grid');
     const proximamente = grid?.lastElementChild;
     try {
-      // Usar cliente Supabase — evita CORS
-      const { data, error: storeErr } = await sb.from('products')
-        .select('*')
-        .eq('activo', true)
-        .order('created_at', { ascending: false });
+      const res = const { data, error: storeErr } = await sb.from('products')
+        .select('*').eq('activo', true).order('created_at', { ascending: false });
       if (storeErr) throw storeErr;
       if (!Array.isArray(data)) return;
       // Agregar reproductor al track que tiene archivo
@@ -1252,7 +1277,14 @@ document.addEventListener('DOMContentLoaded', init);
           grid.insertBefore(card, proximamente);
         });
       }
-    } catch(e) { console.log('Store error:', e); }
+    } catch(e) {
+    console.error('Store error:', e);
+    // Mostrar productos hardcodeados si Supabase falla
+    const grid = document.getElementById('store-grid');
+    if (grid && grid.children.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Error cargando productos. Recargá la página.</div>';
+    }
+  }
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -1475,49 +1507,67 @@ function closeMPModal(){
   if(m) m.style.display='none';
 }
 
+let mpLoading = false;
 async function initMercadoPago(){
-  var email=document.getElementById('mp-email')?.value?.trim();
-  var nombre=document.getElementById('mp-nombre')?.value?.trim();
-  var btn=document.getElementById('mp-btn');
-  if(!email||!nombre){alert('Completá email y nombre');return;}
-  if(!window.mpCurrentProduct) return;
-  if(btn){btn.textContent='Procesando...';btn.disabled=true;}
+  if (mpLoading) return;
+  mpLoading = true;
+  var email = document.getElementById('mp-email')?.value?.trim();
+  var nombre = document.getElementById('mp-nombre')?.value?.trim();
+  var btn = document.getElementById('mp-btn');
+  if(!email || !nombre){
+    alert('Completá email y nombre');
+    mpLoading = false;
+    return;
+  }
+  if(!window.mpCurrentProduct){
+    alert('Producto inválido');
+    mpLoading = false;
+    return;
+  }
+  if(btn){ btn.textContent = 'Procesando...'; btn.disabled = true; }
   try {
-    var sb=window._sb;
-    var productId=window.mpCurrentProduct.id;
-    var insertData={
-      nombre,email,
-      monto:window.mpCurrentProduct.price,
-      estado:'pendiente',
-      user_id:window._currentUser?.id||null
+    const sb = window._sb;
+    const insertData = {
+      nombre, email,
+      monto: window.mpCurrentProduct.price,
+      estado: 'pendiente',
+      user_id: window._currentUser?.id || null
     };
-    if(productId && productId!='null') insertData.product_id=productId;
-    var orderRes=await sb.from('orders').insert(insertData).select().single();
-    if(orderRes.error) throw orderRes.error;
-
-    var mpRes=await fetch('https://api.mercadopago.com/checkout/preferences',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'},
-      body:JSON.stringify({
-        items:[{title:window.mpCurrentProduct.name,quantity:1,unit_price:parseFloat(window.mpCurrentProduct.price),currency_id:'USD'}],
-        payer:{email,name:nombre},
-        external_reference:orderRes.data.id,
-        back_urls:{
-          success:window.location.origin+'?pago=ok&order='+orderRes.data.id,
-          failure:window.location.origin+'?pago=error',
-          pending:window.location.origin+'?pago=pendiente'
+    if(window.mpCurrentProduct.id && window.mpCurrentProduct.id !== 'null'){
+      insertData.product_id = window.mpCurrentProduct.id;
+    }
+    const { data: order, error } = await sb
+      .from('orders')
+      .insert(insertData)
+      .select()
+      .single();
+    if(error) throw error;
+    const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
+      },
+      body: JSON.stringify({
+        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: Number(window.mpCurrentProduct.price), currency_id: 'USD' }],
+        payer: { email: email, name: nombre },
+        external_reference: order.id,
+        back_urls: {
+          success: window.location.origin + '?pago=ok&order=' + order.id,
+          failure: window.location.origin + '?pago=error',
+          pending: window.location.origin + '?pago=pendiente'
         },
-        auto_return:'approved'
+        auto_return: 'approved'
       })
     });
-    var mpData=await mpRes.json();
-    if(!mpData.init_point) throw new Error(mpData.message||'Error MP');
-    closeMPModal();
-    window.location.href=mpData.init_point;
-  } catch(e) {
-    console.error('MP error:',e);
-    alert('Error: '+e.message);
-    if(btn){btn.textContent='Pagar con Mercado Pago';btn.disabled=false;}
+    const mpData = await mpRes.json();
+    if(!mpData.init_point) throw new Error(mpData.message || 'Error Mercado Pago');
+    window.location.href = mpData.init_point;
+  } catch(e){
+    console.error('MP ERROR:', e);
+    alert('Error: ' + e.message);
+    if(btn){ btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; }
+    mpLoading = false;
   }
 }
 
