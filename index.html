@@ -1216,6 +1216,7 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
   let currentUser = null;
   let currentProfile = null;
+  var currentTab = 'login';
 
   async function loadProfile(user) {
     const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
@@ -1679,7 +1680,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script>
 // ---- AUTH TABS ----
-var currentTab = 'login';
 function switchTab(tab) {
   currentTab = tab;
   const isReg = tab === 'register';
