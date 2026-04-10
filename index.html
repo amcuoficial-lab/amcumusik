@@ -5,229 +5,244 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMCU — Bass House Producer</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
-
-<script src="https://sdk.mercadopago.com/js/v2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --black: #020202; --white: #ede9e4; --red: #c0170f; --red2: #e01a10;
-  --chrome: #b8b0c8; --chrome2: #c9a84c; --green: #3fff2a; --purple: #9b6fff;
-  --muted: #282828; --muted2: #666; --card: #0a0a0a; --border: #1a1a1a;
-  --font-display: 'Bebas Neue', sans-serif; --font-body: 'DM Sans', sans-serif; --font-mono: 'DM Mono', monospace;
+  --black: #020202;
+  --white: #ede9e4;
+  --red: #c0170f;
+  --red2: #e01a10;
+  --chrome: #b8b0c8;
+  --chrome2: #c9a84c;
+  --green: #3fff2a;
+  --purple: #9b6fff;
+  --muted: #282828;
+  --muted2: #666;
+  --card: #0a0a0a;
+  --border: #1a1a1a;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
 }
+
 html { scroll-behavior: smooth; }
-body { background: var(--black); color: var(--white); font-family: var(--font-body); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
-body::after { content:''; position: fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:9990; }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+}
 
-nav { position: fixed; top:0; left:0; right:0; z-index:200; display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; transition: background .3s; border-bottom: 1px solid transparent; }
+.cursor {
+  position: fixed;
+  width: 10px; height: 10px;
+  background: var(--red2);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .2s, height .2s;
+  mix-blend-mode: difference;
+}
+.cursor.big { width: 44px; height: 44px; }
+
+body::after {
+  content:'';
+  position: fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:9990;
+}
+
+/* NAV */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 48px;
+  transition: background .3s, border-color .3s;
+  border-bottom: 1px solid transparent;
+}
 nav.scrolled { background: rgba(2,2,2,.95); border-color: var(--border); backdrop-filter: blur(16px); }
-.nav-logo img { height: 42px; }
+.nav-logo img { height: 42px; filter: drop-shadow(0 0 12px rgba(180,140,255,.3)); }
 .nav-links { display:flex; gap:32px; list-style:none; }
-.nav-links a { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted2); text-decoration: none; }
-.nav-cta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; background: var(--red2); color: var(--white); border: none; padding: 10px 22px; cursor:pointer; }
+.nav-links a {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted2); text-decoration: none; transition: color .2s;
+}
+.nav-links a:hover { color: var(--white); }
+.nav-cta {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  background: var(--red2); color: var(--white); border: none; padding: 10px 22px; cursor: none; transition: background .2s;
+}
+.nav-cta:hover { background: #ff2010; }
 
-.hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; position: relative; overflow: hidden; }
-.hero-left { display:flex; flex-direction:column; justify-content:flex-end; padding: 120px 48px 160px; z-index:2; }
-.hero-logo { width: min(460px, 90%); margin-bottom: 36px; }
-.btn-main { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; background: var(--red2); color: var(--white); border: none; padding: 14px 28px; cursor:pointer; }
-.hero-photo { width:100%; height:100%; object-fit:cover; }
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: grid; grid-template-columns: 1fr 1fr;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background: radial-gradient(ellipse 60% 80% at 0% 50%, rgba(192,23,15,.15) 0%, transparent 65%),
+              radial-gradient(ellipse 40% 40% at 100% 80%, rgba(155,111,255,.07) 0%, transparent 60%);
+}
+.hero-left {
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding: 120px 48px 160px; position:relative; z-index:2;
+}
+.hero-tag {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 28px;
+  opacity:0; animation: fadeUp .7s .3s forwards;
+}
+.hero-tag span { color: var(--red2); }
+.hero-logo {
+  width: min(460px, 90%); margin-bottom: 36px;
+  opacity:0; animation: fadeUp .8s .5s forwards;
+  filter: drop-shadow(0 0 28px rgba(192,23,15,.22)) drop-shadow(0 0 56px rgba(155,111,255,.13));
+}
+.hero-desc {
+  font-size: 15px; color: var(--muted2); max-width: 400px; line-height: 1.8;
+  font-weight: 300; margin-bottom: 40px;
+  opacity:0; animation: fadeUp .7s .7s forwards;
+}
+.hero-actions {
+  display:flex; gap:16px; flex-wrap:wrap;
+  opacity:0; animation: fadeUp .7s .9s forwards;
+}
+.btn-main {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  background: var(--red2); color: var(--white); border: none; padding: 14px 28px; cursor: none; transition: background .2s;
+}
+.btn-main:hover { background: #ff2010; }
+.btn-outline {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  background: transparent; color: var(--white); border: 1px solid var(--border); padding: 14px 28px; cursor: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-outline:hover { border-color: var(--chrome); color: var(--chrome); }
+.hero-right { position:relative; overflow:hidden; }
+.hero-photo {
+  width:100%; height:100%; object-fit:cover; object-position:center top;
+  filter: contrast(1.05);
+  opacity:0; animation: fadeIn 1.2s .4s forwards;
+}
+.hero-right::after {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(to right, var(--black) 0%, transparent 30%),
+              linear-gradient(to top, var(--black) 0%, transparent 15%),
+              rgba(192,23,15,.06);
+}
+.stats-bar {
+  position:absolute; bottom:0; left:0; right:0; z-index:3;
+  border-top: 1px solid var(--border);
+  display:grid; grid-template-columns: repeat(3,1fr);
+  background: rgba(2,2,2,.85); backdrop-filter:blur(12px);
+}
+.stat { padding: 24px 32px; border-right: 1px solid var(--border); opacity:0; animation: fadeUp .6s forwards; }
+.stat:nth-child(1){animation-delay:.8s}
+.stat:nth-child(2){animation-delay:.95s}
+.stat:nth-child(3){animation-delay:1.1s;border-right:none}
+.stat-n { font-family:var(--font-display); font-size:40px; color:var(--white); display:block; line-height:1; }
+.stat-l { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); margin-top:4px; display:block; }
 
+/* MARQUEE */
+.marquee-wrap { border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden; padding:14px 0; background:#060606; }
+.marquee-track { display:flex; animation:marquee 22s linear infinite; white-space:nowrap; }
+.m-item { font-family:var(--font-display); font-size:16px; letter-spacing:5px; color:var(--muted); padding:0 32px; }
+.m-item.r { color:var(--red2); }
+.m-item.c { color:var(--chrome); }
+
+/* SECTIONS */
 section { padding: 120px 48px; }
-.s-title { font-family:var(--font-display); font-size:clamp(44px,6vw,76px); line-height:.95; margin-bottom:60px; }
+.s-label { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--red2); margin-bottom:16px; }
+.s-title { font-family:var(--font-display); font-size:clamp(44px,6vw,76px); line-height:.95; letter-spacing:1px; margin-bottom:60px; }
+
+/* ABOUT */
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+.about-photos { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.about-photo { width:100%; aspect-ratio:3/4; object-fit:cover; object-position:center top; transition:filter .4s; }
+.about-photo:hover { filter:contrast(1.1) brightness(1.05); }
+.about-text p { font-size:15px; color:var(--muted2); line-height:1.9; font-weight:300; margin-bottom:20px; }
+.about-text p strong { color:var(--white); font-weight:400; }
+.genre-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:32px; }
+.pill {
+  font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  border:1px solid var(--border); color:var(--muted2); padding:6px 14px; transition:border-color .2s, color .2s;
+}
+.pill.active { border-color:var(--red2); color:var(--red2); }
+.pill:hover { border-color:var(--white); color:var(--white); }
+
+.waveform { display:flex; align-items:center; gap:3px; height:36px; margin:28px 0; }
+.wb { width:2px; background:var(--red2); border-radius:2px; opacity:.5; animation:wave var(--d,1s) ease-in-out infinite; animation-delay:var(--del,0s); }
+@keyframes wave { 0%,100%{height:4px} 50%{height:var(--h,28px)} }
+
+/* STORE */
 .store-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:var(--border); }
-.product-card { background:var(--card); padding:36px; position:relative; }
-.p-badge { position:absolute; top:20px; right:20px; font-size:9px; background:var(--red2); padding:4px 8px; }
+.product-card { background:var(--card); padding:36px; position:relative; overflow:hidden; cursor:none; transition:background .3s; }
+.product-card:hover { background:#0e0e0e; }
+.product-card::after { content:''; position:absolute; top:0;left:0;right:0;height:1px; background:linear-gradient(90deg,var(--red2),var(--purple)); transform:scaleX(0); transform-origin:left; transition:transform .3s; }
+.product-card:hover::after { transform:scaleX(1); }
+.p-type { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); margin-bottom:14px; }
+.p-name { font-family:var(--font-display); font-size:26px; letter-spacing:1px; margin-bottom:12px; line-height:1.1; }
+.p-desc { font-size:13px; color:var(--muted2); line-height:1.7; margin-bottom:28px; font-weight:300; }
+.p-footer { display:flex; align-items:center; justify-content:space-between; }
+.p-price { font-family:var(--font-display); font-size:30px; }
+.p-price span { font-family:var(--font-mono); font-size:11px; color:var(--muted2); }
+.btn-buy { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; background:transparent; border:1px solid var(--border); color:var(--white); padding:10px 16px; cursor:none; transition:background .2s, border-color .2s; }
+.btn-buy:hover { background:var(--red2); border-color:var(--red2); }
+.p-badge { position:absolute; top:20px;right:20px; font-family:var(--font-mono); font-size:9px; letter-spacing:1px; text-transform:uppercase; background:var(--red2); color:var(--white); padding:4px 8px; }
 
-/* CALENDARIO Y CHAT STYLES */
-.cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:12px; cursor:pointer; border:1px solid transparent; }
-.cal-day.available { background:#111; color:var(--white); }
-.cal-day.selected { background:var(--red2); color:var(--white); }
-.msg { max-width:75%; padding:14px 18px; font-size:13px; margin-bottom:10px; }
-.msg.u { align-self:flex-end; background:#161616; }
-.msg.a { align-self:flex-start; background:#0d0000; border:1px solid rgba(192,23,15,.3); }
+/* GHOST */
+.ghost-section { background:var(--card); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.ghost-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+.ghost-list { list-style:none; margin-bottom:40px; }
+.ghost-list li { padding:18px 0; border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:flex-start; font-size:14px; color:var(--muted2); font-weight:300; line-height:1.6; }
+.ghost-list li::before { content:''; width:5px;height:5px; background:var(--red2); border-radius:50%; flex-shrink:0; margin-top:8px; }
+.ghost-list li strong { color:var(--white); font-weight:400; }
+.ghost-form { background:#050505; border:1px solid var(--border); padding:40px; }
+.form-title { font-family:var(--font-display); font-size:22px; letter-spacing:2px; margin-bottom:28px; }
+.form-group { margin-bottom:18px; }
+.form-label { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); display:block; margin-bottom:6px; }
+.form-input,.form-select,.form-textarea { width:100%; background:var(--black); border:1px solid var(--border); color:var(--white); font-family:var(--font-body); font-size:14px; padding:12px 14px; outline:none; transition:border-color .2s; font-weight:300; }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--red2); }
+.form-textarea { resize:vertical; min-height:90px; }
+.form-select { appearance:none; cursor:none; }
+.form-input::placeholder,.form-textarea::placeholder { color:var(--muted); }
 
-@media (max-width: 768px) { .hero { grid-template-columns: 1fr; } .store-grid { grid-template-columns: 1fr !important; } }
-</style>
-</head>
-<body>
+/* MEMBERSHIP */
+.member-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
+.member-card { background:var(--card); padding:48px; position:relative; overflow:hidden; }
+.member-card.featured { background:#0c0000; }
+.member-card.featured::before { content:'RECOMENDADO'; position:absolute; top:22px;right:-34px; background:var(--red2); color:var(--white); font-family:var(--font-mono); font-size:9px; letter-spacing:2px; padding:5px 48px; transform:rotate(45deg); }
+.m-plan { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted2); margin-bottom:20px; }
+.m-price { font-family:var(--font-display); font-size:64px; line-height:1; margin-bottom:4px; }
+.m-price small { font-family:var(--font-mono); font-size:12px; color:var(--muted2); }
+.m-curr { font-family:var(--font-mono); font-size:11px; color:var(--muted2); margin-bottom:32px; }
+.m-perks { list-style:none; margin-bottom:40px; }
+.m-perks li { font-size:13px; color:var(--muted2); padding:10px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; font-weight:300; }
+.chk { width:16px;height:16px;background:var(--red2);color:var(--white);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700; }
+.chk.off { background:var(--muted); }
+.m-perks li strong { color:var(--white); font-weight:400; }
 
-<div id="intro" style="position:fixed;inset:0;z-index:99999;background:#020202;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="width:220px;height:1px;background:#111;overflow:hidden;">
-    <div id="ibar" style="height:100%;background:linear-gradient(90deg,#e01a10,#9b6fff);width:0%;"></div>
-  </div>
-</div>
+/* CHAT */
+.chat-box { background:var(--card); border:1px solid var(--border); padding:40px; margin-top:60px; }
+.chat-hdr { display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border); }
+.chat-dot { width:8px;height:8px;background:var(--red2);border-radius:50%;animation:pulse 2s infinite; }
+.chat-ttl { font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2); }
+.chat-msgs { display:flex;flex-direction:column;gap:14px;margin-bottom:20px; }
+.msg { max-width:75%;padding:14px 18px;font-size:13px;line-height:1.6;font-weight:300; }
+.msg.u { align-self:flex-end;background:#161616;border:1px solid var(--border); }
+.msg.a { align-self:flex-start;background:#0d0000;border:1px solid rgba(192,23,15,.3); }
+.msg.a .ml { font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);text-transform:uppercase;margin-bottom:6px; }
+.chat-row { display:flex;gap:8px; }
+.chat-inp { flex:1;background:#080808;border:1px solid var(--border);color:var(--muted2);font-family:var(--font-mono);font-size:12px;padding:12px 16px;outline:none;font-style:italic; }
+.chat-btn { background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;padding:12px 20px;cursor:none;text-transform:uppercase;font-weight:500; }
 
-<nav id="nav">
-  <a href="#" class="nav-logo"><img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" height="42"></a>
-  <ul class="nav-links">
-    <li><a href="#about">Sobre mí</a></li>
-    <li><a href="#musica">Música</a></li>
-    <li><a href="#store">Tienda</a></li>
-    <li><a href="#ghost">Ghost</a></li>
-    <li><a href="#membership">Membresía</a></li>
-    <li><a href="#clases">Clases</a></li>
-  </ul>
-  <button class="nav-cta" id="auth-btn" onclick="openAuthModal()">Iniciar sesión</button>
-</nav>
-
-<div class="hero">
-  <div class="hero-left">
-    <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" class="hero-logo">
-    <button class="btn-main" onclick="document.getElementById('store').scrollIntoView()">Ver tienda</button>
-  </div>
-  <div class="hero-right"><img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/hero.jpg" class="hero-photo"></div>
-</div>
-
-<section id="about">
-  <h2 class="s-title">Sobre mí</h2>
-  <p>Productor y DJ especializado en Bass House. Sonidos diseñados para elevar tu carrera.</p>
-</section>
-
-<section id="store">
-  <div id="store-grid" class="store-grid">
-    <div class="product-card" id="pc-placeholder">
-       <div class="p-name">Cargando productos...</div>
-    </div>
-    <div style="display:none" id="proximamente"></div>
-  </div>
-</section>
-
-<section id="ghost">
-  <h2 class="s-title">Ghost Production</h2>
-  <p>Tu nombre. Mi música. Entrega en 7-14 días.</p>
-</section>
-
-<section id="clases">
-  <h2 class="s-title">Clases</h2>
-  <div id="cal-grid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; max-width:400px;"></div>
-</section>
-
-<section id="membership">
-  <h2 class="s-title">Producer Club</h2>
-  <div id="chat-msgs" style="height:300px; overflow-y:auto; display:flex; flex-direction:column;"></div>
-  <input id="chat-input" type="text" placeholder="Pregunta a la IA..." style="width:100%; padding:10px;">
-  <button class="btn-main" onclick="sendChat()">Enviar</button>
-</section>
-
-<div id="auth-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#0a0a0a; padding:40px; border:1px solid #222;">
-    <input id="auth-email" type="email" placeholder="Email"><br><br>
-    <input id="auth-pass" type="password" placeholder="Contraseña"><br><br>
-    <button class="btn-main" onclick="doLogin()">Entrar</button>
-    <button onclick="closeAuthModal()">Cerrar</button>
-  </div>
-</div>
-
-<div id="mp-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:#0a0a0a; padding:40px; border:1px solid #222; text-align:center;">
-    <h3 id="mp-product-name"></h3>
-    <p id="mp-product-price" style="font-size:32px; color:var(--red2);"></p>
-    <input id="mp-email" type="email" placeholder="Tu Email" style="padding:10px;"><br><br>
-    <input id="mp-nombre" type="text" placeholder="Tu Nombre" style="padding:10px;"><br><br>
-    <button id="mp-btn" class="btn-main" onclick="initMercadoPago()">Pagar con Mercado Pago</button>
-  </div>
-</div>
-
-<script>
-const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let currentUser = null;
-let mpLoading = false;
-window.mpCurrentProduct = null;
-
-async function loadStore() {
-  const grid = document.getElementById('store-grid');
-  const proximamente = document.getElementById('proximamente');
-  try {
-    const { data, error } = await sb.from('products').select('*').eq('activo', true).order('created_at', { ascending: false });
-    if (error) throw error;
-    
-    grid.innerHTML = data.map(p => `
-      <div class="product-card">
-        <div class="p-badge">${p.tipo.toUpperCase()}</div>
-        <div class="p-name" style="font-family:var(--font-display); font-size:24px;">${p.nombre}</div>
-        <p style="color:#666; font-size:13px;">${p.descripcion || ''}</p>
-        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:24px;">$${p.precio} USD</div>
-          <button class="btn-main" onclick="openMPModal('${p.nombre.replace(/'/g, "\\'")}', ${p.precio}, '${p.id}')">Comprar</button>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) { console.error(e); }
-}
-
-async function initMercadoPago() {
-  if (mpLoading) return;
-  const email = document.getElementById('mp-email').value;
-  const nombre = document.getElementById('mp-nombre').value;
-  if(!email || !nombre) return alert("Completa tus datos");
-  
-  mpLoading = true;
-  document.getElementById('mp-btn').textContent = "Procesando...";
-
-  try {
-    const { data: order, error: orderErr } = await sb.from('orders').insert({
-      nombre, email, monto: window.mpCurrentProduct.price, product_id: window.mpCurrentProduct.id, estado: 'pendiente'
-    }).select().single();
-    if (orderErr) throw orderErr;
-
-    const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997' },
-      body: JSON.stringify({
-        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: Number(window.mpCurrentProduct.price), currency_id: 'USD' }],
-        external_reference: order.id,
-        back_urls: { success: window.location.origin + "?pago=ok&order=" + order.id, failure: window.location.origin + "?pago=error" }
-      })
-    });
-    const mpData = await res.json();
-    if (mpData.init_point) window.location.href = mpData.init_point;
-  } catch (e) { alert("Error en pago"); mpLoading = false; }
-}
-
-function openMPModal(name, price, id) {
-  window.mpCurrentProduct = { name, price, id };
-  document.getElementById('mp-product-name').textContent = name;
-  document.getElementById('mp-product-price').textContent = `$${price} USD`;
-  document.getElementById('mp-modal').style.display = 'flex';
-}
-
-function openAuthModal() { document.getElementById('auth-modal').style.display = 'flex'; }
-function closeAuthModal() { document.getElementById('auth-modal').style.display = 'none'; }
-
-async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if(!msg) return;
-  document.getElementById('chat-msgs').innerHTML += `<div class="msg u">${msg}</div>`;
-  input.value = '';
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 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' },
-      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: msg }] })
-    });
-    const data = await res.json();
-    document.getElementById('chat-msgs').innerHTML += `<div class="msg a">${data.choices[0].message.content}</div>`;
-  } catch (e) { console.error(e); }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadStore();
-  let pct = 0;
-  const t = setInterval(() => {
-    pct += 10;
-    document.getElementById('ibar').style.width = pct + '%';
-    if(pct >= 100) { clearInterval(t); setTimeout(() => document.getElementById('intro').style.display='none', 300); }
-  }, 50);
-});
-</script>
-</body>
-</html>
 /* FOOTER */
 footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;align-items:center;justify-content:space-between; }
 .footer-logo img { height:36px; filter:drop-shadow(0 0 10px rgba(192,23,15,.3)); }
@@ -246,71 +261,59 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 
 /* REPRODUCTOR BEATPORT STYLE */
 .track-player {
-  background: #050505;
-  border: 1px solid var(--border);
-  padding: 14px;
+  background: #060606;
+  border: 1px solid #1e1e1e;
   margin-bottom: 20px;
   position: relative;
   user-select: none;
+  -webkit-user-select: none;
 }
-.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.player-header {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #111;
+}
 .play-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--red2); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: background .2s;
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #111; border: none; border-right: 1px solid #1e1e1e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
 }
-.play-btn:hover { background: #ff2010; }
+.play-btn:hover { background: var(--red2); }
 .play-btn svg { pointer-events: none; }
-.player-info { flex: 1; min-width: 0; }
-.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
-.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
-.waveform-container {
-  position: relative; height: 40px; cursor: pointer;
-  background: #080808; overflow: hidden;
+.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
+.player-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.waveform-canvas { width: 100%; height: 100%; display: block; }
-.progress-overlay {
-  position: absolute; top: 0; left: 0; height: 100%;
-  background: rgba(224,26,16,.15); pointer-events: none;
-  transition: width .1s linear;
+.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
+.player-time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
+  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
+  display: flex; align-items: center;
 }
-.preview-badge {
-  position: absolute; top: 8px; right: 8px;
+.waveform-wrap {
+  position: relative; height: 48px; cursor: pointer;
+  background: #030303; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.waveform-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--red2); pointer-events: none;
+  box-shadow: 0 0 6px var(--red2);
+  transition: left .1s linear;
+}
+.preview-lock {
+  position: absolute; bottom: 6px; right: 8px;
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
-  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
-  text-transform: uppercase;
+  color: #333; text-transform: uppercase; pointer-events: none;
 }
-
-@media (max-width: 768px) {
-  .hero { grid-template-columns: 1fr; }
-  .hero-right { display: none; }
-  .hero-left { padding: 100px 24px 120px; }
-  .hero-logo { width: 80%; }
-  .about-grid, .ghost-grid, .member-grid { grid-template-columns: 1fr; gap: 40px; }
-  .store-grid { grid-template-columns: 1fr !important; }
-  .stats-bar { grid-template-columns: repeat(3,1fr); }
-  nav { padding: 16px 24px; }
-  .nav-links { display: none; }
-  section { padding: 80px 24px; }
-  .block-grid { grid-template-columns: 1fr; }
-  .about-photos { grid-template-columns: 1fr 1fr; }
-  .layout { grid-template-columns: 1fr; }
-  footer { flex-direction: column; gap: 20px; text-align: center; }
-  .footer-links { flex-wrap: wrap; justify-content: center; }
-}
-@media (max-width: 480px) {
-  .hero-title { font-size: clamp(60px, 18vw, 100px); }
-  .stats-bar { grid-template-columns: 1fr; }
-  .stat { border-right: none; border-bottom: 1px solid var(--border); }
+.player-loading {
+  position: absolute; inset: 0; background: #060606;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
 }
 </style>
-
-<script src="https://sdk.mercadopago.com/js/v2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 <body>
@@ -318,63 +321,58 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 
 <!-- INTRO SCREEN -->
 <div id="intro" style="position:fixed;inset:0;z-index:99999;background:#020202;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;cursor:pointer;" onclick="forceExit()">
-  <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG"
-       style="width:300px;filter:drop-shadow(0 0 24px rgba(192,23,15,.5));"
-       alt="AMCU" onerror="this.style.opacity='.2'">
-  <div style="width:220px;height:1px;background:#111;overflow:hidden;">
+  <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" 
+       style="width:300px;filter:drop-shadow(0 0 24px rgba(192,23,15,.5));" 
+       alt="AMCU"
+       onerror="this.style.display='none'">
+  <div style="width:220px;height:1px;background:#111;overflow:hidden;border-radius:1px;">
     <div id="ibar" style="height:100%;background:linear-gradient(90deg,#e01a10,#9b6fff);width:0%;"></div>
   </div>
-  <p id="ilabel" style="font-family:monospace;font-size:10px;letter-spacing:3px;color:#444;text-transform:uppercase;">loading</p>
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;color:#444;text-transform:uppercase;" id="ilabel">loading</p>
 </div>
 <script>
-(function(){
-  var pct=0, t;
-  function exit(){
-    var el=document.getElementById('intro');
-    if(!el||el.style.display==='none')return;
-    el.style.transition='opacity .4s';
-    el.style.opacity='0';
-    setTimeout(function(){el.style.display='none';document.body.style.overflow='';},400);
+// Intro completamente independiente — no depende de ningún script externo
+(function() {
+  var pct = 0;
+  var el = document.getElementById('ibar');
+  var lbl = document.getElementById('ilabel');
+  
+  function exit() {
+    var intro = document.getElementById('intro');
+    if (!intro || intro.style.display === 'none') return;
+    intro.style.transition = 'opacity 0.4s';
+    intro.style.opacity = '0';
+    setTimeout(function() { 
+      intro.style.display = 'none'; 
+      document.body.style.overflow = '';
+    }, 400);
   }
-  window.forceExit=exit;
-  t=setInterval(function(){
-    pct+=Math.random()*15+10;
-    if(pct>100)pct=100;
-    var bar=document.getElementById('ibar');
-    var lbl=document.getElementById('ilabel');
-    if(bar)bar.style.width=pct+'%';
-    if(pct>50&&lbl)lbl.textContent='bass house';
-    if(pct>85&&lbl)lbl.textContent='amcu';
-    if(pct>=100){clearInterval(t);if(lbl)lbl.textContent='enter';setTimeout(exit,300);}
-  },40);
-  setTimeout(function(){clearInterval(t);exit();},2000);
-  document.body.style.overflow='hidden';
+  
+  window.forceExit = exit;
+  
+  var t = setInterval(function() {
+    pct += Math.random() * 15 + 10;
+    if (pct > 100) pct = 100;
+    if (el) el.style.width = pct + '%';
+    if (pct > 50 && lbl) lbl.textContent = 'bass house';
+    if (pct > 85 && lbl) lbl.textContent = 'amcu';
+    if (pct >= 100) {
+      clearInterval(t);
+      if (lbl) lbl.textContent = 'enter';
+      setTimeout(exit, 300);
+    }
+  }, 40);
+  
+  // Failsafe absoluto — sale en 2 segundos pase lo que pase
+  setTimeout(function() { clearInterval(t); exit(); }, 2000);
+  
+  document.body.style.overflow = 'hidden';
 })();
 </script>
 
-<div class="cursor" id="cur" style="display:none;pointer-events:none;"></div>
+<div class="cursor" id="cur"></div>
 
 <!-- NAV -->
-<script>
-// Stubs globales — se sobreescriben cuando carga el script principal
-function openAuthModal() { 
-  document.getElementById('auth-modal').style.display = 'flex'; 
-}
-function closeAuthModal() { 
-  var m = document.getElementById('auth-modal');
-  if(m) m.style.display = 'none'; 
-}
-function openMPModal(name, price, id) {
-  var m = document.getElementById('mp-modal');
-  if(!m) return;
-  document.getElementById('mp-product-name').textContent = name;
-  document.getElementById('mp-product-price').textContent = '$'+price+' USD';
-  m._product = {name:name, price:price, id:id};
-  window.mpCurrentProduct = {name:name, price:price, id:id};
-  m.style.display = 'flex';
-}
-
-</script>
 <nav id="nav">
   <a href="#" class="nav-logo">
     <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU">
@@ -397,8 +395,8 @@ function openMPModal(name, price, id) {
     <img src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU" class="hero-logo">
     <p class="hero-desc">Tracks, sample packs y producción personalizada. Sonidos diseñados para destruir dancefloors y elevar tu carrera.</p>
     <div class="hero-actions">
-      <button class="btn-main" onclick="document.getElementById('store').scrollIntoView({behavior:'smooth'})">Ver tienda</button>
-      <button class="btn-outline" onclick="document.getElementById('membership').scrollIntoView({behavior:'smooth'})">Producer Club</button>
+      <button class="btn-main">Ver tienda</button>
+      <button class="btn-outline">Producer Club</button>
     </div>
   </div>
   <div class="hero-right">
@@ -476,20 +474,20 @@ function openMPModal(name, price, id) {
     <h2 class="s-title reveal">Sonidos que<br>hacen historia</h2>
   </div>
   <div id="store-grid" class="store-grid reveal" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));">
-    <div class="product-card" id="pc-ac444f3a-502f-47cf-8633-1da9b97f6a2f">
+    <div class="product-card" id="pc-ac444f3a-582f-47cf-8633-1da9b97f6a2f">
       <div class="p-badge">DISPONIBLE</div>
       <div class="p-type">Sample Pack</div>
       <div class="p-name">Minimal Bass 01 by AMCU</div>
       <p class="p-desc">El primer pack oficial de AMCU. Samples de Minimal Bass para darle carácter y profundidad a tus producciones.</p>
-      <div class="p-footer"><div class="p-price">$20 <span>USD</span></div><button class="btn-buy" onclick="openMPModal('Minimal Bass 01 by AMCU',20,'ac444f3a-502f-47cf-8633-1da9b97f6a2f')">Comprar</button></div>
+      <div class="p-footer"><div class="p-price">$20 <span>USD</span></div><button class="btn-buy" onclick="openMPModal('Minimal Bass 01 by AMCU',20,'ac444f3a-582f-47cf-8633-1da9b97f6a2f')">Comprar</button></div>
     </div>
-    <div class="product-card" id="pc-8b9c5ce0-3497-4f2a-9b39-4d9d2a01f3b4">
+    <div class="product-card" id="pc-68b844d9-5de6-4a36-b785-ac196d865fc3">
       <div class="p-badge" style="background:var(--purple)">UNRELEASED</div>
       <div class="p-type">Track Unreleased</div>
       <div class="p-name">AMCU, CAITTO — JACK</div>
       <p class="p-desc">Track unreleased exclusivo de AMCU. Sonido diseñado para destruir dancefloors.</p>
-      <div id="player-zone-8b9c5ce0-3497-4f2a-9b39-4d9d2a01f3b4"></div>
-      <div class="p-footer"><div class="p-price">$5 <span>USD</span></div><button class="btn-buy" onclick="openMPModal('AMCU, CAITTO - JACK',5,'8b9c5ce0-3497-4f2a-9b39-4d9d2a01f3b4')">Comprar</button></div>
+      <div id="player-zone-68b844d9-5de6-4a36-b785-ac196d865fc3"></div>
+      <div class="p-footer"><div class="p-price">$5 <span>USD</span></div><button class="btn-buy" onclick="openMPModal('AMCU, CAITTO - JACK',5,'68b844d9-5de6-4a36-b785-ac196d865fc3')">Comprar</button></div>
     </div>
     <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
       <div class="p-type">Próximamente</div>
@@ -671,41 +669,56 @@ function openMPModal(name, price, id) {
 
 /* REPRODUCTOR BEATPORT STYLE */
 .track-player {
-  background: #050505;
-  border: 1px solid var(--border);
-  padding: 14px;
+  background: #060606;
+  border: 1px solid #1e1e1e;
   margin-bottom: 20px;
   position: relative;
   user-select: none;
+  -webkit-user-select: none;
 }
-.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.player-header {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #111;
+}
 .play-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--red2); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: background .2s;
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #111; border: none; border-right: 1px solid #1e1e1e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
 }
-.play-btn:hover { background: #ff2010; }
+.play-btn:hover { background: var(--red2); }
 .play-btn svg { pointer-events: none; }
-.player-info { flex: 1; min-width: 0; }
-.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
-.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
-.waveform-container {
-  position: relative; height: 40px; cursor: pointer;
-  background: #080808; overflow: hidden;
+.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
+.player-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.waveform-canvas { width: 100%; height: 100%; display: block; }
-.progress-overlay {
-  position: absolute; top: 0; left: 0; height: 100%;
-  background: rgba(224,26,16,.15); pointer-events: none;
-  transition: width .1s linear;
+.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
+.player-time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
+  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
+  display: flex; align-items: center;
 }
-.preview-badge {
-  position: absolute; top: 8px; right: 8px;
+.waveform-wrap {
+  position: relative; height: 48px; cursor: pointer;
+  background: #030303; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.waveform-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--red2); pointer-events: none;
+  box-shadow: 0 0 6px var(--red2);
+  transition: left .1s linear;
+}
+.preview-lock {
+  position: absolute; bottom: 6px; right: 8px;
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
-  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
-  text-transform: uppercase;
+  color: #333; text-transform: uppercase; pointer-events: none;
+}
+.player-loading {
+  position: absolute; inset: 0; background: #060606;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
 }
 </style>
 
@@ -944,7 +957,7 @@ document.addEventListener('DOMContentLoaded', init);
         <li><span class="chk">✓</span><strong>Feedback mensual</strong> de tus producciones</li>
         <li><span class="chk">✓</span><strong>Clases exclusivas</strong> de producción Bass House</li>
       </ul>
-      <button class="btn-main" style="width:100%;text-align:center;padding:14px" onclick="openMPModal('Producer Club — Membresía mensual', 50, null)">Unirse al club</button>
+      <button class="btn-main" style="width:100%;text-align:center;padding:14px">Unirse al club</button>
     </div>
   </div>
 
@@ -991,45 +1004,164 @@ document.addEventListener('DOMContentLoaded', init);
   
 /* REPRODUCTOR BEATPORT STYLE */
 .track-player {
-  background: #050505;
-  border: 1px solid var(--border);
-  padding: 14px;
+  background: #060606;
+  border: 1px solid #1e1e1e;
   margin-bottom: 20px;
   position: relative;
   user-select: none;
+  -webkit-user-select: none;
 }
-.player-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.player-header {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #111;
+}
 .play-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--red2); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: background .2s;
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #111; border: none; border-right: 1px solid #1e1e1e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
 }
-.play-btn:hover { background: #ff2010; }
+.play-btn:hover { background: var(--red2); }
 .play-btn svg { pointer-events: none; }
-.player-info { flex: 1; min-width: 0; }
-.player-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--muted2); margin-top: 2px; }
-.player-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); flex-shrink: 0; }
-.waveform-container {
-  position: relative; height: 40px; cursor: pointer;
-  background: #080808; overflow: hidden;
+.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
+.player-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.waveform-canvas { width: 100%; height: 100%; display: block; }
-.progress-overlay {
-  position: absolute; top: 0; left: 0; height: 100%;
-  background: rgba(224,26,16,.15); pointer-events: none;
-  transition: width .1s linear;
+.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
+.player-time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
+  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
+  display: flex; align-items: center;
 }
-.preview-badge {
-  position: absolute; top: 8px; right: 8px;
+.waveform-wrap {
+  position: relative; height: 48px; cursor: pointer;
+  background: #030303; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.waveform-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--red2); pointer-events: none;
+  box-shadow: 0 0 6px var(--red2);
+  transition: left .1s linear;
+}
+.preview-lock {
+  position: absolute; bottom: 6px; right: 8px;
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
-  background: rgba(0,0,0,.7); color: var(--muted2); padding: 3px 6px;
-  text-transform: uppercase;
+  color: #333; text-transform: uppercase; pointer-events: none;
+}
+.player-loading {
+  position: absolute; inset: 0; background: #060606;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
 }
 </style>
 
-  
+  <script>
+  const AMCU_SYSTEM = `Sos AMCU, un DJ y productor de Bass House argentino con 8 años de carrera que firmó en sellos top a nivel mundial. Respondés preguntas sobre producción musical de forma directa, honesta y con tu voz propia — sin vueltas, como le hablarías a un alumno en clase.
+
+Tu setup: Ableton Live 12, Serum para síntesis, samples propios, Waves, FabFilter y plugins nativos de Ableton para mix y master.
+Tu proceso: arrancás siempre por el kick/ritmo, trabajás entre 128-132 BPM para Bass House.
+Tu referencia principal: Chris Lake.
+Tu sello: lograste firmar en sellos top mundiales después de 8 años de trabajo constante.
+Tu filosofía de enseñanza: enseñás producción como no te enseñan en YouTube — yendo a lo esencial, sin complicar lo que es simple.
+El error más común que ves: los productores nuevos se lo hacen más complejo de lo que es.
+
+Reglas:
+- Respondés siempre en español rioplatense (vos, che, etc.)
+- Sos directo, concreto, sin relleno
+- Cuando hablás de técnicas, usás ejemplos reales de tu workflow en Ableton
+- Si te preguntan sobre otros géneros que no son tu especialidad, lo aclarás pero igual ayudás
+- Nunca inventás información técnica incorrecta
+- Máximo 150 palabras por respuesta — conciso y al punto
+- Si la pregunta no es de producción musical, redirigís al tema`;
+
+  let chatHistory = [];
+
+  async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    document.getElementById('chat-send').disabled = true;
+
+    // Agregar mensaje usuario
+    addMsg(msg, 'u');
+    chatHistory.push({ role: 'user', content: msg });
+
+    // Typing indicator
+    const typingId = addTyping();
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: AMCU_SYSTEM,
+          messages: chatHistory
+        })
+      });
+
+      const data = await response.json();
+      removeTyping(typingId);
+
+      const reply = data.choices?.[0]?.message?.content || 'No pude procesar eso, intentá de nuevo.';
+      addMsg(reply, 'a');
+      chatHistory.push({ role: 'assistant', content: reply });
+
+    } catch(e) {
+      removeTyping(typingId);
+      addMsg('Error de conexión. Intentá de nuevo.', 'a');
+    }
+
+    document.getElementById('chat-send').disabled = false;
+    input.focus();
+  }
+
+  function addMsg(text, type) {
+    const msgs = document.getElementById('chat-msgs');
+    const div = document.createElement('div');
+    div.className = 'msg ' + (type === 'u' ? 'u' : 'a');
+    if (type === 'a') {
+      div.innerHTML = '<div class="ml">AMCU</div>' + escapeHtml(text);
+    } else {
+      div.textContent = text;
+    }
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+
+  function addTyping() {
+    const msgs = document.getElementById('chat-msgs');
+    const id = 'typing-' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'msg a typing';
+    div.id = id;
+    div.innerHTML = '<div class="ml">AMCU</div><span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return id;
+  }
+
+  function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function escapeHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  function askSuggestion(btn) {
+    document.getElementById('chat-input').value = btn.textContent;
+    document.getElementById('chat-suggestions').style.display = 'none';
+    sendChat();
+  }
+  </script>
 </section>
 
 
@@ -1124,43 +1256,88 @@ document.addEventListener('DOMContentLoaded', init);
   <p class="footer-copy">© 2025 AMCU. All rights reserved.</p>
 </footer>
 
-
+<script>
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('a,button,.product-card,.member-card').forEach(el => {
+  el.addEventListener('mouseenter', () => cur.classList.add('big'));
+  el.addEventListener('mouseleave', () => cur.classList.remove('big'));
+});
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 60));
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e,i) => { if(e.isIntersecting) setTimeout(()=>e.target.classList.add('in'), i*80); });
+}, {threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
 
   <!-- SUPABASE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  window._sb = sb;
-  window._supabase_ready = true;
-  
+  // Cargar tienda apenas el script corre — sin esperar DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadStore());
+  } else {
+    loadStore();
+  }
 
   let currentUser = null;
   let currentProfile = null;
 
-  // ---- AUTH STATE ----
+  async function loadProfile(user) {
+    const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if (error) console.error('Error cargando perfil:', error);
+    return data;
+  }
+
+  // Auth state — unica fuente de verdad
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-      currentUser = session.user;
-      const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-      currentProfile = data;
-    } else {
+    console.log('Auth event:', event, session?.user?.email);
+    if (event === 'SIGNED_OUT' || !session) {
       currentUser = null;
       currentProfile = null;
+      const panel = document.getElementById('admin-panel');
+      if (panel) panel.remove();
+    } else if (session?.user) {
+      currentUser = session.user;
+      currentProfile = await loadProfile(currentUser);
     }
-    window._currentUser = currentUser;
-    window._currentProfile = currentProfile;
-    updateNavBtn();
-    if (currentProfile?.role === 'admin') showAdminPanel();
+    updateAuthUI();
+    if (currentProfile?.role === 'admin') renderAdminPanel();
   });
 
-  function updateNavBtn() {
+  async function refreshAuth() {
+    try {
+      const { data: { session }, error } = await sb.auth.getSession();
+      if (error || !session) {
+        // Limpiar sesión corrupta
+        await sb.auth.signOut();
+        currentUser = null;
+        currentProfile = null;
+      } else if (session?.user) {
+        currentUser = session.user;
+        currentProfile = await loadProfile(currentUser);
+      }
+    } catch(e) {
+      console.log('Auth refresh error:', e);
+    }
+    updateAuthUI();
+    if (currentProfile?.role === 'admin') renderAdminPanel();
+  }
+
+  function updateAuthUI() {
     const btn = document.getElementById('auth-btn');
     if (!btn) return;
     if (currentUser) {
-      btn.textContent = currentProfile?.nombre || currentUser.email.split('@')[0];
-      btn.style.background = currentProfile?.role === 'admin' ? '#6b0000' : 'var(--red2)';
+      const name = currentProfile?.nombre || currentUser.email?.split('@')[0] || 'Mi cuenta';
+      btn.textContent = name;
+      btn.style.background = currentProfile?.role === 'admin' ? '#8b0000' : 'var(--red2)';
+      // Cerrar modal si estaba abierto
       closeAuthModal();
     } else {
       btn.textContent = 'Iniciar sesión';
@@ -1168,22 +1345,223 @@ document.addEventListener('DOMContentLoaded', init);
     }
   }
 
-  function showAdminPanel() {
-    if (document.getElementById('admin-panel')) return;
-    const p = document.createElement('div');
-    p.id = 'admin-panel';
-    p.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9000;background:#080000;border:1px solid var(--red2);padding:20px;min-width:260px;font-family:var(--font-mono);';
-    p.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);">// Admin</p>
-        <a href="/amcu_admin.html" style="font-size:10px;letter-spacing:1px;color:var(--white);text-decoration:none;border:1px solid var(--border);padding:4px 10px;">Panel completo →</a>
-      </div>
-      <p style="font-size:10px;color:var(--muted2);letter-spacing:1px;">Logueado como admin</p>
-    `;
-    document.body.appendChild(p);
+  // ---- MODAL ----
+  function openAuthModal() {
+    if (currentUser) {
+      showAccountMenu();
+      return;
+    }
+    document.getElementById('auth-modal').style.display = 'flex';
+    document.getElementById('auth-email').focus();
+    document.getElementById('auth-msg').textContent = '';
   }
 
-  // ---- BOOKING ----
+  function closeAuthModal() {
+    document.getElementById('auth-modal').style.display = 'none';
+  }
+
+  function showAccountMenu() {
+    const existing = document.getElementById('account-menu');
+    if (existing) { existing.remove(); return; }
+    const btn = document.getElementById('auth-btn');
+    const rect = btn.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.id = 'account-menu';
+    menu.style.cssText = `position:fixed;top:${rect.bottom+8}px;right:${window.innerWidth-rect.right}px;z-index:10000;background:#0a0a0a;border:1px solid var(--border);min-width:200px;`;
+    menu.innerHTML = `
+      <div style="padding:16px;border-bottom:1px solid var(--border);">
+        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser?.email}</p>
+        ${currentProfile?.role === 'admin' ? '<p style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);margin-top:4px;">ADMIN</p>' : ''}
+      </div>
+      <button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
+    `;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', () => menu.remove(), {once:true}), 100);
+  }
+
+  async function doLogout() {
+    try {
+      await sb.auth.signOut({ scope: 'local' });
+    } catch(e) { console.log(e); }
+    currentUser = null;
+    currentProfile = null;
+    const panel = document.getElementById('admin-panel');
+    if (panel) panel.remove();
+    const menu = document.getElementById('account-menu');
+    if (menu) menu.remove();
+    updateAuthUI();
+    // Limpiar localStorage de supabase
+    Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-')).forEach(k => localStorage.removeItem(k));
+    window.location.reload();
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('auth-email').value.trim();
+    const pass  = document.getElementById('auth-pass').value;
+    const msg   = document.getElementById('auth-msg');
+    const btn   = document.getElementById('auth-submit');
+
+    if (!email || !pass) { msg.textContent = 'Completá email y contraseña'; return; }
+    msg.textContent = '';
+    btn.textContent = 'Cargando...';
+    btn.disabled = true;
+
+    if (currentTab === 'login') {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        msg.textContent = error.message === 'Invalid login credentials'
+          ? 'Email o contraseña incorrectos'
+          : error.message;
+        btn.textContent = 'Entrar'; btn.disabled = false;
+        return;
+      }
+      closeAuthModal();
+    } else {
+      const nombre = document.getElementById('auth-nombre')?.value?.trim() || '';
+      const { error } = await sb.auth.signUp({
+        email, password: pass,
+        options: { data: { nombre } }
+      });
+      if (error) {
+        msg.textContent = error.message;
+        btn.textContent = 'Crear cuenta'; btn.disabled = false;
+        return;
+      }
+      msg.style.color = '#3fff2a';
+      msg.textContent = '¡Cuenta creada! Revisá tu email para confirmar.';
+      btn.textContent = 'Crear cuenta'; btn.disabled = false;
+      return;
+    }
+    btn.textContent = 'Entrar'; btn.disabled = false;
+  }
+
+  function toggleAuthMode() {
+    const mode = document.getElementById('auth-mode').value;
+    const ng = document.getElementById('auth-nombre-group');
+    const sb2 = document.getElementById('auth-submit');
+    ng.style.display = mode === 'register' ? 'block' : 'none';
+    sb2.textContent = mode === 'register' ? 'Crear cuenta' : 'Entrar';
+    document.getElementById('auth-msg').textContent = '';
+  }
+
+  // ---- ADMIN PANEL ----
+  function renderAdminPanel() {
+    if (document.getElementById('admin-panel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'admin-panel';
+    panel.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9000;background:#080000;border:1px solid var(--red2);padding:24px;min-width:280px;font-family:var(--font-mono);box-shadow:0 0 30px rgba(192,23,15,.2);';
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);">// Admin panel</p>
+        <button onclick="document.getElementById('admin-panel').remove()" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:16px;">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button onclick="openBookingsAdmin()" style="background:var(--card);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;text-align:left;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--red2)'" onmouseout="this.style.borderColor='var(--border)'">Ver reservas pendientes</button>
+        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+          <p style="font-size:9px;letter-spacing:1px;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">Bloquear fecha/hora</p>
+          <input id="block-date" type="date" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:8px;font-family:var(--font-mono);font-size:11px;outline:none;margin-bottom:6px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <input id="block-hora" type="number" min="9" max="20" placeholder="Hora (vacío=día entero)" style="flex:1;background:var(--black);border:1px solid var(--border);color:var(--white);padding:8px;font-family:var(--font-mono);font-size:11px;outline:none;">
+          </div>
+          <button onclick="blockSlot()" style="width:100%;background:var(--red2);border:none;color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;">Bloquear</button>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+          <button onclick="toggleAdminPanel()" id="admin-toggle-btn" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--muted2);padding:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;cursor:pointer;">Minimizar panel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(panel);
+  }
+
+  let adminMinimized = false;
+  function toggleAdminPanel() {
+    const panel = document.getElementById('admin-panel');
+    const btn = document.getElementById('admin-toggle-btn');
+    adminMinimized = !adminMinimized;
+    panel.style.minWidth = adminMinimized ? 'auto' : '280px';
+    btn.textContent = adminMinimized ? 'Expandir panel' : 'Minimizar panel';
+  }
+
+  async function blockSlot() {
+    const fecha = document.getElementById('block-date').value;
+    const hora  = document.getElementById('block-hora').value;
+    if (!fecha) { alert('Seleccioná una fecha'); return; }
+    const { error } = await sb.from('blocked_slots').insert({
+      fecha,
+      hora: hora ? parseInt(hora) : null,
+      motivo: 'Bloqueado por admin'
+    });
+    if (error) { alert('Error: ' + error.message); return; }
+    if (hora) {
+      bookedSlots.add(`${fecha}-${String(hora).padStart(2,'0')}`);
+    } else {
+      blockedDays.add(fecha);
+    }
+    renderCal();
+    alert(`Bloqueado: ${fecha}${hora ? ' a las '+hora+':00' : ' (día completo)'}`);
+  }
+
+  async function openBookingsAdmin() {
+    const { data, error } = await sb.from('bookings').select('*').order('fecha').order('hora');
+    if (error) { alert('Error: ' + error.message); return; }
+    if (!data || data.length === 0) { alert('No hay reservas todavía.'); return; }
+
+    const existing = document.getElementById('bookings-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'bookings-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;';
+
+    let rows = data.map(b => `
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 12px;font-size:12px;">${b.fecha}</td>
+        <td style="padding:10px 12px;font-size:12px;">${b.hora}:00 — ${b.hora+2}:00</td>
+        <td style="padding:10px 12px;font-size:12px;">${b.nombre}</td>
+        <td style="padding:10px 12px;font-size:12px;">${b.email}</td>
+        <td style="padding:10px 12px;font-size:12px;">${b.modalidad}</td>
+        <td style="padding:10px 12px;">
+          <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:3px 8px;background:${b.estado==='confirmada'?'#003300':b.estado==='cancelada'?'#1a0000':'#1a1a00'};color:${b.estado==='confirmada'?'#3fff2a':b.estado==='cancelada'?'var(--red2)':'#c9a84c'};">${b.estado}</span>
+        </td>
+        <td style="padding:10px 12px;">
+          <button onclick="updateBooking('${b.id}','confirmada')" style="background:none;border:1px solid #3fff2a;color:#3fff2a;font-family:var(--font-mono);font-size:9px;padding:4px 8px;cursor:pointer;margin-right:4px;">✓</button>
+          <button onclick="updateBooking('${b.id}','cancelada')" style="background:none;border:1px solid var(--red2);color:var(--red2);font-family:var(--font-mono);font-size:9px;padding:4px 8px;cursor:pointer;">✗</button>
+        </td>
+      </tr>
+    `).join('');
+
+    modal.innerHTML = `
+      <div style="background:#0a0a0a;border:1px solid var(--border);padding:40px;max-width:900px;width:95%;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+          <p style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);">// Reservas (${data.length})</p>
+          <button onclick="document.getElementById('bookings-modal').remove()" style="background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-family:var(--font-body);">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Fecha</th>
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Horario</th>
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Nombre</th>
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Email</th>
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Modalidad</th>
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Estado</th>
+              <th style="padding:8px 12px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:left;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  async function updateBooking(id, estado) {
+    const { error } = await sb.from('bookings').update({ estado }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    openBookingsAdmin();
+  }
+
+  // ---- BOOKINGS ----
   async function loadBlockedSlots() {
     const { data: blocked } = await sb.from('blocked_slots').select('*');
     if (blocked) {
@@ -1195,8 +1573,10 @@ document.addEventListener('DOMContentLoaded', init);
     const { data: bookings } = await sb.from('bookings').select('fecha,hora').in('estado',['pendiente','confirmada']);
     if (bookings) {
       bookings.forEach(b => {
-        bookedSlots.add(`${b.fecha}-${String(b.hora).padStart(2,'0')}`);
-        bookedSlots.add(`${b.fecha}-${String(b.hora+1).padStart(2,'0')}`);
+        const h  = String(b.hora).padStart(2,'0');
+        const h2 = String(b.hora+1).padStart(2,'0');
+        bookedSlots.add(`${b.fecha}-${h}`);
+        bookedSlots.add(`${b.fecha}-${h2}`);
       });
     }
     renderCal();
@@ -1207,356 +1587,256 @@ document.addEventListener('DOMContentLoaded', init);
     const email  = document.getElementById('r-email').value.trim();
     const msg    = document.getElementById('r-msg')?.value || '';
     if (!nombre || !email) { alert('Completá nombre y email'); return; }
+
     const [dy,dm,dd,hh] = selectedSlot.split('-');
     const fecha = `${dy}-${dm}-${dd}`;
     const hora  = parseInt(hh);
+
     const btn = document.querySelector('#form-reserva .btn-main');
     if (btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
-    const { error } = await sb.from('bookings').insert({ fecha, hora, modalidad, nombre, email, mensaje: msg, user_id: currentUser?.id || null });
-    if (error) { alert('Error: ' + error.message); if (btn) { btn.textContent = 'Confirmar reserva'; btn.disabled = false; } return; }
+
+    const { error } = await sb.from('bookings').insert({
+      fecha, hora, modalidad,
+      nombre, email, mensaje: msg,
+      user_id: currentUser?.id || null
+    });
+
+    if (error) {
+      alert('Error: ' + error.message);
+      if (btn) { btn.textContent = 'Confirmar reserva'; btn.disabled = false; }
+      return;
+    }
+
+    const h2 = String(hora+1).padStart(2,'0');
     bookedSlots.add(selectedSlot);
-    bookedSlots.add(`${dy}-${dm}-${dd}-${String(hora+1).padStart(2,'0')}`);
+    bookedSlots.add(`${dy}-${dm}-${dd}-${h2}`);
     document.getElementById('form-reserva').style.display = 'none';
     document.getElementById('reserva-ok').style.display = 'block';
     selectedSlot = null;
     renderCal();
   }
 
-  // ---- STORE ----
   async function loadStore() {
-    const STATIC_IDS = ['ac444f3a-502f-47cf-8633-1da9b97f6a2f','8b9c5ce0-3497-4f2a-9b39-4d9d2a01f3b4'];
-    const grid = document.getElementById('store-grid');
-    const proximamente = grid?.lastElementChild;
-    try {
-      // CORRECCIÓN AQUÍ: Se eliminó el "const res =" sobrante
-      const { data, error: storeErr } = await sb.from('products')
-        .select('*').eq('activo', true).order('created_at', { ascending: false });
-        
-      if (storeErr) throw storeErr;
-      if (!Array.isArray(data)) return;
+  const grid = document.getElementById('store-grid');
+  if (!grid) return;
 
-      // Agregar productos nuevos al grid
-      if (grid && proximamente) {
-        const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
-        const badgeColor = { sample_pack: 'var(--red2)', track_unreleased: 'var(--purple)', bundle: 'var(--chrome2)' };
-        const badgeText  = { sample_pack: 'DISPONIBLE', track_unreleased: 'UNRELEASED', bundle: 'BUNDLE' };
-        
-        data.filter(p => !STATIC_IDS.includes(p.id)).forEach(p => {
-          if (document.getElementById('pc-' + p.id)) return;
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          card.id = 'pc-' + p.id;
-          
-          // Usamos Template Literals (acentos graves) para evitar errores de comillas
-          card.innerHTML = `
-            <div class="p-badge" style="background:${badgeColor[p.tipo] || 'var(--red2)'}">${badgeText[p.tipo] || 'NUEVO'}</div>
-            <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
-            <div class="p-name">${p.nombre}</div>
-            <p class="p-desc">${p.descripcion || ''}</p>
-            <div class="p-footer">
-              <div class="p-price">$${p.precio} <span>USD</span></div>
-              <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g, "\\'")}',${p.precio},'${p.id}')">Comprar</button>
-            </div>
-          `;
-          grid.insertBefore(card, proximamente);
-        });
-      }
-    } catch(e) {
-      console.error('Store error:', e);
-      if (grid && grid.children.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Error cargando productos. Recargá la página.</div>';
-      }
-    }
-  }
-      // Agregar productos nuevos
-      if (grid && proximamente) {
-        const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
-        const badgeColor = { sample_pack: 'var(--red2)', track_unreleased: 'var(--purple)', bundle: 'var(--chrome2)' };
-        const badgeText  = { sample_pack: 'DISPONIBLE', track_unreleased: 'UNRELEASED', bundle: 'BUNDLE' };
-        data.filter(p => !STATIC_IDS.includes(p.id)).forEach(p => {
-          if (document.getElementById('pc-' + p.id)) return;
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          card.id = 'pc-' + p.id;
-          card.innerHTML = `
-            <div class="p-badge" style="background:${badgeColor[p.tipo]||'var(--red2)'}">${badgeText[p.tipo]||'NUEVO'}</div>
-            <div class="p-type">${tipoLabel[p.tipo]||p.tipo}</div>
-            <div class="p-name">${p.nombre}</div>
-            <p class="p-desc">${p.descripcion||''}</p>
-            ${p.archivo_url ? `<div id="player-zone-${p.id}">${renderPlayer(p.id, p.nombre, p.preview_start||0)}</div><span id="asrc-${p.id}" style="display:none;position:absolute;" data-e="${btoa(unescape(encodeURIComponent(p.archivo_url)))}"></span>` : ''}
-            <div class="p-footer">
-              <div class="p-price">$${p.precio} <span>USD</span></div>
-              <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}',${p.precio},'${p.id}')">Comprar</button>
-            </div>
-          `;
-          grid.insertBefore(card, proximamente);
-        });
-      }
-    } catch(e) {
-    console.error('Store error:', e);
-    // Mostrar productos hardcodeados si Supabase falla
-    const grid = document.getElementById('store-grid');
-    if (grid && grid.children.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Error cargando productos. Recargá la página.</div>';
-    }
-  }
-  }
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Cargando...</div>';
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    // Verificar sesión existente
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
-      const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-      currentProfile = data;
-      window._currentUser = currentUser;
-      window._currentProfile = currentProfile;
-      updateNavBtn();
-      if (currentProfile?.role === 'admin') showAdminPanel();
+  try {
+    // Usar fetch directo a la REST API de Supabase
+    const res = await fetch(
+      'https://anvkreqmsbzsfaepudlx.supabase.co/rest/v1/products?activo=eq.true&order=created_at.desc',
+      {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
+        }
+      }
+    );
+    const data = await res.json();
+    const error = res.ok ? null : data;
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Próximamente — Sumate al Producer Club</div>';
+      return;
     }
+
+    const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
+    const badgeColor = { sample_pack: 'var(--red2)', track_unreleased: 'var(--purple)', bundle: 'var(--chrome2)' };
+    const badgeText  = { sample_pack: 'DISPONIBLE', track_unreleased: 'UNRELEASED', bundle: 'BUNDLE' };
+
+    grid.innerHTML = data.map(p => `
+      <div class="product-card">
+        <div class="p-badge" style="background:${badgeColor[p.tipo] || 'var(--red2)'};">${badgeText[p.tipo] || 'NUEVO'}</div>
+        <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
+        <div class="p-name">${p.nombre}</div>
+        <p class="p-desc">${p.descripcion || ''}</p>
+        ${p.archivo_url ? `
+        <div style="margin-bottom:20px;">
+          <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-transform:uppercase;margin-bottom:6px;">// Preview</p>
+          <audio controls style="width:100%;height:36px;outline:none;" preload="none">
+            <source src="${p.archivo_url}" type="audio/wav">
+            <source src="${p.archivo_url}" type="audio/mpeg">
+          </audio>
+        </div>` : ''}
+        <div class="p-footer">
+          <div class="p-price">$${p.precio} <span>USD</span></div>
+          <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
+        </div>
+      </div>
+    `).join('') + `
+      <div class="product-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:280px;">
+        <div class="p-type">Próximamente</div>
+        <div class="p-name" style="color:var(--muted2);font-size:20px;margin-bottom:12px;">Más en camino</div>
+        <p class="p-desc" style="margin:0">Sumate al Producer Club para ser el primero en acceder.</p>
+      </div>
+    `;
+
+    document.querySelectorAll('.product-card').forEach(el => {
+      el.addEventListener('mouseenter', () => document.getElementById('cur')?.classList.add('big'));
+      el.addEventListener('mouseleave', () => document.getElementById('cur')?.classList.remove('big'));
+    });
+
+  } catch(e) {
+    console.error('Error cargando tienda:', e);
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;font-family:var(--font-mono);font-size:11px;color:var(--red2);">Error cargando productos. Recargá la página.</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    refreshAuth();
     loadBlockedSlots();
-    loadStore();
   });
   </script>
 
 <!-- AUTH MODAL -->
-<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid #222;width:90%;max-width:420px;position:relative;overflow:hidden;">
+<!-- AUTH MODAL -->
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--border);padding:0;min-width:380px;max-width:440px;width:90%;position:relative;overflow:hidden;">
     
-    <!-- Top bar -->
-    <div style="padding:24px 28px 0;border-bottom:1px solid #151515;">
-      <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555;font-size:22px;cursor:pointer;line-height:1;z-index:1;">×</button>
-      <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:18px;">// Acceso AMCU</p>
+    <!-- Header -->
+    <div style="padding:28px 32px 0;border-bottom:1px solid var(--border);">
+      <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;line-height:1;">×</button>
+      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Acceso AMCU</p>
+      
       <!-- Tabs -->
-      <div style="display:flex;">
-        <button id="tab-login" onclick="switchTab('login')" 
-          style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px;cursor:pointer;">
-          Iniciar sesión
-        </button>
-        <button id="tab-register" onclick="switchTab('register')"
-          style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#555;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px;cursor:pointer;">
-          Crear cuenta
-        </button>
+      <div style="display:flex;gap:0;">
+        <button id="tab-login" onclick="switchTab('login')" style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Iniciar sesión</button>
+        <button id="tab-register" onclick="switchTab('register')" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Crear cuenta</button>
       </div>
     </div>
 
-    <div style="padding:24px 28px;">
-      <!-- Google -->
-      <button id="google-btn" onclick="loginWithGoogle()"
-        style="width:100%;background:#fff;border:none;color:#111;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
-        <svg width="16" height="16" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
+    <div style="padding:28px 32px;">
+      <!-- Google Login -->
+      <button onclick="loginWithGoogle()" style="width:100%;background:#fff;border:none;color:#111;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;transition:background .2s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#fff'">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Continuar con Google
       </button>
 
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <div style="flex:1;height:1px;background:#1a1a1a;"></div>
-        <span style="font-family:var(--font-mono);font-size:9px;color:#333;">O</span>
-        <div style="flex:1;height:1px;background:#1a1a1a;"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);">O</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
       </div>
 
-      <div id="field-nombre" style="display:none;margin-bottom:12px;">
-        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Nombre</label>
-        <input id="auth-nombre" type="text" placeholder="Tu nombre"
-          style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
-          onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
+      <!-- Nombre (solo registro) -->
+      <div id="field-nombre" style="display:none;margin-bottom:14px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
+        <input id="auth-nombre" type="text" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
 
-      <div style="margin-bottom:12px;">
-        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Email</label>
-        <input id="auth-email" type="email" placeholder="tu@email.com"
-          style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
-          onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
+      <div style="margin-bottom:14px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
+        <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
 
-      <div style="margin-bottom:6px;">
-        <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Contraseña</label>
-        <input id="auth-pass" type="password" placeholder="••••••••"
-          style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
-          onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'"
-          onkeydown="if(event.key==='Enter')doLogin()">
+      <div style="margin-bottom:8px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Contraseña</label>
+        <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
 
-      <p id="auth-msg" style="font-family:var(--font-mono);font-size:10px;color:var(--red2);min-height:16px;margin:8px 0 14px;"></p>
+      <p id="auth-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);min-height:18px;margin:8px 0 16px;"></p>
 
-      <button id="auth-submit" onclick="doLogin()"
-        style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:13px;cursor:pointer;">
-        Entrar
-      </button>
+      <button id="auth-submit" onclick="doLogin()" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#ff2010'" onmouseout="this.style.background='var(--red2)'">Entrar</button>
     </div>
   </div>
 </div>
 
-<!-- MP MODAL -->
-<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
-  <div style="background:#0a0a0a;border:1px solid #222;padding:36px;width:90%;max-width:400px;position:relative;">
-    <button onclick="closeMPModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555;font-size:22px;cursor:pointer;">×</button>
-    <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Checkout</p>
-    <div style="background:#060606;border:1px solid #1a1a1a;padding:16px;margin-bottom:20px;">
-      <p id="mp-product-name" style="font-family:var(--font-display);font-size:22px;margin-bottom:4px;"></p>
-      <p id="mp-product-price" style="font-family:var(--font-display);font-size:32px;color:var(--red2);"></p>
+<!-- MERCADO PAGO MODAL -->
+<div id="mp-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--border);padding:40px;min-width:360px;max-width:440px;width:90%;position:relative;">
+    <button onclick="closeMPModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted2);font-size:22px;cursor:pointer;">×</button>
+    <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:24px;">// Checkout</p>
+    <div id="mp-product-info" style="background:var(--black);border:1px solid var(--border);padding:20px;margin-bottom:24px;">
+      <p id="mp-product-name" style="font-family:var(--font-display);font-size:24px;margin-bottom:4px;"></p>
+      <p id="mp-product-price" style="font-family:var(--font-display);font-size:36px;color:var(--red2);"></p>
     </div>
-    <div style="margin-bottom:12px;">
-      <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Email</label>
-      <input id="mp-email" type="email" placeholder="Para recibir tu compra"
-        style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
-        onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
+    <div style="margin-bottom:16px;">
+      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu email</label>
+      <input id="mp-email" type="email" placeholder="Para recibir tu compra" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
     </div>
-    <div style="margin-bottom:20px;">
-      <label style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#555;display:block;margin-bottom:5px;">Nombre</label>
-      <input id="mp-nombre" type="text" placeholder="Nombre completo"
-        style="width:100%;background:#060606;border:1px solid #1a1a1a;color:var(--white);padding:11px 12px;font-family:var(--font-body);font-size:14px;outline:none;"
-        onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='#1a1a1a'">
+    <div style="margin-bottom:24px;">
+      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu nombre</label>
+      <input id="mp-nombre" type="text" placeholder="Nombre completo" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
     </div>
-    <button id="mp-btn" onclick="initMercadoPago()"
-      style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg>
+    <!-- Botón oficial de Mercado Pago -->
+    <button onclick="initMercadoPago()" id="mp-btn" style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;" onmouseover="this.style.background='#007ab8'" onmouseout="this.style.background='#009ee3'">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#009ee3"/><path d="M8 20.5c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2v.5c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2v-.5z" fill="#fff"/></svg>
       Pagar con Mercado Pago
     </button>
-    <p style="font-family:var(--font-mono);font-size:9px;color:#333;text-align:center;margin-top:10px;letter-spacing:1px;">Tarjetas · Débito · Efectivo · Cuotas</p>
+    <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted2);text-align:center;margin-top:12px;">Tarjetas, débito, efectivo · Pago seguro</p>
   </div>
 </div>
 
-
-
 <script>
-// ============ TABS AUTH ============
-var currentTab = 'login';
+// ---- AUTH TABS ----
+let currentTab = 'login';
 function switchTab(tab) {
   currentTab = tab;
-  var isReg = tab === 'register';
-  var tl = document.getElementById('tab-login');
-  var tr = document.getElementById('tab-register');
-  var fn = document.getElementById('field-nombre');
-  var sb2 = document.getElementById('auth-submit');
-  if(tl){tl.style.borderBottomColor=isReg?'transparent':'var(--red2)';tl.style.color=isReg?'#555':'var(--white)';}
-  if(tr){tr.style.borderBottomColor=isReg?'var(--red2)':'transparent';tr.style.color=isReg?'var(--white)':'#555';}
-  if(fn) fn.style.display=isReg?'block':'none';
-  if(sb2) sb2.textContent=isReg?'Crear cuenta':'Entrar';
-  var msg=document.getElementById('auth-msg');
-  if(msg) msg.textContent='';
+  const isReg = tab === 'register';
+  document.getElementById('tab-login').style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)';
+  document.getElementById('tab-login').style.color = isReg ? 'var(--muted2)' : 'var(--white)';
+  document.getElementById('tab-register').style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent';
+  document.getElementById('tab-register').style.color = isReg ? 'var(--white)' : 'var(--muted2)';
+  document.getElementById('field-nombre').style.display = isReg ? 'block' : 'none';
+  document.getElementById('auth-submit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
+  document.getElementById('auth-msg').textContent = '';
 }
 
-// ============ GOOGLE LOGIN ============
 async function loginWithGoogle() {
-  var btn = document.getElementById('google-btn');
-  if(btn) btn.textContent='Conectando...';
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) document.getElementById('auth-msg').textContent = error.message;
+}
+
+function toggleAuthMode() {
+  switchTab(document.getElementById('auth-mode')?.value || 'login');
+}
+
+// ---- MERCADO PAGO ----
+let mpCurrentProduct = null;
+
+function openMPModal(productName, productPrice, productId) {
+  if (!currentUser) { openAuthModal(); return; }
+  mpCurrentProduct = { name: productName, price: productPrice, id: productId };
+  document.getElementById('mp-product-name').textContent = productName;
+  document.getElementById('mp-product-price').textContent = '$' + productPrice + ' USD';
+  document.getElementById('mp-email').value = currentUser.email || '';
+  document.getElementById('mp-nombre').value = currentProfile?.nombre || '';
+  document.getElementById('mp-modal').style.display = 'flex';
+}
+
+function closeMPModal() {
+  document.getElementById('mp-modal').style.display = 'none';
+}
+
+async function initMercadoPago() {
+  const email  = document.getElementById('mp-email').value.trim();
+  const nombre = document.getElementById('mp-nombre').value.trim();
+  const btn    = document.getElementById('mp-btn');
+
+  if (!email || !nombre) { alert('Completá email y nombre'); return; }
+  if (!mpCurrentProduct) return;
+
+  btn.innerHTML = '<span style="opacity:.7">Procesando...</span>'; btn.disabled = true;
+
   try {
-    var result = await window._sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-        queryParams: { prompt: 'select_account' }
-      }
-    });
-    if(result.error) throw result.error;
-  } catch(e) {
-    var msg=document.getElementById('auth-msg');
-    if(msg) msg.textContent='Error Google: '+e.message;
-    if(btn) btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Continuar con Google';
-  }
-}
-
-// ============ LOGIN EMAIL ============
-async function doLogin() {
-  var email = document.getElementById('auth-email')?.value?.trim();
-  var pass  = document.getElementById('auth-pass')?.value;
-  var msg   = document.getElementById('auth-msg');
-  var btn   = document.getElementById('auth-submit');
-  if(!email||!pass){if(msg)msg.textContent='Completá email y contraseña';return;}
-  if(msg){msg.style.color='var(--red2)';msg.textContent='';}
-  if(btn){btn.textContent='Cargando...';btn.disabled=true;}
-  try {
-    if(currentTab==='register'){
-      var nombre=document.getElementById('auth-nombre')?.value?.trim()||'';
-      var r=await window._sb.auth.signUp({email,password:pass,options:{data:{nombre}}});
-      if(r.error) throw r.error;
-      if(msg){msg.style.color='#3fff2a';msg.textContent='¡Cuenta creada! Revisá tu email.';}
-      if(btn){btn.textContent='Crear cuenta';btn.disabled=false;}
-      return;
-    } else {
-      var r=await window._sb.auth.signInWithPassword({email,password:pass});
-      if(r.error) throw r.error;
-      closeAuthModal();
-    }
-  } catch(e) {
-    var errMsg=e.message==='Invalid login credentials'?'Email o contraseña incorrectos':e.message;
-    if(msg){msg.style.color='var(--red2)';msg.textContent=errMsg;}
-  }
-  if(btn){btn.textContent=currentTab==='register'?'Crear cuenta':'Entrar';btn.disabled=false;}
-}
-
-async function doLogout() {
-  await window._sb.auth.signOut();
-  window._currentUser=null;
-  window._currentProfile=null;
-  var panel=document.getElementById('admin-panel');
-  if(panel) panel.remove();
-  var menu=document.getElementById('account-menu');
-  if(menu) menu.remove();
-  var btn=document.getElementById('auth-btn');
-  if(btn){btn.textContent='Iniciar sesión';btn.style.background='var(--red2)';}
-}
-
-function showAccountMenu() {
-  var existing=document.getElementById('account-menu');
-  if(existing){existing.remove();return;}
-  var btn=document.getElementById('auth-btn');
-  if(!btn) return;
-  var rect=btn.getBoundingClientRect();
-  var menu=document.createElement('div');
-  menu.id='account-menu';
-  menu.style.cssText='position:fixed;top:'+(rect.bottom+6)+'px;right:'+(window.innerWidth-rect.right)+'px;z-index:10000;background:#0a0a0a;border:1px solid #222;min-width:200px;';
-  menu.innerHTML='<div style="padding:14px 16px;border-bottom:1px solid #151515;"><p style="font-family:var(--font-mono);font-size:10px;color:#555;">'+(window._currentUser?.email||'')+'</p>'+(window._currentProfile?.role==='admin'?'<p style="font-family:var(--font-mono);font-size:9px;color:var(--red2);margin-top:4px;letter-spacing:1px;">ADMIN</p>':'')+'</div><button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;cursor:pointer;text-align:left;">Cerrar sesión</button>';
-  document.body.appendChild(menu);
-  setTimeout(function(){document.addEventListener('click',function rm(e){if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',rm);}});},100);
-}
-
-// ============ MERCADO PAGO ============
-function closeMPModal(){
-  var m=document.getElementById('mp-modal');
-  if(m) m.style.display='none';
-}
-
-let mpLoading = false;
-async function initMercadoPago(){
-  if (mpLoading) return;
-  mpLoading = true;
-  var email = document.getElementById('mp-email')?.value?.trim();
-  var nombre = document.getElementById('mp-nombre')?.value?.trim();
-  var btn = document.getElementById('mp-btn');
-  if(!email || !nombre){
-    alert('Completá email y nombre');
-    mpLoading = false;
-    return;
-  }
-  if(!window.mpCurrentProduct){
-    alert('Producto inválido');
-    mpLoading = false;
-    return;
-  }
-  if(btn){ btn.textContent = 'Procesando...'; btn.disabled = true; }
-  try {
-    const sb = window._sb;
-    const insertData = {
+    // 1. Guardar orden pendiente en Supabase
+    const { data: order, error: orderError } = await sb.from('orders').insert({
+      user_id: currentUser?.id || null,
+      product_id: mpCurrentProduct.id || null,
       nombre, email,
-      monto: window.mpCurrentProduct.price,
-      estado: 'pendiente',
-      user_id: window._currentUser?.id || null
-    };
-    if(window.mpCurrentProduct.id && window.mpCurrentProduct.id !== 'null'){
-      insertData.product_id = window.mpCurrentProduct.id;
-    }
-    const { data: order, error } = await sb
-      .from('orders')
-      .insert(insertData)
-      .select()
-      .single();
-    if(error) throw error;
+      monto: mpCurrentProduct.price,
+      estado: 'pendiente'
+    }).select().single();
+
+    if (orderError) throw orderError;
+
+    // 2. Crear preferencia de pago en Mercado Pago
     const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -1564,121 +1844,854 @@ async function initMercadoPago(){
         'Authorization': 'Bearer APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997'
       },
       body: JSON.stringify({
-        items: [{ title: window.mpCurrentProduct.name, quantity: 1, unit_price: Number(window.mpCurrentProduct.price), currency_id: 'USD' }],
-        payer: { email: email, name: nombre },
+        items: [{
+          title: mpCurrentProduct.name,
+          quantity: 1,
+          unit_price: parseFloat(mpCurrentProduct.price),
+          currency_id: 'USD'
+        }],
+        payer: { email, name: nombre },
         external_reference: order.id,
         back_urls: {
           success: window.location.origin + '?pago=ok&order=' + order.id,
-          failure: window.location.origin + '?pago=error',
-          pending: window.location.origin + '?pago=pendiente'
+          failure: window.location.origin + '?pago=error&order=' + order.id,
+          pending: window.location.origin + '?pago=pendiente&order=' + order.id
         },
-        auto_return: 'approved'
+        auto_return: 'approved',
+        notification_url: 'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/mp-webhook'
       })
     });
+
     const mpData = await mpRes.json();
-    if(!mpData.init_point) throw new Error(mpData.message || 'Error Mercado Pago');
+
+    if (!mpData.init_point) throw new Error(mpData.message || 'Error creando preferencia MP');
+
+    // 3. Actualizar orden con el ID de preferencia de MP
+    await sb.from('orders').update({ 
+      estado: 'pendiente',
+      mp_preference_id: mpData.id 
+    }).eq('id', order.id);
+
+    // 4. Redirigir al checkout de Mercado Pago
+    closeMPModal();
     window.location.href = mpData.init_point;
-  } catch(e){
-    console.error('MP ERROR:', e);
-    alert('Error: ' + e.message);
-    if(btn){ btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; }
-    mpLoading = false;
-  }
-}
 
-// Verificar resultado pago
-(function(){
-  var params=new URLSearchParams(window.location.search);
-  var pago=params.get('pago');
-  if(!pago) return;
-  history.replaceState(null,'',window.location.pathname);
-  if(pago==='ok'){
-    setTimeout(function(){
-      var d=document.createElement('div');
-      d.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
-      d.innerHTML='<div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:360px;"><div style="font-family:var(--font-display);font-size:56px;color:#3fff2a;margin-bottom:12px;">✓</div><p style="font-family:var(--font-display);font-size:26px;letter-spacing:2px;margin-bottom:10px;">PAGO EXITOSO</p><p style="font-family:var(--font-mono);font-size:11px;color:#666;margin-bottom:24px;">Revisá tu email — te enviamos el link de descarga.</p><button onclick="this.parentElement.parentElement.remove()" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;">Cerrar</button></div>';
-      document.body.appendChild(d);
-    },500);
-  }
-})();
-
-// ============ CHAT GROQ ============
-const AMCU_SYSTEM = `Sos AMCU, un DJ y productor de Bass House argentino con 8 años de carrera que firmó en sellos top a nivel mundial. Respondés preguntas sobre producción musical de forma directa, honesta y con tu voz propia — sin vueltas, como le hablarías a un alumno en clase.
-
-Tu setup: Ableton Live 12, Serum, Waves, FabFilter y plugins nativos.
-BPM: 128-132. Referencia: Chris Lake.
-Filosofía: enseñás como no te enseñan en YouTube — simple y directo.
-Error más común: los productores nuevos se lo hacen más complejo de lo que es.
-
-Respondés siempre en español rioplatense. Máximo 150 palabras por respuesta.`;
-
-let chatHistory = [];
-
-async function sendChat() {
-  var input=document.getElementById('chat-input');
-  var msg=input?.value?.trim();
-  if(!msg) return;
-  input.value='';
-  var sendBtn=document.getElementById('chat-send');
-  if(sendBtn) sendBtn.disabled=true;
-  addChatMsg(msg,'u');
-  chatHistory.push({role:'user',content:msg});
-  var typingId=addTypingIndicator();
-  try {
-    var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer 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'},
-      body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        max_tokens:300,
-        messages:[{role:'system',content:AMCU_SYSTEM},...chatHistory]
-      })
-    });
-    var data=await res.json();
-    removeTypingIndicator(typingId);
-    var reply=data.choices?.[0]?.message?.content||'No pude procesar eso, intentá de nuevo.';
-    addChatMsg(reply,'a');
-    chatHistory.push({role:'assistant',content:reply});
   } catch(e) {
-    removeTypingIndicator(typingId);
-    addChatMsg('Error de conexión. Intentá de nuevo.','a');
+    console.error('MP Error:', e);
+    // Fallback — mostrar link de pago manual
+    btn.innerHTML = 'Pagar con Mercado Pago'; btn.disabled = false;
+    alert('Error al procesar el pago: ' + e.message + '\n\nContactanos a amcuoficial@gmail.com para coordinar el pago.');
   }
-  if(sendBtn) sendBtn.disabled=false;
-  if(input) input.focus();
 }
 
-function addChatMsg(text,type){
-  var msgs=document.getElementById('chat-msgs');
-  if(!msgs) return;
-  var div=document.createElement('div');
-  div.className='msg '+(type==='u'?'u':'a');
-  if(type==='a') div.innerHTML='<div class="ml">AMCU</div>'+text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-  else div.textContent=text;
-  msgs.appendChild(div);
-  msgs.scrollTop=msgs.scrollHeight;
+// Verificar resultado del pago al volver de MP
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const pago = params.get('pago');
+  const orderId = params.get('order');
+  if (pago === 'ok' && orderId) {
+    // Actualizar orden como pagada
+    sb.from('orders').update({ estado: 'pagado' }).eq('id', orderId).then(() => {
+      showPaymentSuccess();
+    });
+  } else if (pago === 'error') {
+    showPaymentError();
+  }
+});
+
+function showPaymentSuccess() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#050505;border:1px solid #3fff2a;padding:48px;text-align:center;max-width:400px;">
+      <div style="font-family:var(--font-display);font-size:60px;color:#3fff2a;margin-bottom:16px;">✓</div>
+      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO EXITOSO</p>
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Revisá tu email — te enviamos el link de descarga.</p>
+      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:#3fff2a;border:none;color:#000;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
-function addTypingIndicator(){
-  var msgs=document.getElementById('chat-msgs');
-  if(!msgs) return;
-  var id='typing-'+Date.now();
-  var div=document.createElement('div');
-  div.className='msg a typing';div.id=id;
-  div.innerHTML='<div class="ml">AMCU</div><span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-  msgs.appendChild(div);
-  msgs.scrollTop=msgs.scrollHeight;
-  return id;
-}
-
-function removeTypingIndicator(id){var el=document.getElementById(id);if(el)el.remove();}
-
-function askSuggestion(btn){
-  var input=document.getElementById('chat-input');
-  if(input) input.value=btn.textContent;
-  var suggestions=document.getElementById('chat-suggestions');
-  if(suggestions) suggestions.style.display='none';
-  sendChat();
+function showPaymentError() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#050505;border:1px solid var(--red2);padding:48px;text-align:center;max-width:400px;">
+      <div style="font-family:var(--font-display);font-size:60px;color:var(--red2);margin-bottom:16px;">✗</div>
+      <p style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;margin-bottom:12px;">PAGO CANCELADO</p>
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);margin-bottom:28px;">Si tuviste algún problema escribinos a amcuoficial@gmail.com</p>
+      <button onclick="this.closest('div[style]').remove();history.replaceState(null,'',window.location.pathname);" style="background:var(--red2);border:none;color:#fff;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;cursor:pointer;">Cerrar</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 </script>
 
+<script>
+// ============ REPRODUCTOR PROTEGIDO ESTILO BEATPORT ============
+// Sin elemento <audio> en el DOM — Web Audio API pura
+// URL nunca expuesta — fetch interno con token
+
+const PLAYERS = {};
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
+
+// Bloquear todas las formas de descarga
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && ['s','S','u','U','p','P'].includes(e.key)) e.preventDefault();
+  if (e.key === 'F12') e.preventDefault();
+});
+document.addEventListener('dragstart', e => {
+  if (e.target.closest('.track-player')) e.preventDefault();
+});
+
+function renderPlayer(productId, nombre, previewStart) {
+  return `
+    <div class="track-player" id="player-${productId}" oncontextmenu="return false">
+      <div class="player-header">
+        <button class="play-btn" id="playbtn-${productId}" onclick="handlePlay('${productId}', ${previewStart||0})">
+          <svg id="playico-${productId}" width="14" height="14" viewBox="0 0 14 14">
+            <polygon points="3,1 13,7 3,13" fill="white"/>
+          </svg>
+        </button>
+        <div class="player-meta">
+          <div class="player-title">${nombre}</div>
+          <div class="player-sub">Preview · 30 seg</div>
+        </div>
+        <div class="player-time" id="ptime-${productId}">0:30</div>
+      </div>
+      <div class="waveform-wrap" id="wwrap-${productId}" onclick="seekPlayer('${productId}', event)">
+        <canvas id="wcanvas-${productId}" class="waveform-canvas"></canvas>
+        <div class="waveform-cursor" id="wcursor-${productId}" style="left:0%"></div>
+        <div class="player-loading" id="pload-${productId}" style="display:none">Cargando audio...</div>
+        <div class="preview-lock">Preview — No descargable</div>
+      </div>
+    </div>
+  `;
+}
+
+async function handlePlay(id, startSec) {
+  const p = PLAYERS[id];
+  if (!p) {
+    await loadAudio(id, startSec);
+    return;
+  }
+  if (p.playing) pausePlayer(id);
+  else resumePlayer(id);
+}
+
+async function loadAudio(id, startSec) {
+  const loadEl = document.getElementById('pload-' + id);
+  const ico = document.getElementById('playico-' + id);
+  if (loadEl) loadEl.style.display = 'flex';
+  // Spinner en botón
+  if (ico) ico.innerHTML = '<circle cx="7" cy="7" r="5" fill="none" stroke="white" stroke-width="1.5" stroke-dasharray="8 4"><animateTransform attributeName="transform" type="rotate" from="0 7 7" to="360 7 7" dur=".7s" repeatCount="indefinite"/></circle>';
+
+  // Obtener URL real desde el DOM (encriptada)
+  const srcEl = document.getElementById('asrc-' + id);
+  if (!srcEl) { if (loadEl) loadEl.style.display = 'none'; return; }
+  const url = atob(srcEl.dataset.e);
+
+  try {
+    // Fetch con token — URL nunca en src de audio
+    const res = await fetch(url, {
+      headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
+    });
+    if (!res.ok) throw new Error('No se pudo cargar el audio');
+    const buf = await res.arrayBuffer();
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuf = await ctx.decodeAudioData(buf);
+
+    PLAYERS[id] = {
+      ctx, audioBuf, startSec,
+      source: null, playing: false,
+      pausedAt: 0, startTime: 0,
+      duration: 30, rafId: null
+    };
+
+    if (loadEl) loadEl.style.display = 'none';
+    drawWaveformFromBuffer(id, audioBuf, startSec);
+    startPlayer(id);
+
+  } catch(e) {
+    console.error('Audio load error:', e);
+    if (loadEl) { loadEl.textContent = 'Error cargando audio'; }
+    if (ico) ico.innerHTML = '<polygon points="3,1 13,7 3,13" fill="white"/>';
+  }
+}
+
+function drawWaveformFromBuffer(id, audioBuf, startSec) {
+  const canvas = document.getElementById('wcanvas-' + id);
+  if (!canvas) return;
+  const W = canvas.parentElement.offsetWidth || 400;
+  const H = 48;
+  canvas.width = W; canvas.height = H;
+  const ctx2 = canvas.getContext('2d');
+  const data = audioBuf.getChannelData(0);
+  const sr = audioBuf.sampleRate;
+  const startSample = Math.floor(startSec * sr);
+  const endSample = Math.min(startSample + Math.floor(30 * sr), data.length);
+  const total = endSample - startSample;
+  const step = Math.ceil(total / W);
+  ctx2.clearRect(0, 0, W, H);
+  for (let i = 0; i < W; i++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) {
+      const idx = startSample + i * step + j;
+      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
+    }
+    const bh = Math.max(1, max * H * 0.85);
+    const y = (H - bh) / 2;
+    // Color degradado según intensidad
+    const intensity = Math.floor(max * 255);
+    ctx2.fillStyle = `rgb(${Math.floor(intensity*0.3)},${Math.floor(intensity*0.1)},${Math.floor(intensity*0.1)})`;
+    ctx2.fillRect(i, 0, 1, H);
+    ctx2.fillStyle = `rgb(${40 + intensity*0.5}, ${10}, ${10})`;
+    ctx2.fillRect(i, y, 1, bh);
+  }
+  // Store waveform data for redraw
+  PLAYERS[id]._wdata = { W, H, data, sr, startSec: startSec };
+}
+
+function startPlayer(id) {
+  const p = PLAYERS[id];
+  if (!p) return;
+  // Pausar otros
+  Object.keys(PLAYERS).forEach(oid => { if (oid !== id && PLAYERS[oid].playing) pausePlayer(oid); });
+  if (p.ctx.state === 'suspended') p.ctx.resume();
+  p.source = p.ctx.createBufferSource();
+  p.source.buffer = p.audioBuf;
+  p.source.connect(p.ctx.destination);
+  const offset = p.startSec + p.pausedAt;
+  const remaining = p.duration - p.pausedAt;
+  p.source.start(0, offset, remaining);
+  p.startTime = p.ctx.currentTime - p.pausedAt;
+  p.playing = true;
+  setPlayIcon(id, true);
+  p.source.onended = () => {
+    if (p.playing) { p.playing = false; p.pausedAt = 0; setPlayIcon(id, false); updateCursor(id, 0); setTimeDisplay(id, 30); }
+  };
+  p.rafId = requestAnimationFrame(() => tickPlayer(id));
+}
+
+function pausePlayer(id) {
+  const p = PLAYERS[id];
+  if (!p || !p.playing) return;
+  p.pausedAt = Math.min(p.ctx.currentTime - p.startTime, p.duration);
+  p.source.stop();
+  p.playing = false;
+  cancelAnimationFrame(p.rafId);
+  setPlayIcon(id, false);
+}
+
+function resumePlayer(id) {
+  const p = PLAYERS[id];
+  if (!p || p.playing) return;
+  startPlayer(id);
+}
+
+function tickPlayer(id) {
+  const p = PLAYERS[id];
+  if (!p || !p.playing) return;
+  const elapsed = p.ctx.currentTime - p.startTime;
+  const pct = Math.min(elapsed / p.duration, 1);
+  updateCursor(id, pct * 100);
+  setTimeDisplay(id, Math.max(0, p.duration - elapsed));
+  redrawPlayed(id, pct);
+  if (pct < 1) p.rafId = requestAnimationFrame(() => tickPlayer(id));
+}
+
+function updateCursor(id, pct) {
+  const el = document.getElementById('wcursor-' + id);
+  if (el) el.style.left = pct + '%';
+}
+
+function setTimeDisplay(id, secs) {
+  const el = document.getElementById('ptime-' + id);
+  if (el) { const s = Math.ceil(secs); el.textContent = '0:' + String(s).padStart(2,'0'); }
+}
+
+function redrawPlayed(id, pct) {
+  const p = PLAYERS[id];
+  if (!p || !p._wdata) return;
+  const canvas = document.getElementById('wcanvas-' + id);
+  if (!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  const { W, H, data, sr, startSec } = p._wdata;
+  const playedPx = Math.floor(W * pct);
+  const startSample = Math.floor(startSec * sr);
+  const endSample = Math.min(startSample + Math.floor(30 * sr), data.length);
+  const total = endSample - startSample;
+  const step = Math.ceil(total / W);
+  for (let i = 0; i < playedPx; i++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) {
+      const idx = startSample + i * step + j;
+      if (idx < data.length) max = Math.max(max, Math.abs(data[idx]));
+    }
+    const bh = Math.max(1, max * H * 0.85);
+    const y = (H - bh) / 2;
+    ctx2.fillStyle = 'rgba(224,26,16,.15)';
+    ctx2.fillRect(i, 0, 1, H);
+    ctx2.fillStyle = '#e01a10';
+    ctx2.fillRect(i, y, 1, bh);
+  }
+}
+
+function seekPlayer(id, e) {
+  const p = PLAYERS[id];
+  if (!p) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  p.pausedAt = pct * p.duration;
+  if (p.playing) { p.source.stop(); p.playing = false; startPlayer(id); }
+  else { updateCursor(id, pct*100); setTimeDisplay(id, (1-pct)*p.duration); }
+}
+
+function setPlayIcon(id, playing) {
+  const ico = document.getElementById('playico-' + id);
+  const btn = document.getElementById('playbtn-' + id);
+  if (!ico) return;
+  if (playing) {
+    ico.innerHTML = '<rect x="2" y="2" width="4" height="10" fill="white"/><rect x="8" y="2" width="4" height="10" fill="white"/>';
+    if (btn) btn.style.background = 'var(--red2)';
+  } else {
+    ico.innerHTML = '<polygon points="3,1 13,7 3,13" fill="white"/>';
+    if (btn) btn.style.background = '#111';
+  }
+}?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #020202;
+  --white: #ede9e4;
+  --red: #c0170f;
+  --red2: #e01a10;
+  --chrome: #b8b0c8;
+  --chrome2: #c9a84c;
+  --green: #3fff2a;
+  --purple: #9b6fff;
+  --muted: #282828;
+  --muted2: #666;
+  --card: #0a0a0a;
+  --border: #1a1a1a;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+.cursor {
+  position: fixed;
+  width: 10px; height: 10px;
+  background: var(--red2);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .2s, height .2s;
+  mix-blend-mode: difference;
+}
+.cursor.big { width: 44px; height: 44px; }
+
+body::after {
+  content:'';
+  position: fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:9990;
+}
+
+/* NAV */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 48px;
+  transition: background .3s, border-color .3s;
+  border-bottom: 1px solid transparent;
+}
+nav.scrolled { background: rgba(2,2,2,.95); border-color: var(--border); backdrop-filter: blur(16px); }
+.nav-logo img { height: 42px; filter: drop-shadow(0 0 12px rgba(180,140,255,.3)); }
+.nav-links { display:flex; gap:32px; list-style:none; }
+.nav-links a {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted2); text-decoration: none; transition: color .2s;
+}
+.nav-links a:hover { color: var(--white); }
+.nav-cta {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  background: var(--red2); color: var(--white); border: none; padding: 10px 22px; cursor: none; transition: background .2s;
+}
+.nav-cta:hover { background: #ff2010; }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: grid; grid-template-columns: 1fr 1fr;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background: radial-gradient(ellipse 60% 80% at 0% 50%, rgba(192,23,15,.15) 0%, transparent 65%),
+              radial-gradient(ellipse 40% 40% at 100% 80%, rgba(155,111,255,.07) 0%, transparent 60%);
+}
+.hero-left {
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding: 120px 48px 160px; position:relative; z-index:2;
+}
+.hero-tag {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 28px;
+  opacity:0; animation: fadeUp .7s .3s forwards;
+}
+.hero-tag span { color: var(--red2); }
+.hero-logo {
+  width: min(460px, 90%); margin-bottom: 36px;
+  opacity:0; animation: fadeUp .8s .5s forwards;
+  filter: drop-shadow(0 0 28px rgba(192,23,15,.22)) drop-shadow(0 0 56px rgba(155,111,255,.13));
+}
+.hero-desc {
+  font-size: 15px; color: var(--muted2); max-width: 400px; line-height: 1.8;
+  font-weight: 300; margin-bottom: 40px;
+  opacity:0; animation: fadeUp .7s .7s forwards;
+}
+.hero-actions {
+  display:flex; gap:16px; flex-wrap:wrap;
+  opacity:0; animation: fadeUp .7s .9s forwards;
+}
+.btn-main {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  background: var(--red2); color: var(--white); border: none; padding: 14px 28px; cursor: none; transition: background .2s;
+}
+.btn-main:hover { background: #ff2010; }
+.btn-outline {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  background: transparent; color: var(--white); border: 1px solid var(--border); padding: 14px 28px; cursor: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-outline:hover { border-color: var(--chrome); color: var(--chrome); }
+.hero-right { position:relative; overflow:hidden; }
+.hero-photo {
+  width:100%; height:100%; object-fit:cover; object-position:center top;
+  filter: contrast(1.05);
+  opacity:0; animation: fadeIn 1.2s .4s forwards;
+}
+.hero-right::after {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(to right, var(--black) 0%, transparent 30%),
+              linear-gradient(to top, var(--black) 0%, transparent 15%),
+              rgba(192,23,15,.06);
+}
+.stats-bar {
+  position:absolute; bottom:0; left:0; right:0; z-index:3;
+  border-top: 1px solid var(--border);
+  display:grid; grid-template-columns: repeat(3,1fr);
+  background: rgba(2,2,2,.85); backdrop-filter:blur(12px);
+}
+.stat { padding: 24px 32px; border-right: 1px solid var(--border); opacity:0; animation: fadeUp .6s forwards; }
+.stat:nth-child(1){animation-delay:.8s}
+.stat:nth-child(2){animation-delay:.95s}
+.stat:nth-child(3){animation-delay:1.1s;border-right:none}
+.stat-n { font-family:var(--font-display); font-size:40px; color:var(--white); display:block; line-height:1; }
+.stat-l { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); margin-top:4px; display:block; }
+
+/* MARQUEE */
+.marquee-wrap { border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden; padding:14px 0; background:#060606; }
+.marquee-track { display:flex; animation:marquee 22s linear infinite; white-space:nowrap; }
+.m-item { font-family:var(--font-display); font-size:16px; letter-spacing:5px; color:var(--muted); padding:0 32px; }
+.m-item.r { color:var(--red2); }
+.m-item.c { color:var(--chrome); }
+
+/* SECTIONS */
+section { padding: 120px 48px; }
+.s-label { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--red2); margin-bottom:16px; }
+.s-title { font-family:var(--font-display); font-size:clamp(44px,6vw,76px); line-height:.95; letter-spacing:1px; margin-bottom:60px; }
+
+/* ABOUT */
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+.about-photos { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.about-photo { width:100%; aspect-ratio:3/4; object-fit:cover; object-position:center top; transition:filter .4s; }
+.about-photo:hover { filter:contrast(1.1) brightness(1.05); }
+.about-text p { font-size:15px; color:var(--muted2); line-height:1.9; font-weight:300; margin-bottom:20px; }
+.about-text p strong { color:var(--white); font-weight:400; }
+.genre-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:32px; }
+.pill {
+  font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  border:1px solid var(--border); color:var(--muted2); padding:6px 14px; transition:border-color .2s, color .2s;
+}
+.pill.active { border-color:var(--red2); color:var(--red2); }
+.pill:hover { border-color:var(--white); color:var(--white); }
+
+.waveform { display:flex; align-items:center; gap:3px; height:36px; margin:28px 0; }
+.wb { width:2px; background:var(--red2); border-radius:2px; opacity:.5; animation:wave var(--d,1s) ease-in-out infinite; animation-delay:var(--del,0s); }
+@keyframes wave { 0%,100%{height:4px} 50%{height:var(--h,28px)} }
+
+/* STORE */
+.store-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:var(--border); }
+.product-card { background:var(--card); padding:36px; position:relative; overflow:hidden; cursor:none; transition:background .3s; }
+.product-card:hover { background:#0e0e0e; }
+.product-card::after { content:''; position:absolute; top:0;left:0;right:0;height:1px; background:linear-gradient(90deg,var(--red2),var(--purple)); transform:scaleX(0); transform-origin:left; transition:transform .3s; }
+.product-card:hover::after { transform:scaleX(1); }
+.p-type { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); margin-bottom:14px; }
+.p-name { font-family:var(--font-display); font-size:26px; letter-spacing:1px; margin-bottom:12px; line-height:1.1; }
+.p-desc { font-size:13px; color:var(--muted2); line-height:1.7; margin-bottom:28px; font-weight:300; }
+.p-footer { display:flex; align-items:center; justify-content:space-between; }
+.p-price { font-family:var(--font-display); font-size:30px; }
+.p-price span { font-family:var(--font-mono); font-size:11px; color:var(--muted2); }
+.btn-buy { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; background:transparent; border:1px solid var(--border); color:var(--white); padding:10px 16px; cursor:none; transition:background .2s, border-color .2s; }
+.btn-buy:hover { background:var(--red2); border-color:var(--red2); }
+.p-badge { position:absolute; top:20px;right:20px; font-family:var(--font-mono); font-size:9px; letter-spacing:1px; text-transform:uppercase; background:var(--red2); color:var(--white); padding:4px 8px; }
+
+/* GHOST */
+.ghost-section { background:var(--card); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.ghost-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+.ghost-list { list-style:none; margin-bottom:40px; }
+.ghost-list li { padding:18px 0; border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:flex-start; font-size:14px; color:var(--muted2); font-weight:300; line-height:1.6; }
+.ghost-list li::before { content:''; width:5px;height:5px; background:var(--red2); border-radius:50%; flex-shrink:0; margin-top:8px; }
+.ghost-list li strong { color:var(--white); font-weight:400; }
+.ghost-form { background:#050505; border:1px solid var(--border); padding:40px; }
+.form-title { font-family:var(--font-display); font-size:22px; letter-spacing:2px; margin-bottom:28px; }
+.form-group { margin-bottom:18px; }
+.form-label { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted2); display:block; margin-bottom:6px; }
+.form-input,.form-select,.form-textarea { width:100%; background:var(--black); border:1px solid var(--border); color:var(--white); font-family:var(--font-body); font-size:14px; padding:12px 14px; outline:none; transition:border-color .2s; font-weight:300; }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--red2); }
+.form-textarea { resize:vertical; min-height:90px; }
+.form-select { appearance:none; cursor:none; }
+.form-input::placeholder,.form-textarea::placeholder { color:var(--muted); }
+
+/* MEMBERSHIP */
+.member-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
+.member-card { background:var(--card); padding:48px; position:relative; overflow:hidden; }
+.member-card.featured { background:#0c0000; }
+.member-card.featured::before { content:'RECOMENDADO'; position:absolute; top:22px;right:-34px; background:var(--red2); color:var(--white); font-family:var(--font-mono); font-size:9px; letter-spacing:2px; padding:5px 48px; transform:rotate(45deg); }
+.m-plan { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted2); margin-bottom:20px; }
+.m-price { font-family:var(--font-display); font-size:64px; line-height:1; margin-bottom:4px; }
+.m-price small { font-family:var(--font-mono); font-size:12px; color:var(--muted2); }
+.m-curr { font-family:var(--font-mono); font-size:11px; color:var(--muted2); margin-bottom:32px; }
+.m-perks { list-style:none; margin-bottom:40px; }
+.m-perks li { font-size:13px; color:var(--muted2); padding:10px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; font-weight:300; }
+.chk { width:16px;height:16px;background:var(--red2);color:var(--white);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700; }
+.chk.off { background:var(--muted); }
+.m-perks li strong { color:var(--white); font-weight:400; }
+
+/* CHAT */
+.chat-box { background:var(--card); border:1px solid var(--border); padding:40px; margin-top:60px; }
+.chat-hdr { display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border); }
+.chat-dot { width:8px;height:8px;background:var(--red2);border-radius:50%;animation:pulse 2s infinite; }
+.chat-ttl { font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2); }
+.chat-msgs { display:flex;flex-direction:column;gap:14px;margin-bottom:20px; }
+.msg { max-width:75%;padding:14px 18px;font-size:13px;line-height:1.6;font-weight:300; }
+.msg.u { align-self:flex-end;background:#161616;border:1px solid var(--border); }
+.msg.a { align-self:flex-start;background:#0d0000;border:1px solid rgba(192,23,15,.3); }
+.msg.a .ml { font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);text-transform:uppercase;margin-bottom:6px; }
+.chat-row { display:flex;gap:8px; }
+.chat-inp { flex:1;background:#080808;border:1px solid var(--border);color:var(--muted2);font-family:var(--font-mono);font-size:12px;padding:12px 16px;outline:none;font-style:italic; }
+.chat-btn { background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;padding:12px 20px;cursor:none;text-transform:uppercase;font-weight:500; }
+
+/* FOOTER */
+footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;align-items:center;justify-content:space-between; }
+.footer-logo img { height:36px; filter:drop-shadow(0 0 10px rgba(192,23,15,.3)); }
+.footer-links { display:flex;gap:32px;list-style:none; }
+.footer-links a { font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);text-decoration:none;transition:color .2s; }
+.footer-links a:hover { color:var(--white); }
+.footer-copy { font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1px; }
+
+.reveal { opacity:0;transform:translateY(36px);transition:opacity .7s,transform .7s; }
+.reveal.in { opacity:1;transform:none; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:none} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #060606;
+  border: 1px solid #1e1e1e;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.player-header {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #111;
+}
+.play-btn {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #111; border: none; border-right: 1px solid #1e1e1e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.play-btn:hover { background: var(--red2); }
+.play-btn svg { pointer-events: none; }
+.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
+.player-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
+.player-time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
+  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
+  display: flex; align-items: center;
+}
+.waveform-wrap {
+  position: relative; height: 48px; cursor: pointer;
+  background: #030303; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.waveform-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--red2); pointer-events: none;
+  box-shadow: 0 0 6px var(--red2);
+  transition: left .1s linear;
+}
+.preview-lock {
+  position: absolute; bottom: 6px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  color: #333; text-transform: uppercase; pointer-events: none;
+}
+.player-loading {
+  position: absolute; inset: 0; background: #060606;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body>
+
+
+<!-- INTRO SCREEN -->
+<div id="intro">
+  <div id="intro-bg"></div>
+  <div id="intro-lines"></div>
+  <div id="intro-content">
+    <img id="intro-logo" src="https://anvkreqmsbzsfaepudlx.supabase.co/storage/v1/object/public/amcu-files/images/3D%20(4).PNG" alt="AMCU">
+    <div id="intro-bar"><div id="intro-bar-fill"></div></div>
+    <p id="intro-label">// loading</p>
+  </div>
+</div>
+<style>
+#intro {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #020202;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#intro-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, #1a0000 0%, transparent 70%);
+  animation: introPulse 2s ease-in-out infinite alternate;
+}
+@keyframes introPulse {
+  from { opacity: 0.4; transform: scale(1); }
+  to   { opacity: 1;   transform: scale(1.15); }
+}
+#intro-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(224,26,16,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(224,26,16,0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridFade 1s ease forwards;
+}
+@keyframes gridFade { from{opacity:0} to{opacity:1} }
+
+#intro-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+#intro-logo {
+  width: min(520px, 80vw);
+  opacity: 0;
+  filter: drop-shadow(0 0 0px rgba(224,26,16,0))
+          drop-shadow(0 0 0px rgba(155,111,255,0));
+  animation: logoAppear 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
+}
+@keyframes logoAppear {
+  0%   { opacity:0; transform: scale(0.6) translateY(30px);
+         filter: drop-shadow(0 0 0px rgba(224,26,16,0)) drop-shadow(0 0 0px rgba(155,111,255,0)); }
+  60%  { opacity:1; transform: scale(1.06) translateY(-4px);
+         filter: drop-shadow(0 0 40px rgba(224,26,16,.6)) drop-shadow(0 0 80px rgba(155,111,255,.4)); }
+  100% { opacity:1; transform: scale(1) translateY(0);
+         filter: drop-shadow(0 0 20px rgba(224,26,16,.35)) drop-shadow(0 0 50px rgba(155,111,255,.2)); }
+}
+
+/* logo idle glow pulse after appear */
+#intro-logo.glowing {
+  animation: logoAppear 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s forwards,
+             logoGlow 1.8s ease-in-out 1.7s infinite alternate;
+}
+@keyframes logoGlow {
+  from { filter: drop-shadow(0 0 18px rgba(224,26,16,.3)) drop-shadow(0 0 40px rgba(155,111,255,.18)); }
+  to   { filter: drop-shadow(0 0 36px rgba(224,26,16,.7)) drop-shadow(0 0 70px rgba(155,111,255,.45)) drop-shadow(0 0 100px rgba(200,245,66,.15)); }
+}
+
+#intro-bar {
+  width: min(320px, 70vw);
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  position: relative;
+  opacity: 0;
+  animation: fadeIn .4s ease 1.4s forwards;
+}
+#intro-bar-fill {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background: linear-gradient(90deg, var(--red2,#e01a10), #b388ff);
+  width: 0%;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 8px rgba(224,26,16,.8);
+}
+#intro-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  opacity: 0;
+  animation: fadeIn .4s ease 1.5s forwards;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* EXIT animation */
+#intro.exit {
+  animation: introExit 0.9s cubic-bezier(0.7,0,1,1) forwards;
+}
+@keyframes introExit {
+  0%   { opacity:1; transform: scale(1); }
+  40%  { opacity:1; transform: scale(1.04); }
+  100% { opacity:0; transform: scale(1.12); pointer-events:none; }
+}
+
+/* REPRODUCTOR BEATPORT STYLE */
+.track-player {
+  background: #060606;
+  border: 1px solid #1e1e1e;
+  margin-bottom: 20px;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.player-header {
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid #111;
+}
+.play-btn {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #111; border: none; border-right: 1px solid #1e1e1e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.play-btn:hover { background: var(--red2); }
+.play-btn svg { pointer-events: none; }
+.player-meta { flex: 1; padding: 8px 14px; min-width: 0; }
+.player-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 3px; letter-spacing: 1px; }
+.player-time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted2);
+  padding: 0 14px; flex-shrink: 0; border-left: 1px solid #1e1e1e;
+  display: flex; align-items: center;
+}
+.waveform-wrap {
+  position: relative; height: 48px; cursor: pointer;
+  background: #030303; overflow: hidden;
+}
+.waveform-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.waveform-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--red2); pointer-events: none;
+  box-shadow: 0 0 6px var(--red2);
+  transition: left .1s linear;
+}
+.preview-lock {
+  position: absolute; bottom: 6px; right: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  color: #333; text-transform: uppercase; pointer-events: none;
+}
+.player-loading {
+  position: absolute; inset: 0; background: #060606;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2);
+}
+</style>
+<script>
+(function(){
+  const intro = document.getElementById('intro');
+  const logo  = document.getElementById('intro-logo');
+  const fill  = document.getElementById('intro-bar-fill');
+  const label = document.getElementById('intro-label');
+
+  const labels = ['// loading', '// initializing', '// bass house', '// amcu'];
+  let li = 0, pct = 0;
+
+  // Start glow pulse after logo appears
+  setTimeout(() => logo.classList.add('glowing'), 1700);
+
+  // Progress bar
+  const interval = setInterval(() => {
+    pct += Math.random() * 14 + 8;
+    if (pct > 100) pct = 100;
+    fill.style.width = pct + '%';
+
+    if (pct > 25 && li < 1)  { li=1; label.textContent = labels[1]; }
+    if (pct > 55 && li < 2)  { li=2; label.textContent = labels[2]; }
+    if (pct > 80 && li < 3)  { li=3; label.textContent = labels[3]; }
+
+    if (pct >= 100) {
+      clearInterval(interval);
+      label.textContent = '// enter';
+      // Small pause then exit
+      setTimeout(exitIntro, 300);
+    }
+  }, 40);
+  setTimeout(() => { clearInterval(interval); exitIntro(); }, 2500);
+
+  function exitIntro() {
+    intro.classList.add('exit');
+    setTimeout(() => {
+      intro.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 900);
+  }
+
+  // Also allow click to skip
+  intro.addEventListener('click', () => {
+    clearInterval(interval);
+    fill.style.width = '100%';
+    label.textContent = '// enter';
+    setTimeout(exitIntro, 300);
+  });
+
+  document.body.style.overflow = 'hidden';
+})();
+</script>
 </body>
+</html>
