@@ -255,7 +255,7 @@
       <li><a href="#custom" onclick="toggleMobileMenu()" class="font-accent text-4xl tracking-[.1em] uppercase text-white hover:text-red-600 transition-colors">Custom</a></li>
       <li><a href="#membership" onclick="toggleMobileMenu()" class="font-accent text-4xl tracking-[.1em] uppercase text-white hover:text-red-600 transition-colors">Membresía</a></li>
       <li class="pt-8">
-        <button onclick="toggleMobileMenu(); toggleAuthModal()" class="px-10 py-4 bg-red-600 text-white font-mono text-xs tracking-[.2em] uppercase hover:bg-white hover:text-black transition-all duration-300">
+        <button onclick="toggleMobileMenu();" class="px-10 py-4 bg-red-600 text-white font-mono text-xs tracking-[.2em] uppercase hover:bg-white hover:text-black transition-all duration-300">
           Ingresar
         </button>
       </li>
@@ -614,7 +614,7 @@
     // ---- PURCHASE LOGIC ----
     async function handlePurchase(productId) {
       if (!currentUser) {
-        alert('¡Inicia sesión para realizar una compra!');
+        alert('Debes iniciar sesión para comprar.');
         toggleAuthModal();
         return;
       }
@@ -660,7 +660,7 @@
         return;
       }
 
-      msg.textContent = '¡Solicitud de servicio enviada con éxito! Nos contactaremos pronto.';
+      msg.textContent = '¡Solicitud enviada con éxito!';
       msg.classList.replace('text-gray-500', 'text-green-500');
       form.reset();
     }
@@ -693,21 +693,13 @@
       history.scrollTop = history.scrollHeight;
     }
 
-    function getBotResponse(input) {
-        const lowerInput = input.toLowerCase();
-        if (lowerInput.includes('hola') || lowerInput.includes('buen')) {
-            return "¡Hola! Bienvenido al ecosistema AMCU. ¿En qué puedo ayudarte hoy?";
-        }
-        if (lowerInput.includes('precio') || lowerInput.includes('cuanto') || lowerInput.includes('costo')) {
-            return "Nuestros packs de samples comienzan desde los $15 USD. Puedes ver los precios detallados en la sección de 'Catálogo'.";
-        }
-        if (lowerInput.includes('membresía') || lowerInput.includes('membership') || lowerInput.includes('suscripcion')) {
-            return "La membresía AMCU te da acceso total a nuestra librería y servicios de mezcla/mastering. Tienes los detalles en la sección de Membresía.";
-        }
-        if (lowerInput.includes('mezcla') || lowerInput.includes('mastering') || lowerInput.includes('servicio')) {
-            return "Ofrecemos servicios de mezcla y mastering profesional. Puedes enviarnos tu consulta a través del formulario de 'Servicios Personalizados'.";
-        }
-        return "Interesante. Para una atención más personalizada sobre ese tema, te recomiendo contactarnos por nuestras redes sociales.";
+    function getBotResponse(text) {
+      const t = text.toLowerCase();
+      if (t.includes('precio') || t.includes('cuanto costa')) return 'Los packs individuales cuestan desde $5 USD. La membresía VIP cuesta $19/mes.';
+      if (t.includes('membresia') || t.includes('club')) return 'La membresía VIP te da acceso a todos los packs, soporte 24/7 y una masterización gratis al mes.';
+      if (t.includes('mastering') || t.includes('mezcla')) return 'Ofrecemos servicios de mezcla y mastering. Puedes solicitar una cotización en la sección Custom.';
+      if (t.includes('hola') || t.includes('buenas')) return '¡Hola! Soy AMCU Bot. ¿Te gustaría saber más sobre nuestros packs o la membresía VIP?';
+      return 'Entiendo. Para una respuesta más detallada, puedes escribirnos a amcuoficial@gmail.com o unirte a nuestro Discord.';
     }
 
     // Custom Cursor Logic
@@ -757,12 +749,12 @@
       
       if (error) {
         console.error('Error fetching products:', error);
-        container.innerHTML = `<div class="col-span-full py-20 text-center text-red-600 font-mono text-xs">Error al cargar el catálogo. Inténtalo más tarde.</div>`;
+        container.innerHTML = `<div class="col-span-full py-20 text-center text-red-600 font-mono text-xs">Error loading samples. Please try later.</div>`;
         return;
       }
 
       if (!data?.length) {
-        container.innerHTML = `<div class="col-span-full py-20 text-center text-gray-600 font-mono text-xs">No se encontraron packs activos en la tienda.</div>`;
+        container.innerHTML = `<div class="col-span-full py-20 text-center text-gray-600 font-mono text-xs">No active packs found in the store.</div>`;
         return;
       }
 
