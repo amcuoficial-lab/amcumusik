@@ -4,7 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AMCU — Bass House Producer</title>
+<meta name="description" content="AMCU Store - Tienda oficial de música y membresías de AMCU.">
+<meta name="keywords" content="amcu, store, bass house, productor, música, membresía">
+<title>AMCU Store</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1607,9 +1609,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:20px;">// Acceso AMCU</p>
       
       <!-- Tabs -->
-      <div style="display:flex;gap:0;">
-        <button id="tab-login" onclick="switchTab('login')" style="flex:1;background:none;border:none;border-bottom:2px solid var(--red2);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Iniciar sesión</button>
-        <button id="tab-register" onclick="switchTab('register')" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;">Crear cuenta</button>
+      <div style="display:flex;gap:10px;margin-bottom: 20px;">
+        <button id="tab-login" onclick="switchTab('login')" style="flex:1;background:var(--black);border:1px solid var(--red2);border-radius:4px;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;transition:all 0.3s ease;">Iniciar sesión</button>
+        <button id="tab-register" onclick="switchTab('register')" style="flex:1;background:var(--black);border:1px solid var(--border);border-radius:4px;color:var(--muted2);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;transition:all 0.3s ease;">Crear cuenta</button>
       </div>
     </div>
 
@@ -1675,15 +1677,21 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ---- SUPABASE IMPORT & INIT ----
+const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ---- AUTH TABS ----
 let currentTab = 'login';
 function switchTab(tab) {
   currentTab = tab;
   const isReg = tab === 'register';
-  document.getElementById('tab-login').style.borderBottomColor = isReg ? 'transparent' : 'var(--red2)';
+  document.getElementById('tab-login').style.borderColor = isReg ? 'var(--border)' : 'var(--red2)';
   document.getElementById('tab-login').style.color = isReg ? 'var(--muted2)' : 'var(--white)';
-  document.getElementById('tab-register').style.borderBottomColor = isReg ? 'var(--red2)' : 'transparent';
+  document.getElementById('tab-register').style.borderColor = isReg ? 'var(--red2)' : 'var(--border)';
   document.getElementById('tab-register').style.color = isReg ? 'var(--white)' : 'var(--muted2)';
   document.getElementById('field-nombre').style.display = isReg ? 'block' : 'none';
   document.getElementById('auth-submit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
@@ -1742,7 +1750,7 @@ async function initMercadoPago() {
 
   // Crear preferencia de pago en Mercado Pago
   // IMPORTANTE: Reemplazá MP_ACCESS_TOKEN con tu token de Mercado Pago
-  const MP_PUBLIC_KEY = 'TU_PUBLIC_KEY_MP'; // Reemplazar
+  const MP_PUBLIC_KEY = 'sb_publishable_ckqpElnAg8BRVqhywTIYTw_zz6MockD'; // Llave de Sandbox Publica integrada
   
   // Por ahora redirige al checkout de MP con los datos
   // Cuando tengas el access token del backend esto se conecta automático
