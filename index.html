@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMCU STORE | Elite Music Assets</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="La tienda definitiva para creadores de música. Samples de élite, soporte personalizado y un ecosistema diseñado para tu éxito.">
+  <meta name="keywords" content="samples, music production, amcu store, trap, hip hop, membership">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Modern Font variables */
+    :root {
+      --font-heading: 'Outfit', sans-serif;
+      --font-accent: 'Bebas Neue', sans-serif;
+      --black: #020202;
+      --white: #ede9e4;
+      --red: #c0170f;
+      --red2: #e01a10;
+      --chrome: #b8b0c8;
+      --chrome2: #c9a84c;
+      --green: #3fff2a;
+      --purple: #9b6fff;
+      --muted: #282828;
+      --muted2: #666;
+      --card: #0a0a0a;
+      --border: #1a1a1a;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Custom Cursor */
+    .cursor {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--red2);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s;
+      mix-blend-mode: difference;
+      display: none;
+    }
+    @media (min-width: 1024px) {
+      body { cursor: none; }
+      .cursor { display: block; }
+    }
+    .cursor.big { width: 44px; height: 44px; }
+
+    /* Grainy Texture */
+    body::after {
+      content:'';
+      position: fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events:none; z-index:9990;
+    }
+
+    /* Animations */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:none} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    .animate-fade-in { animation: fadeIn 1s ease forwards; }
+    .animate-slide-up { animation: fadeUp 1s ease forwards; opacity: 0; }
+
+    /* Intro Loader */
+    #intro {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 1s ease-out, visibility 1s;
+    }
+    #intro-logo {
+      width: 120px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 20px var(--red));
+    }
+    .loader-bar {
+      width: 200px;
+      height: 2px;
+      background: var(--muted);
+      position: relative;
+    }
+    .loader-progress {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--red2);
+      transition: width 0.5s ease;
+    }
+
+    /* Marquee */
+    .marquee-wrap { border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden; padding:14px 0; background:#060606; }
+    .marquee-track { display:flex; animation:marquee 22s linear infinite; white-space:nowrap; }
+    .m-item { font-family:var(--font-display); font-size:16px; letter-spacing:5px; color:var(--muted); padding:0 32px; }
+    .m-item.r { color:var(--red2); }
+    .m-item.c { color:var(--chrome); }
+
+    /* Store Cards */
+    .product-card { background: var(--card); border: 1px solid var(--border); transition: all 0.4s ease; }
+    .product-card:hover { border-color: var(--red2); transform: translateY(-10px); background: #0e0e0e; }
+    .product-card::after { 
+      content:''; position:absolute; top:0;left:0;right:0;height:1px; 
+      background:linear-gradient(90deg,var(--red2),var(--purple)); 
+      transform:scaleX(0); transform-origin:left; transition:transform 0.3s; 
+    }
+    .product-card:hover::after { transform:scaleX(1); }
+
+    /* Waveform Animation */
+    .wb { width:3px; background:var(--red2); border-radius:2px; opacity:0.7; animation: wave 1.2s ease-in-out infinite; }
+    @keyframes wave { 0%, 100% { height: 8px; } 50% { height: 24px; } }
+
+    /* Chat Widget */
+    .chat-dot { width:10px;height:10px;background:var(--red2);border-radius:50%;animation:pulse 2s infinite; }
+    .msg.u { align-self:flex-end;background:#161616;border:1px solid var(--border); }
+    .msg.a { align-self:flex-start;background:#0d0000;border:1px solid rgba(192,23,15,.3); }
+
+    /* Auth Modal */
+    #auth-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    #auth-modal.show { display: flex; opacity: 1; }
+    .auth-box {
+      background: #0a0a0a; border: 1px solid var(--border);
+      width: 100%; max-width: 400px; padding: 48px; position: relative;
+    }
+    .auth-tab { cursor: pointer; color: var(--muted2); font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding-bottom: 8px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .auth-tab.active { color: var(--red2); border-bottom-color: var(--red2); }
+    .field input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .field input:focus { border-color: var(--red2); }
+
+    .reveal { opacity:0;transform:translateY(36px);transition:opacity .7s,transform .7s; }
+    .reveal.in { opacity:1;transform:none; }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+
+  <!-- AUTH MODAL -->
+  <div id="auth-modal" onclick="if(event.target===this)toggleAuthModal()">
+    <div class="auth-box animate-fade-in">
+      <button onclick="toggleAuthModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+
+      <div class="flex gap-8 mb-10">
+        <div id="tab-login" class="auth-tab active" onclick="switchAuthTab('login')">Ingresar</div>
+        <div id="tab-register" class="auth-tab" onclick="switchAuthTab('register')">Registro</div>
+      </div>
+
+      <!-- Login Form -->
+      <div id="form-login" class="space-y-6">
+        <div class="field space-y-2">
+          <label class="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Email</label>
+          <input type="email" id="login-email" placeholder="tu@email.com">
+        </div>
+        <div class="field space-y-2">
+          <label class="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Contraseña</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <button onclick="signIn()" class="w-full py-4 bg-red-600 text-white font-mono text-[10px] tracking-widest uppercase hover:bg-white hover:text-black transition-all">Entrar a AMCU</button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="form-register" class="space-y-6 hidden">
+        <div class="field space-y-2">
+          <label class="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Email</label>
+          <input type="email" id="reg-email" placeholder="tu@email.com">
+        </div>
+        <div class="field space-y-2">
+          <label class="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Contraseña</label>
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <button onclick="signUp()" class="w-full py-4 bg-red-600 text-white font-mono text-[10px] tracking-widest uppercase hover:bg-white hover:text-black transition-all">Crear Cuenta</button>
+      </div>
+      
+      <p id="auth-msg" class="mt-6 font-mono text-[9px] text-red-600 uppercase tracking-widest text-center min-h-[14px]"></p>
+    </div>
+  </div>
+
+  <!-- INTRO SCREEN -->
+  <div id="intro">
+    <div class="text-white font-accent text-6xl tracking-[0.3em] mb-4">AMCU</div>
+    <div class="loader-bar">
+      <div class="loader-progress" id="loader-progress"></div>
+    </div>
+    <div class="text-red-600 font-mono text-[10px] tracking-[0.2em] mt-4 uppercase">Initializing Ecosystem</div>
+  </div>
+
+  <!-- NAV -->
+  <nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-12 py-5 transition-all duration-300">
+    <div class="nav-logo flex items-center gap-4">
+      <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+        <span class="text-black font-bold text-xl">A</span>
+      </div>
+      <span class="font-accent tracking-[.2em] text-xl hidden sm:block">AMCU <span class="text-red-600">TIENDA</span></span>
+    </div>
+    
+    <!-- Desktop Nav -->
+    <ul class="hidden md:flex items-center gap-10 list-none">
+      <li><a href="#about" class="font-mono text-[11px] tracking-[.2em] uppercase text-gray-400 hover:text-white transition-colors">Nosotros</a></li>
+      <li><a href="#samples" class="font-mono text-[11px] tracking-[.2em] uppercase text-gray-400 hover:text-white transition-colors">Catálogo</a></li>
+      <li><a href="#custom" class="font-mono text-[11px] tracking-[.2em] uppercase text-gray-400 hover:text-white transition-colors">Personalizado</a></li>
+      <li><a href="#membership" class="font-mono text-[11px] tracking-[.2em] uppercase text-gray-400 hover:text-white transition-colors">Membresía</a></li>
+    </ul>
+
+    <div class="flex items-center gap-4">
+      <button id="nav-auth-btn" onclick="handleAuthAction()" class="hidden sm:block nav-cta px-6 py-2.5 bg-red-600 text-white font-mono text-[10px] tracking-[.2em] uppercase hover:bg-white hover:text-black transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.4)]">
+        Ingresar
+      </button>
+      
+      <!-- Mobile Menu Button -->
+      <button onclick="toggleMobileMenu()" class="md:hidden flex flex-col gap-1.5 p-2 focus:outline-none z-[60]">
+        <span class="w-6 h-0.5 bg-white transition-all duration-300 transform" id="bar1"></span>
+        <span class="w-6 h-0.5 bg-white transition-all duration-300" id="bar2"></span>
+        <span class="w-6 h-0.5 bg-white transition-all duration-300 transform" id="bar3"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="mobile-menu" class="fixed inset-0 bg-black/95 z-[55] flex flex-col items-center justify-center translate-x-full transition-transform duration-500 md:hidden">
+    <ul class="flex flex-col items-center gap-8 list-none text-center">
+      <li><a href="#about" onclick="toggleMobileMenu()" class="font-accent text-4xl tracking-[.1em] uppercase text-white hover:text-red-600 transition-colors">Nosotros</a></li>
+      <li><a href="#samples" onclick="toggleMobileMenu()" class="font-accent text-4xl tracking-[.1em] uppercase text-white hover:text-red-600 transition-colors">Catálogo</a></li>
+      <li><a href="#custom" onclick="toggleMobileMenu()" class="font-accent text-4xl tracking-[.1em] uppercase text-white hover:text-red-600 transition-colors">Personalizado</a></li>
+      <li><a href="#membership" onclick="toggleMobileMenu()" class="font-accent text-4xl tracking-[.1em] uppercase text-white hover:text-red-600 transition-colors">Membresía</a></li>
+      <li class="pt-8">
+        <button onclick="toggleMobileMenu(); toggleAuthModal()" class="px-10 py-4 bg-red-600 text-white font-mono text-xs tracking-[.2em] uppercase hover:bg-white hover:text-black transition-all duration-300">
+          Ingresar
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- HERO -->
+  <section class="relative min-h-screen grid lg:grid-cols-2 overflow-hidden bg-black">
+    <div class="absolute inset-0 pointer-events-none z-0">
+      <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-red-600/10 blur-[120px] rounded-full"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-white/5 blur-[100px] rounded-full"></div>
+    </div>
+
+    <div class="flex flex-col justify-center px-8 md:px-16 lg:px-24 pt-32 pb-24 relative z-10">
+      <div class="space-y-6 max-w-xl">
+        <p class="font-mono text-[11px] tracking-[.3em] uppercase text-gray-500 animate-fade-in">
+          <span class="inline-block w-8 h-[1px] bg-red-600 mr-3 align-middle"></span>
+          Premium <span class="text-red-600">Music Assets</span>
+        </p>
+        
+        <h1 class="font-heading text-6xl md:text-8xl font-bold leading-tight tracking-tighter text-white animate-slide-up">
+          LIBERA TU <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-red-500 to-white drop-shadow-[0_0_25px_rgba(220,38,38,0.3)]">SONIDO</span>
+        </h1>
+        
+        <p class="text-lg text-gray-400 font-light leading-relaxed max-w-md animate-slide-up [animation-delay:200ms]">
+          La tienda definitiva para creadores de música. Samples de élite, soporte personalizado y un ecosistema diseñado para tu éxito.
+        </p>
+        
+        <div class="flex flex-wrap gap-4 pt-4 animate-slide-up [animation-delay:400ms]">
+          <a href="#samples" class="px-10 py-4 bg-white text-black font-bold uppercase text-xs tracking-[.2em] hover:bg-red-600 hover:text-white transition-all duration-300 shadow-[0_10px_20px_rgba(255,255,255,0.1)]">
+            Explorar Catálogo
+          </a>
+          <a href="#custom" class="px-10 py-4 border border-white/10 text-white font-bold uppercase text-xs tracking-[.2em] hover:bg-white hover:text-black transition-all duration-300">
+            Personalizar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative hidden lg:block overflow-hidden min-h-[60vh] lg:min-h-screen">
+      <div class="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent z-10 w-1/4"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10 h-1/4 bottom-0 top-auto"></div>
+      <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1200" 
+           alt="Studio" class="w-full h-full object-cover object-center scale-105 hover:scale-100 transition-transform duration-[2000ms] ease-out brightness-90">
+      <div class="absolute inset-0 ring-1 ring-white/5 inset-y-12 inset-x-8 pointer-events-none"></div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <div class="m-item">TRAP</div>
+      <div class="m-item r">HIP HOP</div>
+      <div class="m-item">REGGAETON</div>
+      <div class="m-item c">TECHNO</div>
+      <div class="m-item">DRILL</div>
+      <div class="m-item r">LO-FI</div>
+      <div class="m-item">TRAP</div>
+      <div class="m-item r">HIP HOP</div>
+      <div class="m-item">REGGAETON</div>
+      <div class="m-item c">TECHNO</div>
+      <div class="m-item">DRILL</div>
+      <div class="m-item r">LO-FI</div>
+    </div>
+  </div>
+
+  <!-- NOSOTROS SECTION -->
+  <section id="about" class="py-32 px-8 md:px-24">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div class="reveal">
+        <p class="font-mono text-xs text-red-600 tracking-[.3em] uppercase mb-4">The Team</p>
+        <h2 class="font-accent text-6xl md:text-8xl mb-8 leading-none">SOMOS EL SONIDO DEL <span class="text-gray-700">MAÑANA</span></h2>
+        <div class="space-y-6 text-gray-400 font-light text-lg">
+          <p>En <strong class="text-white">AMCU STORE</strong>, no solo vendemos sonidos; construimos las herramientas para tu próximo hit. Nacidos de la necesidad de calidad sin compromisos en la escena urbana.</p>
+          <p>Nuestros ingenieros han trabajado con los nombres más grandes de la industria, asegurando que cada sample tenga la pegada y la textura necesaria para destacar en cualquier mezcla.</p>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-12">
+          <div class="wb" style="--h:30px; --d: 1s;"></div>
+          <div class="wb" style="--h:45px; --d: 0.8s;"></div>
+          <div class="wb" style="--h:35px; --d: 1.1s;"></div>
+          <div class="wb" style="--h:25px; --d: 0.9s;"></div>
+          <div class="wb" style="--h:50px; --d: 1.3s;"></div>
+          <span class="font-mono text-[10px] tracking-widest text-gray-500 ml-4 uppercase">Waveform Optimized</span>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4 reveal">
+        <div class="space-y-4 pt-12">
+          <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=400" alt="Studio Gear" class="w-full aspect-[3/4] object-cover grayscale hover:grayscale-0 transition-all duration-700">
+          <img src="https://images.unsplash.com/photo-121?q=80&w=400" alt="Producer" class="w-full aspect-square object-cover grayscale hover:grayscale-0 transition-all duration-700">
+        </div>
+        <div class="space-y-4">
+          <img src="https://images.unsplash.com/photo-1514525253344-9914f25af13a?q=80&w=400" alt="Concert" class="w-full aspect-square object-cover grayscale hover:grayscale-0 transition-all duration-700">
+          <img src="https://images.unsplash.com/photo-1520529011348-1ac192ce0f62?q=80&w=400" alt="Vibe" class="w-full aspect-[3/4] object-cover grayscale hover:grayscale-0 transition-all duration-700">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STORE SECTION -->
+  <section id="samples" class="py-32 bg-[#050505]">
+    <div class="px-8 md:px-24 mb-16">
+      <p class="font-mono text-xs text-red-600 tracking-[.3em] uppercase mb-4">Librería Exclusiva</p>
+      <h2 class="font-accent text-6xl md:text-8xl">CATÁLOGO PREMIUM</h2>
+    </div>
+
+    <div id="samples-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-1 px-4 md:px-24">
+      <!-- Products will be loaded here dynamically -->
+      <div class="col-span-full py-20 text-center animate-pulse font-mono text-gray-600 tracking-widest uppercase">
+        Loading Elite Assets...
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CUSTOM SECTION -->
+  <section id="custom" class="py-32 px-8 md:px-24">
+    <div class="grid lg:grid-cols-2 gap-16">
+      <div class="reveal">
+        <p class="font-mono text-xs text-red-600 tracking-[.3em] uppercase mb-4">Tailor Made</p>
+        <h2 class="font-accent text-6xl md:text-8xl mb-8 leading-none">PERSONALIZACIÓN <span class="text-gray-700">TOTAL</span></h2>
+        <ul class="space-y-6 list-none font-light text-gray-400">
+          <li class="flex gap-4">
+            <span class="w-2 h-2 rounded-full bg-red-600 mt-2 flex-shrink-0"></span>
+            <div><strong class="text-white">Custom Packs:</strong> Diseñamos una paleta de sonidos exclusiva para tu próximo álbum.</div>
+          </li>
+          <li class="flex gap-4">
+            <span class="w-2 h-2 rounded-full bg-red-600 mt-2 flex-shrink-0"></span>
+            <div><strong class="text-white">Mixing & Mastering:</strong> Envía tus stems y deja que nuestros ingenieros le den el acabado pro.</div>
+          </li>
+          <li class="flex gap-4">
+            <span class="w-2 h-2 rounded-full bg-red-600 mt-2 flex-shrink-0"></span>
+            <div><strong class="text-white">Music Coaching:</strong> Sesiones 1 a 1 vía Zoom para mejorar tu workflow y teoría musical.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-[#080808] border border-white/5 p-8 md:p-12 reveal">
+        <h3 class="font-accent text-2xl tracking-widest mb-8 uppercase">Solicitar Información</h3>
+        <form onsubmit="event.preventDefault(); submitCustomRequest(this)" class="space-y-4">
+          <div class="space-y-1">
+            <label class="font-mono text-[10px] text-gray-600 uppercase tracking-widest">Nombre</label>
+            <input name="nombre" type="text" placeholder="Tu Nombre" required class="w-full bg-black border border-white/10 px-4 py-3 text-sm focus:border-red-600 outline-none transition-all">
+          </div>
+          <div class="space-y-1">
+            <label class="font-mono text-[10px] text-gray-600 uppercase tracking-widest">Email</label>
+            <input name="email" type="email" placeholder="email@ejemplo.com" required class="w-full bg-black border border-white/10 px-4 py-3 text-sm focus:border-red-600 outline-none transition-all">
+          </div>
+          <div class="space-y-1">
+            <label class="font-mono text-[10px] text-gray-600 uppercase tracking-widest">Servicio</label>
+            <select name="servicio" class="w-full bg-black border border-white/10 px-4 py-3 text-sm focus:border-red-600 outline-none transition-all appearance-none cursor-pointer">
+              <option value="Custom Pack">Custom Pack</option>
+              <option value="Mixing & Mastering">Mixing & Mastering</option>
+              <option value="Coaching">Coaching</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full py-4 bg-red-600 text-white font-mono text-[10px] tracking-widest uppercase hover:bg-white hover:text-black transition-all mt-4">Enviar Solicitud</button>
+          <p id="custom-form-msg" class="font-mono text-[9px] text-center uppercase tracking-widest mt-2"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEMBERSHIP SECTION -->
+  <section id="membership" class="py-32 bg-white text-black">
+    <div class="px-8 md:px-24 mb-16">
+      <p class="font-mono text-xs text-red-600 tracking-[.3em] uppercase mb-4">The Club</p>
+      <h2 class="font-accent text-6xl md:text-8xl">MEMBRESÍA VIP</h2>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:mx-24 border border-black/10">
+      <div class="p-12 border-b md:border-b-0 md:border-r border-black/10 reveal">
+        <p class="font-mono text-[10px] text-gray-500 uppercase tracking-[.2em] mb-4">PLAN ANUAL</p>
+        <div class="flex items-baseline gap-2 mb-8">
+          <span class="font-accent text-8xl leading-none">$149</span>
+          <span class="font-mono text-xs uppercase text-gray-500">/ año</span>
+        </div>
+        <ul class="space-y-4 list-none font-light text-sm mb-12">
+          <li class="flex items-center gap-3">
+            <span class="w-4 h-4 bg-red-600 text-white flex items-center justify-center text-[8px]">✓</span> 
+            Acceso a <strong>Todos los Packs</strong> actuales y futuros.
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="w-4 h-4 bg-red-600 text-white flex items-center justify-center text-[8px]">✓</span> 
+            Soporte prioritario 24/7.
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="w-4 h-4 bg-red-600 text-white flex items-center justify-center text-[8px]">✓</span> 
+            1 Masterización gratuita al mes.
+          </li>
+        </ul>
+        <button class="w-full py-5 bg-black text-white font-mono text-xs tracking-widest uppercase hover:bg-red-600 transition-all">Suscripción Anual</button>
+      </div>
+
+      <div class="p-12 bg-gray-50 reveal">
+        <p class="font-mono text-[10px] text-gray-500 uppercase tracking-[.2em] mb-4">PLAN MENSUAL</p>
+        <div class="flex items-baseline gap-2 mb-8">
+          <span class="font-accent text-8xl leading-none">$19</span>
+          <span class="font-mono text-xs uppercase text-gray-500">/ mes</span>
+        </div>
+        <ul class="space-y-4 list-none font-light text-sm mb-12">
+          <li class="flex items-center gap-3">
+            <span class="w-4 h-4 bg-gray-300 text-white flex items-center justify-center text-[8px]">✓</span> 
+            4 descargas de packs al mes.
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="w-4 h-4 bg-gray-300 text-white flex items-center justify-center text-[8px]">✓</span> 
+            Acceso a la comunidad privada.
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="w-4 h-4 bg-gray-300 text-white flex items-center justify-center text-[8px]">✓</span> 
+            Descuento del 20% en Custom Services.
+          </li>
+        </ul>
+        <button class="w-full py-5 border border-black text-black font-mono text-xs tracking-widest uppercase hover:bg-black hover:text-white transition-all">Suscripción Mensual</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT WIDGET -->
+  <div class="px-8 md:px-24 py-20" id="chat">
+    <div class="bg-[#0a0a0a] border border-white/5 p-8 md:p-12 reveal">
+      <div class="flex items-center gap-4 border-b border-white/5 pb-6 mb-8">
+        <div class="chat-dot"></div>
+        <span class="font-mono text-[10px] tracking-[.2em] uppercase text-gray-500">Soporte en línea: AMCU Bot v1.0</span>
+      </div>
+      
+      <div id="chat-history" class="space-y-4 max-h-[300px] overflow-y-auto mb-8 pr-4">
+        <div class="msg a p-4 max-w-[80%]">
+          <p class="font-mono text-[8px] text-red-600 uppercase mb-2">AMCU Support</p>
+          <p class="text-sm font-light">Bienvenido a AMCU STORE. ¿En qué podemos ayudarte hoy? Tenemos nuevos packs de Drill recién salidos del estudio.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <input type="text" id="chat-input" onkeydown="if(event.key==='Enter')sendChatMessage()" placeholder="Escribe tu mensaje..." class="flex-1 bg-black border border-white/10 px-6 py-4 text-sm font-mono outline-none focus:border-red-600 transition-all italic">
+        <button onclick="sendChatMessage()" class="px-8 bg-red-600 text-white font-mono text-[10px] tracking-widest uppercase hover:bg-white hover:text-black transition-all">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="py-20 px-8 md:px-24 border-t border-white/5 bg-[#020202] relative z-10">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-12">
+      <div class="flex items-center gap-4">
+        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+          <span class="text-black font-bold text-lg">A</span>
+        </div>
+        <span class="font-accent tracking-widest text-lg">AMCU STORE</span>
+      </div>
+
+      <ul class="flex gap-8 list-none flex-wrap justify-center">
+        <li><a href="#" class="font-mono text-[10px] text-gray-600 hover:text-white uppercase tracking-widest">Instagram</a></li>
+        <li><a href="#" class="font-mono text-[10px] text-gray-600 hover:text-white uppercase tracking-widest">Twitter (X)</a></li>
+        <li><a href="#" class="font-mono text-[10px] text-gray-600 hover:text-white uppercase tracking-widest">Discord</a></li>
+        <li><a href="#" class="font-mono text-[10px] text-gray-600 hover:text-white uppercase tracking-widest">Términos</a></li>
+      </ul>
+
+      <p class="font-mono text-[9px] text-gray-700 tracking-widest uppercase">© 2024 AMCU ECOSYSTEM. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script>
+    // Supabase Initialization
+    const SB_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
+    const sb = supabase.createClient(SB_URL, SB_KEY);
+
+    // Initialize Mercado Pago
+    const mp = new MercadoPago('APP_USR-00000000-0000-0000-0000-000000000000');
+
+    let currentUser = null;
+
+    // ---- AUTH LOGIC ----
+    async function checkUser() {
+      const { data: { session } } = await sb.auth.getSession();
+      updateAuthUI(session?.user || null);
+    }
+
+    function toggleAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      const isVisible = modal.classList.contains('show');
+      if (isVisible) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+      } else {
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+      }
+    }
+
+    function switchAuthTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('auth-msg').textContent = '';
+    }
+
+    async function signIn() {
+      const email = document.getElementById('login-email').value;
+      const pass = document.getElementById('login-pass').value;
+      const msg = document.getElementById('auth-msg');
+      
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) { msg.textContent = error.message; return; }
+      
+      toggleAuthModal();
+      updateAuthUI(data.user);
+    }
+
+    async function signUp() {
+      const email = document.getElementById('reg-email').value;
+      const pass = document.getElementById('reg-pass').value;
+      const msg = document.getElementById('auth-msg');
+      
+      const { data, error } = await sb.auth.signUp({ email, password: pass });
+      if (error) { msg.textContent = error.message; return; }
+      
+      msg.className = "mt-6 font-mono text-[9px] text-green-500 uppercase tracking-widest text-center";
+      msg.textContent = 'Registro exitoso. Revisa tu email.';
+    }
+
+    async function signOut() {
+      await sb.auth.signOut();
+      updateAuthUI(null);
+    }
+
+    function updateAuthUI(user) {
+      currentUser = user;
+      const btn = document.getElementById('nav-auth-btn');
+      if (user) {
+        btn.textContent = user.email.split('@')[0];
+        btn.onclick = () => {
+          if (confirm('¿Cerrar sesión?')) signOut();
+        };
+      } else {
+        btn.textContent = 'Ingresar';
+        btn.onclick = toggleAuthModal;
+      }
+    }
+
+    function handleAuthAction() {
+      if (currentUser) {
+        // Option to go to profile or logout
+        if (confirm('¿Cerrar sesión?')) signOut();
+      } else {
+        toggleAuthModal();
+      }
+    }
+
+    // ---- PURCHASE LOGIC ----
+    async function handlePurchase(productId) {
+      if (!currentUser) {
+        alert('¡Inicia sesión para realizar una compra!');
+        toggleAuthModal();
+        return;
+      }
+      
+      // Simulate Preference Creation
+      // In a real app: fetch('/create-preference', { method: 'POST', body: JSON.stringify({productId}) })
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = 'Procesando...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        alert('Redirigiendo a Mercado Pago... (Simulación)');
+        // In real MP flow: window.location.href = preference.init_point;
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }, 1500);
+    }
+
+    // ---- CUSTOM REQUESTS ----
+    async function submitCustomRequest(form) {
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+      const msg = document.getElementById('custom-form-msg');
+      
+      msg.textContent = 'Enviando...';
+      msg.className = "font-mono text-[9px] text-center uppercase tracking-widest mt-2 text-gray-500";
+
+      // Save to Supabase (assuming 'bookings' table for simplicity, or just simulate)
+      const { error } = await sb.from('bookings').insert({
+        nombre: data.nombre,
+        email: data.email,
+        mensaje: `Interés en: ${data.servicio}`,
+        modalidad: 'online',
+        estado: 'pendiente',
+        fecha: new Date().toISOString().split('T')[0],
+        hora: 12
+      });
+
+      if (error) {
+        msg.textContent = 'Error al enviar: ' + error.message;
+        msg.classList.add('text-red-600');
+        return;
+      }
+
+      msg.textContent = '¡Solicitud de servicio enviada con éxito! Nos contactaremos pronto.';
+      msg.classList.replace('text-gray-500', 'text-green-500');
+      form.reset();
+    }
+
+    // ---- CHAT LOGIC ----
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage('u', text);
+      input.value = '';
+
+      // Simulate Bot Response
+      setTimeout(() => {
+        const response = getBotResponse(text);
+        appendMessage('a', response);
+      }, 1000);
+    }
+
+    function appendMessage(type, text) {
+      const history = document.getElementById('chat-history');
+      const div = document.createElement('div');
+      div.className = `msg ${type} p-4 max-w-[80%] ${type === 'u' ? 'ml-auto' : ''}`;
+      div.innerHTML = `
+        ${type === 'a' ? '<p class="font-mono text-[8px] text-red-600 uppercase mb-2">AMCU Support</p>' : ''}
+        <p class="text-sm font-light">${text}</p>
+      `;
+      history.appendChild(div);
+      history.scrollTop = history.scrollHeight;
+    }
+
+    function getBotResponse(input) {
+        const lowerInput = input.toLowerCase();
+        if (lowerInput.includes('hola') || lowerInput.includes('buen')) {
+            return "¡Hola! Bienvenido al ecosistema AMCU. ¿En qué puedo ayudarte hoy?";
+        }
+        if (lowerInput.includes('precio') || lowerInput.includes('cuanto') || lowerInput.includes('costo')) {
+            return "Nuestros packs de samples comienzan desde los $15 USD. Puedes ver los precios detallados en la sección de 'Catálogo'.";
+        }
+        if (lowerInput.includes('membresía') || lowerInput.includes('membership') || lowerInput.includes('suscripcion')) {
+            return "La membresía AMCU te da acceso total a nuestra librería y servicios de mezcla/mastering. Tienes los detalles en la sección de Membresía.";
+        }
+        if (lowerInput.includes('mezcla') || lowerInput.includes('mastering') || lowerInput.includes('servicio')) {
+            return "Ofrecemos servicios de mezcla y mastering profesional. Puedes enviarnos tu consulta a través del formulario de 'Servicios Personalizados'.";
+        }
+        return "Interesante. Para una atención más personalizada sobre ese tema, te recomiendo contactarnos por nuestras redes sociales.";
+    }
+
+    // Custom Cursor Logic
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+    });
+
+    // Intro Loader & Data Fetch
+    window.addEventListener('load', async () => {
+      const progress = document.getElementById('loader-progress');
+      let width = 0;
+      
+      // Load Products from Supabase
+      loadProducts();
+      checkUser();
+
+      const interval = setInterval(() => {
+        if (width >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            document.getElementById('intro').style.opacity = '0';
+            document.getElementById('intro').style.visibility = 'hidden';
+          }, 500);
+        } else {
+          width += Math.random() * 20;
+          if (width > 100) width = 100;
+          progress.style.width = width + '%';
+        }
+      }, 100);
+    });
+
+    // Supabase Products Loading
+    async function loadProducts() {
+      const { data, error } = await sb.from('products')
+        .select('*')
+        .eq('activo', true)
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('samples-container');
+      
+      if (error) {
+        console.error('Error fetching products:', error);
+        container.innerHTML = `<div class="col-span-full py-20 text-center text-red-600 font-mono text-xs">Error al cargar el catálogo. Inténtalo más tarde.</div>`;
+        return;
+      }
+
+      if (!data?.length) {
+        container.innerHTML = `<div class="col-span-full py-20 text-center text-gray-600 font-mono text-xs">No se encontraron packs activos en la tienda.</div>`;
+        return;
+      }
+
+      container.innerHTML = data.map(p => `
+        <div class="product-card p-10 relative overflow-hidden reveal">
+          ${p.tipo === 'track_unreleased' ? '<div class="absolute top-4 right-4 bg-red-600 text-[10px] font-mono p-1 px-2 uppercase">Unreleased</div>' : ''}
+          <p class="font-mono text-[10px] text-gray-500 uppercase tracking-widest mb-4">${p.tipo.replace('_', ' ')}</p>
+          <h3 class="font-accent text-3xl mb-4">${p.nombre}</h3>
+          <p class="text-gray-500 text-sm mb-8 font-light">${p.descripcion || 'Premium selection of high-end audio assets.'}</p>
+          <div class="flex items-center justify-between border-t border-white/5 pt-6">
+            <span class="font-accent text-3xl">$${p.precio} <small class="text-[10px] font-mono text-gray-600 uppercase">USD</small></span>
+            <button onclick="handlePurchase('${p.id}')" class="px-4 py-2 border border-white/10 font-mono text-[10px] tracking-widest uppercase hover:bg-white hover:text-black transition-all">Comprar</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Re-trigger reveal check for dynamically added elements
+      checkReveal();
+    }
+
+    function checkReveal() {
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach(el => {
+        const windowHeight = window.innerHeight;
+        const revealTop = el.getBoundingClientRect().top;
+        const revealPoint = 50;
+        if (revealTop < windowHeight - revealPoint) {
+          el.classList.add('in');
+        }
+      });
+    }
+
+    // Mobile Menu
+    const mobileMenu = document.getElementById('mobile-menu');
+    function toggleMobileMenu() {
+      const isClosed = mobileMenu.classList.contains('translate-x-full');
+      if (isClosed) {
+        mobileMenu.classList.remove('translate-x-full');
+      } else {
+        mobileMenu.classList.add('translate-x-full');
+      }
+    }
+
+    // Scroll Effects
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        nav.classList.add('bg-black/80', 'backdrop-blur-md', 'py-3', 'border-white/5');
+      } else {
+        nav.classList.remove('bg-black/80', 'backdrop-blur-md', 'py-3', 'border-white/5');
+      }
+      
+      // Reveal on Scroll
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach(el => {
+        const windowHeight = window.innerHeight;
+        const revealTop = el.getBoundingClientRect().top;
+        const revealPoint = 150;
+        if (revealTop < windowHeight - revealPoint) {
+          el.classList.add('in');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
