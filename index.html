@@ -1677,15 +1677,9 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ---- SUPABASE IMPORT & INIT ----
-const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // ---- AUTH TABS ----
-let currentTab = 'login';
+var currentTab = 'login';
 function switchTab(tab) {
   currentTab = tab;
   const isReg = tab === 'register';
