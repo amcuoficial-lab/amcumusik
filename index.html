@@ -1288,13 +1288,31 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
         <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser?.email}</p>
         ${currentProfile?.role === 'admin' ? '<p style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);margin-top:4px;">ADMIN</p>' : ''}
       </div>
-      <button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
+      <button id="logout-btn" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
     `;
     document.body.appendChild(menu);
-    setTimeout(() => document.addEventListener('click', () => menu.remove(), {once:true}), 100);
+
+    // Botón logout con stopPropagation para evitar que se cierre el menú antes del click
+    document.getElementById('logout-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      doLogout();
+    });
+
+    // Cerrar menú al click fuera, con delay para no interferir con el botón logout
+    setTimeout(() => {
+      function closeOnOutsideClick(e) {
+        if (!menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeOnOutsideClick);
+        }
+      }
+      document.addEventListener('click', closeOnOutsideClick);
+    }, 150);
   }
 
   async function doLogout() {
+    const menu = document.getElementById('account-menu');
+    if (menu) menu.remove();
     const { error } = await sb.auth.signOut();
     if (error) { console.error(error); return; }
     currentUser = null;
@@ -1302,8 +1320,6 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     const panel = document.getElementById('admin-panel');
     if (panel) panel.remove();
     updateAuthUI();
-    const menu = document.getElementById('account-menu');
-    if (menu) menu.remove();
   }
 
   async function doLogin() {
