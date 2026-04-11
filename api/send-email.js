@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   const html = `
     <div style="background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;">
       <h2 style="font-family:Georgia,serif;font-size:28px;letter-spacing:2px;margin-bottom:4px;">AMCU</h2>
-      <p style="color:#888;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;">Bass House Producer</p>
+      <p style="color:#888;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;">Producción Electrónica</p>
       <hr style="border:none;border-top:1px solid #222;margin-bottom:24px;">
       <p style="color:#c0170f;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">✓ Reserva Confirmada</p>
       <h3 style="font-size:22px;margin:0 0 20px;">Hola ${nombre},</h3>
