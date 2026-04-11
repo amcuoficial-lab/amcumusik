@@ -2188,20 +2188,9 @@ async function initMercadoPago() {
     if (!fnData.init_point) throw new Error('No se recibio el link de pago');
 
     // 3. Redirigir a checkout de MercadoPago
+    // init_point funciona en PC y mobile — si la app MP está instalada, la abre automáticamente
     btn.textContent = 'Redirigiendo...';
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile && fnData.preference_id) {
-      // Intentar abrir la app de MercadoPago
-      const appLink = `mercadopago://checkout?pref_id=${fnData.preference_id}`;
-      // Fallback a web si la app no está instalada (2 segundos)
-      const fallbackTimer = setTimeout(() => {
-        window.location.href = fnData.init_point;
-      }, 2000);
-      window.addEventListener('blur', () => clearTimeout(fallbackTimer), { once: true });
-      window.location.href = appLink;
-    } else {
-      window.location.href = fnData.init_point;
-    }
+    window.location.href = fnData.init_point;
 
   } catch(e) {
     console.error('MP error:', e);
