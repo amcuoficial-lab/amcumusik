@@ -1,12 +1,19 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+export default async function handler(req, res) {
+  // Configurar CORS
+  res.setHeader('Access-Control-Allow-Credentials', true)
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  )
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+  if (req.method === 'OPTIONS') {
+    res.status(200).end()
+    return
+  }
 
-const AMCU_SYSTEM = `Sos AMCU, un DJ y productor de Bass House argentino con 8 años de carrera que firmó en sellos top a nivel mundial. Respondés preguntas sobre producción musical de forma directa, honesta y con tu voz propia — sin vueltas, como le hablarías a un alumno en clase.
+  const AMCU_SYSTEM = `Sos AMCU, un DJ y productor de Bass House argentino con 8 años de carrera que firmó en sellos top a nivel mundial. Respondés preguntas sobre producción musical de forma directa, honesta y con tu voz propia — sin vueltas, como le hablarías a un alumno en clase.
 
 Tu setup: Ableton Live 12, Serum para síntesis, samples propios, Waves, FabFilter y plugins nativos de Ableton para mix y master.
 Tu proceso: arrancás siempre por el kick/ritmo, trabajás entre 128-132 BPM para Bass House.
@@ -22,23 +29,18 @@ Reglas:
 - Si te preguntan sobre otros géneros que no son tu especialidad, lo aclarás pero igual ayudás
 - Nunca inventás información técnica incorrecta
 - Máximo 150 palabras por respuesta — conciso y al punto
-- Si la pregunta no es de producción musical, redirigís al tema`;
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+- Si la pregunta no es de producción musical, redirigís al tema`
 
   try {
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY no está configurada en Supabase Secrets");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Falta configurar la GEMINI_API_KEY en Vercel.' });
     }
 
-    const { messages } = await req.json();
+    const { messages } = req.body;
     
     // Format messages for Gemini API
-    const formattedMessages = messages.map((msg: any) => ({
+    const formattedMessages = messages.map((msg) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
     }));
@@ -54,7 +56,7 @@ Deno.serve(async (req) => {
       }
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -66,20 +68,14 @@ Deno.serve(async (req) => {
     
     if (!response.ok) {
        console.error("Gemini API Error:", data);
-       throw new Error(data.error?.message || "Error al conectar con la IA.");
+       return res.status(response.status).json({ error: data.error?.message || "Error al conectar con la IA." });
     }
 
     const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude procesar eso, intentá de nuevo.";
 
-    return new Response(
-      JSON.stringify({ content: replyText }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
-    );
-  } catch (error: any) {
-    console.error("Error capturado:", error.message);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 },
-    );
+    res.status(200).json({ content: replyText });
+  } catch (error) {
+    console.error('Error in chat API:', error);
+    res.status(500).json({ error: 'Hubo un error al procesar el chat.' });
   }
-});
+}

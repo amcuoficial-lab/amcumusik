@@ -1240,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', init);
     const typingId = addTyping();
 
     try {
-      const response = await fetch('https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
