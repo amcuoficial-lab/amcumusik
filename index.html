@@ -1853,7 +1853,12 @@ function sendGhostQuote() {
   const grid = document.getElementById('store-grid');
   if (!grid) return;
 
-  const { data, error } = await sb.from('products').select('*').eq('activo', true).order('created_at', {ascending: false});
+  // Crear un cliente fresco sin sesión para evitar cuelgues por token vencido
+  const sbPublic = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false }
+  });
+
+  const { data, error } = await sbPublic.from('products').select('*').eq('activo', true).order('created_at', {ascending: false});
   
   if (error || !data || data.length === 0) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted2);letter-spacing:2px;">Próximamente — Sumate al club para ser el primero en acceder</div>';
