@@ -1557,7 +1557,7 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   async function doLogin() {
     const email = document.getElementById('auth-email').value.trim();
     const pass  = document.getElementById('auth-pass').value;
-    const mode  = document.getElementById('auth-mode').value;
+    const mode  = window.currentTab || 'login';
     const msg   = document.getElementById('auth-msg');
     const btn   = document.getElementById('auth-submit');
 
