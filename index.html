@@ -1675,6 +1675,10 @@ function sendGhostQuote() {
           <button onclick="blockSlot()" style="width:100%;background:var(--red2);border:none;color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;">Bloquear</button>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+          <p style="font-size:9px;letter-spacing:1px;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">Tienda</p>
+          <button onclick="openAddProductModal()" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;text-align:left;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--red2)'" onmouseout="this.style.borderColor='var(--border)'">+ Agregar producto</button>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
           <button onclick="toggleAdminPanel()" id="admin-toggle-btn" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--muted2);padding:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;cursor:pointer;">Minimizar panel</button>
         </div>
       </div>
@@ -1857,7 +1861,11 @@ function sendGhostQuote() {
 
   const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
   if (!window._audioRegistry) window._audioRegistry = new Map();
-  data.forEach(p => { if (p.archivo_url) window._audioRegistry.set(p.id, p.archivo_url); });
+  // Usar preview_url para el player si existe, sino archivo_url (solo para tracks, no RAR)
+  data.forEach(p => {
+    const audioUrl = p.preview_url || (p.tipo === 'track_unreleased' ? p.archivo_url : null);
+    if (audioUrl) window._audioRegistry.set(p.id, audioUrl);
+  });
 
   grid.innerHTML = data.map(p => `
     <div class="product-card">
@@ -1865,7 +1873,7 @@ function sendGhostQuote() {
       <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
       <div class="p-name">${p.nombre}</div>
       <p class="p-desc">${p.descripcion || ''}</p>
-      ${p.archivo_url ? `
+      ${(p.preview_url || p.tipo === 'track_unreleased' && p.archivo_url) ? `
       <div class="preview-player" id="player-${p.id}" oncontextmenu="return false">
         <button class="pp-btn" onclick="togglePreview('${p.id}')"><span class="pp-icon">&#9654;</span></button>
         <div class="pp-bar" onclick="seekPreview(event,'${p.id}')"><div class="pp-progress" id="progress-${p.id}"></div></div>
@@ -1978,6 +1986,90 @@ function seekPreview(event, productId) {
   audio.currentTime = pct * audio.duration;
 }
 
+// ---- ADD PRODUCT ----
+function openAddProductModal() {
+  document.getElementById('add-product-modal').style.display = 'flex';
+}
+function closeAddProductModal() {
+  document.getElementById('add-product-modal').style.display = 'none';
+}
+function updateFileAccept() {
+  const tipo = document.getElementById('ap-tipo').value;
+  const input = document.getElementById('ap-file');
+  const hint  = document.getElementById('ap-file-hint');
+  if (tipo === 'track_unreleased') {
+    input.accept = '.wav'; hint.textContent = '(WAV)';
+  } else {
+    input.accept = '.rar,.zip'; hint.textContent = '(RAR o ZIP)';
+  }
+}
+
+async function submitAddProduct() {
+  const tipo   = document.getElementById('ap-tipo').value;
+  const nombre = document.getElementById('ap-nombre').value.trim();
+  const desc   = document.getElementById('ap-desc').value.trim();
+  const precio = parseFloat(document.getElementById('ap-precio').value);
+  const file   = document.getElementById('ap-file').files[0];
+  const preview= document.getElementById('ap-preview').files[0];
+  const status = document.getElementById('ap-status');
+  const btn    = document.getElementById('ap-btn');
+
+  if (!nombre || !precio || !file) { status.textContent = 'Completá nombre, precio y archivo'; status.style.color = '#ff4444'; return; }
+
+  btn.textContent = 'Subiendo archivo...'; btn.disabled = true;
+  status.style.color = 'var(--muted2)';
+
+  try {
+    // 1. Subir archivo principal
+    const ext   = file.name.split('.').pop();
+    const path  = `products/${Date.now()}_${nombre.replace(/\s+/g,'_')}.${ext}`;
+    status.textContent = 'Subiendo archivo principal...';
+    const { error: upErr } = await sb.storage.from('files').upload(path, file, { upsert: true });
+    if (upErr) throw new Error('Error al subir archivo: ' + upErr.message);
+
+    const { data: { publicUrl } } = sb.storage.from('files').getPublicUrl(path);
+
+    // 2. Subir preview de audio (si hay)
+    let previewUrl = null;
+    if (preview) {
+      status.textContent = 'Subiendo preview...';
+      const pext  = preview.name.split('.').pop();
+      const ppath = `previews/${Date.now()}_${nombre.replace(/\s+/g,'_')}_preview.${pext}`;
+      const { error: pErr } = await sb.storage.from('files').upload(ppath, preview, { upsert: true });
+      if (!pErr) {
+        const { data: { publicUrl: pUrl } } = sb.storage.from('files').getPublicUrl(ppath);
+        previewUrl = pUrl;
+      }
+    }
+
+    // 3. Crear producto en BD
+    status.textContent = 'Guardando en tienda...';
+    const { error: dbErr } = await sb.from('products').insert({
+      nombre, tipo, descripcion: desc || null,
+      precio, activo: true,
+      archivo_url: publicUrl,
+      ...(previewUrl && { preview_url: previewUrl })
+    });
+    if (dbErr) throw new Error('Error al guardar: ' + dbErr.message);
+
+    status.style.color = '#3fff2a';
+    status.textContent = '¡Producto publicado!';
+    btn.textContent = 'Subir y publicar'; btn.disabled = false;
+
+    // Limpiar form y recargar tienda
+    document.getElementById('ap-nombre').value = '';
+    document.getElementById('ap-desc').value = '';
+    document.getElementById('ap-precio').value = '';
+    document.getElementById('ap-file').value = '';
+    document.getElementById('ap-preview').value = '';
+    setTimeout(() => { closeAddProductModal(); loadStore(); status.textContent = ''; }, 1500);
+
+  } catch(e) {
+    status.textContent = e.message; status.style.color = '#ff4444';
+    btn.textContent = 'Subir y publicar'; btn.disabled = false;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadStore();
     loadBlockedSlots();
@@ -2001,6 +2093,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   </script>
+
+<!-- ADD PRODUCT MODAL -->
+<div id="add-product-modal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--red2);width:90%;max-width:480px;max-height:90vh;overflow-y:auto;position:relative;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);">// Agregar producto</p>
+      <button onclick="closeAddProductModal()" style="background:none;border:none;color:var(--muted2);font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tipo</label>
+        <select id="ap-tipo" onchange="updateFileAccept()" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:12px;outline:none;cursor:pointer;">
+          <option value="track_unreleased">Track (WAV)</option>
+          <option value="sample_pack">Sample Pack (RAR/ZIP)</option>
+          <option value="bundle">Bundle</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
+        <input id="ap-nombre" type="text" placeholder="Ej: Dark Matter Vol.1" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Descripción (opcional)</label>
+        <input id="ap-desc" type="text" placeholder="Descripción breve" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Precio (USD)</label>
+        <input id="ap-precio" type="number" min="1" placeholder="25" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Archivo <span id="ap-file-hint" style="color:var(--muted2);">(WAV)</span></label>
+        <input id="ap-file" type="file" accept=".wav" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;outline:none;cursor:pointer;">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Preview de audio (MP3, opcional)</label>
+        <input id="ap-preview" type="file" accept=".mp3,.wav" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;outline:none;cursor:pointer;">
+      </div>
+      <p id="ap-status" style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);min-height:16px;"></p>
+      <button onclick="submitAddProduct()" id="ap-btn" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;">Subir y publicar</button>
+    </div>
+  </div>
+</div>
 
 <!-- CLUB PRO MODAL -->
 <div id="club-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
