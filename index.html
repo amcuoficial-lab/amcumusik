@@ -1837,7 +1837,7 @@ async function togglePreview(productId) {
   Object.keys(window._audioElements).forEach(id => {
     if (id !== productId) {
       const a = window._audioElements[id];
-      if (!a.paused) {
+      if (a && !a.paused) {
         a.pause();
         const icon = document.querySelector('#player-' + id + ' .pp-icon');
         if (icon) icon.innerHTML = '&#9654;';
@@ -1845,54 +1845,56 @@ async function togglePreview(productId) {
     }
   });
 
-  // Si no está cargado, fetchear como blob (URL nunca expuesta en DOM)
+  // Crear audio element si no existe (URL solo en JS Map, nunca en el DOM)
   if (!window._audioElements[productId]) {
-    if (window._audioLoading.has(productId)) return;
-    window._audioLoading.add(productId);
     const icon = document.querySelector('#player-' + productId + ' .pp-icon');
     if (icon) icon.textContent = '...';
-    try {
-      const resp = await fetch(url);
-      const blob = await resp.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const audio = new Audio();
-      audio.src = blobUrl;
-      audio.preload = 'auto';
-      audio.ontimeupdate = () => {
-        if (!audio.duration) return;
-        const pct = (audio.currentTime / audio.duration) * 100;
-        const prog = document.getElementById('progress-' + productId);
-        if (prog) prog.style.width = pct + '%';
-        const secs = Math.floor(audio.currentTime);
-        const m = Math.floor(secs / 60);
-        const s = secs % 60;
-        const timeEl = document.getElementById('time-' + productId);
-        if (timeEl) timeEl.textContent = m + ':' + String(s).padStart(2, '0');
-      };
-      audio.onended = () => {
-        const i = document.querySelector('#player-' + productId + ' .pp-icon');
-        if (i) i.innerHTML = '&#9654;';
-        const prog = document.getElementById('progress-' + productId);
-        if (prog) prog.style.width = '0%';
-        const timeEl = document.getElementById('time-' + productId);
-        if (timeEl) timeEl.textContent = '0:00';
-        audio.currentTime = 0;
-      };
-      window._audioElements[productId] = audio;
-    } catch(e) {
-      const icon2 = document.querySelector('#player-' + productId + ' .pp-icon');
-      if (icon2) icon2.innerHTML = '&#9654;';
-      window._audioLoading.delete(productId);
-      return;
-    }
-    window._audioLoading.delete(productId);
+
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audio.src = url;
+
+    audio.ontimeupdate = () => {
+      if (!audio.duration) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      const prog = document.getElementById('progress-' + productId);
+      if (prog) prog.style.width = pct + '%';
+      const secs = Math.floor(audio.currentTime);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      const timeEl = document.getElementById('time-' + productId);
+      if (timeEl) timeEl.textContent = m + ':' + String(s).padStart(2, '0');
+    };
+    audio.onended = () => {
+      const i = document.querySelector('#player-' + productId + ' .pp-icon');
+      if (i) i.innerHTML = '&#9654;';
+      const prog = document.getElementById('progress-' + productId);
+      if (prog) prog.style.width = '0%';
+      const timeEl = document.getElementById('time-' + productId);
+      if (timeEl) timeEl.textContent = '0:00';
+      audio.currentTime = 0;
+    };
+    audio.onerror = () => {
+      const i = document.querySelector('#player-' + productId + ' .pp-icon');
+      if (i) i.innerHTML = '&#9654;';
+    };
+    audio.oncanplay = () => {
+      const i = document.querySelector('#player-' + productId + ' .pp-icon');
+      if (i && i.textContent === '...') i.innerHTML = '&#9654;';
+    };
+    window._audioElements[productId] = audio;
   }
 
   const audio = window._audioElements[productId];
   const icon = document.querySelector('#player-' + productId + ' .pp-icon');
+
   if (audio.paused) {
-    audio.play();
-    if (icon) icon.innerHTML = '&#9646;&#9646;';
+    try {
+      await audio.play();
+      if (icon) icon.innerHTML = '&#9646;&#9646;';
+    } catch(e) {
+      if (icon) icon.innerHTML = '&#9654;';
+    }
   } else {
     audio.pause();
     if (icon) icon.innerHTML = '&#9654;';
@@ -2142,35 +2144,46 @@ async function initMercadoPago() {
   const nombre = document.getElementById('mp-nombre').value.trim();
   const btn    = document.getElementById('mp-btn');
 
-  if (!email || !nombre) { alert('Completá email y nombre'); return; }
+  if (!email || !nombre) { alert('Completa email y nombre'); return; }
   if (!mpCurrentProduct) return;
 
   btn.textContent = 'Procesando...'; btn.disabled = true;
 
-  // Guardar orden pendiente en Supabase
-  const { data: order, error } = await sb.from('orders').insert({
-    user_id: currentUser?.id || null,
-    product_id: mpCurrentProduct.id || null,
-    nombre, email,
-    monto: mpCurrentProduct.price,
-    estado: 'pendiente'
-  }).select().single();
+  try {
+    // 1. Guardar orden en Supabase
+    const { data: order, error: orderErr } = await sb.from('orders').insert({
+      user_id: currentUser?.id || null,
+      product_id: mpCurrentProduct.id || null,
+      nombre, email,
+      monto: mpCurrentProduct.price,
+      estado: 'pendiente'
+    }).select().single();
+    if (orderErr) throw new Error(orderErr.message);
 
-  if (error) { alert('Error: ' + error.message); btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false; return; }
+    // 2. Llamar a Supabase Edge Function para crear preferencia MP
+    const { data: fnData, error: fnErr } = await sb.functions.invoke('create-mp-preference', {
+      body: {
+        title: mpCurrentProduct.name,
+        price: mpCurrentProduct.price,
+        order_id: order.id,
+        payer_email: email,
+        payer_name: nombre
+      }
+    });
 
-  // Crear preferencia de pago en Mercado Pago
-  // IMPORTANTE: Reemplazá MP_ACCESS_TOKEN con tu token de Mercado Pago
-  const MP_PUBLIC_KEY = 'TU_PUBLIC_KEY_MP'; // Reemplazar
-  
-  // Por ahora redirige al checkout de MP con los datos
-  // Cuando tengas el access token del backend esto se conecta automático
-  const mpURL = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=pending&payer_email=${encodeURIComponent(email)}`;
-  
-  // Mostrar instrucciones de pago por ahora
-  btn.textContent = 'Pagar con Mercado Pago'; btn.disabled = false;
-  closeMPModal();
-  
-  alert(`✓ Orden registrada #${order.id.slice(0,8)}\n\nPara completar la integración de Mercado Pago necesitás tu Access Token.\n\nTe contactaremos a ${email} para confirmar el pago.`);
+    if (fnErr) throw new Error(fnErr.message);
+    if (!fnData?.init_point) throw new Error('No se recibio el link de pago');
+
+    // 3. Redirigir a checkout de MercadoPago
+    btn.textContent = 'Redirigiendo...';
+    window.location.href = fnData.init_point;
+
+  } catch(e) {
+    console.error('MP error:', e);
+    btn.textContent = 'Pagar con Mercado Pago';
+    btn.disabled = false;
+    alert('Error: ' + e.message);
+  }
 }
 </script>
 </body>
