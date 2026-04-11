@@ -2026,7 +2026,7 @@ function openEditProduct(p) {
   document.getElementById('ep-desc').value     = p.descripcion || '';
   document.getElementById('ep-precio').value   = p.precio;
   document.getElementById('ep-activo').checked = p.activo;
-  document.getElementById('ep-file').value     = '';
+  document.getElementById('ep-url').value      = '';
   document.getElementById('ep-preview').value  = '';
   document.getElementById('ep-status').textContent = '';
   document.getElementById('edit-product-modal').style.display = 'flex';
@@ -2039,7 +2039,7 @@ async function submitEditProduct() {
   const desc   = document.getElementById('ep-desc').value.trim();
   const precio = parseFloat(document.getElementById('ep-precio').value);
   const activo = document.getElementById('ep-activo').checked;
-  const file   = document.getElementById('ep-file').files[0];
+  const dropboxUrl = document.getElementById('ep-url').value.trim();
   const preview= document.getElementById('ep-preview').files[0];
   const status = document.getElementById('ep-status');
   const btn    = document.getElementById('ep-btn');
@@ -2052,9 +2052,8 @@ async function submitEditProduct() {
   try {
     const updates = { nombre, tipo, descripcion: desc || null, precio, activo };
 
-    if (file) {
-      status.textContent = 'Subiendo archivo...';
-      updates.archivo_url = await uploadFileViaAPI(file, 'products');
+    if (dropboxUrl) {
+      updates.archivo_url = dropboxToDirectUrl(dropboxUrl);
     }
 
     if (preview) {
@@ -2087,6 +2086,15 @@ async function deleteProduct(id, nombre) {
   if (error) { alert('Error: ' + error.message); return; }
   openManageProductsModal();
   loadStore();
+}
+
+// ---- DROPBOX URL → DESCARGA DIRECTA ----
+function dropboxToDirectUrl(url) {
+  return url
+    .replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+    .replace('?dl=0', '')
+    .replace('?dl=1', '')
+    .split('?')[0]; // quitar cualquier query param
 }
 
 // ---- UPLOAD HELPER (URL firmada → sube directo a Supabase Storage) ----
@@ -2132,20 +2140,19 @@ async function submitAddProduct() {
   const nombre = document.getElementById('ap-nombre').value.trim();
   const desc   = document.getElementById('ap-desc').value.trim();
   const precio = parseFloat(document.getElementById('ap-precio').value);
-  const file   = document.getElementById('ap-file').files[0];
+  const dropboxUrl = document.getElementById('ap-url').value.trim();
   const preview= document.getElementById('ap-preview').files[0];
   const status = document.getElementById('ap-status');
   const btn    = document.getElementById('ap-btn');
 
-  if (!nombre || !precio || !file) { status.textContent = 'Completá nombre, precio y archivo'; status.style.color = '#ff4444'; return; }
+  if (!nombre || !precio || !dropboxUrl) { status.textContent = 'Completá nombre, precio y link de Dropbox'; status.style.color = '#ff4444'; return; }
 
-  btn.textContent = 'Subiendo archivo...'; btn.disabled = true;
+  btn.textContent = 'Publicando...'; btn.disabled = true;
   status.style.color = 'var(--muted2)';
 
   try {
-    // 1. Subir archivo principal via API (soporta archivos grandes)
-    status.textContent = 'Subiendo archivo principal...';
-    const publicUrl = await uploadFileViaAPI(file, 'products');
+    // 1. Convertir link de Dropbox a descarga directa
+    const publicUrl = dropboxToDirectUrl(dropboxUrl);
 
     // 2. Subir preview de audio (si hay)
     let previewUrl = null;
@@ -2172,7 +2179,7 @@ async function submitAddProduct() {
     document.getElementById('ap-nombre').value = '';
     document.getElementById('ap-desc').value = '';
     document.getElementById('ap-precio').value = '';
-    document.getElementById('ap-file').value = '';
+    document.getElementById('ap-url').value = '';
     document.getElementById('ap-preview').value = '';
     setTimeout(() => { closeAddProductModal(); loadStore(); status.textContent = ''; }, 1500);
 
@@ -2247,8 +2254,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <input id="ep-precio" type="number" min="1" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
       <div>
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Reemplazar archivo principal (opcional)</label>
-        <input id="ep-file" type="file" accept=".wav,.rar,.zip" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;outline:none;cursor:pointer;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nuevo link de Dropbox (opcional)</label>
+        <input id="ep-url" type="text" placeholder="https://www.dropbox.com/s/..." style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
       <div>
         <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Reemplazar preview de audio (opcional)</label>
@@ -2293,8 +2300,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <input id="ap-precio" type="number" min="1" placeholder="25" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
       <div>
-        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Archivo <span id="ap-file-hint" style="color:var(--muted2);">(WAV)</span></label>
-        <input id="ap-file" type="file" accept=".wav" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;outline:none;cursor:pointer;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Link de Dropbox <span style="color:#555;">(pegar link del archivo)</span></label>
+        <input id="ap-url" type="text" placeholder="https://www.dropbox.com/s/..." style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+        <p style="font-family:var(--font-mono);font-size:9px;color:var(--muted2);margin-top:4px;">En Dropbox: Compartir → Copiar link → pegalo acá</p>
       </div>
       <div>
         <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Preview de audio (MP3, opcional)</label>
