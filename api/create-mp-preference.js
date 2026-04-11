@@ -7,10 +7,8 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { title, price, order_id, payer_email, payer_name } = req.body;
-  const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
-  const SITE_URL = process.env.SITE_URL || 'https://amcustore.vercel.app';
-
-  if (!MP_ACCESS_TOKEN) return res.status(500).json({ error: 'MP_ACCESS_TOKEN no configurado' });
+  const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || 'APP_USR-6279290744423286-033017-8e3d0a0cf635fba6d3a2603e51e249e9-3302590997';
+  const SITE_URL = 'https://amcustore.vercel.app';
 
   const preference = {
     items: [{ title, unit_price: Number(price), quantity: 1, currency_id: 'USD' }],
