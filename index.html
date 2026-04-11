@@ -1483,9 +1483,13 @@ document.querySelectorAll('.nav-links a').forEach(a => {
       }
       if (!_authReady) {
         _authReady = true;
-        // Primera vez: cargar tienda ahora que la sesión está lista
-        loadStore();
-        loadBlockedSlots();
+        // Esperar DOM listo antes de cargar tienda
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => { loadStore(); loadBlockedSlots(); });
+        } else {
+          loadStore();
+          loadBlockedSlots();
+        }
       }
       if (currentProfile?.role === 'admin') renderAdminPanel();
     } catch(e) { console.error('Auth error:', e); }
@@ -1917,6 +1921,25 @@ function seekPreview(event, productId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Notificación de retorno desde MercadoPago
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment) {
+      const msg = payment === 'success'
+        ? '¡Pago aprobado! Revisá tu email para recibir tu compra.'
+        : payment === 'pending'
+        ? 'Pago pendiente. Te avisamos cuando se confirme.'
+        : 'El pago no se completó. Podés intentarlo de nuevo.';
+      const color = payment === 'success' ? '#1db954' : payment === 'pending' ? '#f5a623' : '#ff4444';
+      const banner = document.createElement('div');
+      banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:99999;background:${color};color:#fff;text-align:center;padding:14px;font-family:var(--font-mono);font-size:12px;letter-spacing:1px;`;
+      banner.textContent = msg;
+      document.body.appendChild(banner);
+      setTimeout(() => banner.remove(), 6000);
+      // Limpiar params de URL sin recargar
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     // Fallback: si onAuthStateChange no disparó en 3s, cargar igual
     setTimeout(() => {
       if (!_authReady) {
