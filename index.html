@@ -1496,7 +1496,6 @@ function sendGhostQuote() {
 
   let currentUser = null;
   let currentProfile = null;
-  let _authReady = false;
 
   async function loadProfile(user) {
     try {
@@ -1517,16 +1516,6 @@ function sendGhostQuote() {
         currentUser = null;
         currentProfile = null;
         updateAuthUI();
-      }
-      if (!_authReady) {
-        _authReady = true;
-        // Esperar DOM listo antes de cargar tienda
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', () => { loadStore(); loadBlockedSlots(); });
-        } else {
-          loadStore();
-          loadBlockedSlots();
-        }
       }
       if (currentProfile?.role === 'admin') renderAdminPanel();
     } catch(e) { console.error('Auth error:', e); }
@@ -1778,6 +1767,25 @@ function sendGhostQuote() {
   async function updateBooking(id, estado) {
     const { error } = await sb.from('bookings').update({ estado }).eq('id', id);
     if (error) { alert('Error: ' + error.message); return; }
+
+    if (estado === 'confirmada') {
+      // Obtener datos completos de la reserva
+      const { data: booking } = await sb.from('bookings').select('*').eq('id', id).single();
+      if (booking) {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: booking.email,
+            nombre: booking.nombre,
+            fecha: booking.fecha,
+            hora: booking.hora,
+            modalidad: booking.modalidad
+          })
+        }).catch(e => console.error('Email error:', e));
+      }
+    }
+
     openBookingsAdmin();
   }
 
@@ -1971,6 +1979,9 @@ function seekPreview(event, productId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadStore();
+    loadBlockedSlots();
+
     // Notificación de retorno desde MercadoPago
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
@@ -1986,18 +1997,8 @@ document.addEventListener('DOMContentLoaded', () => {
       banner.textContent = msg;
       document.body.appendChild(banner);
       setTimeout(() => banner.remove(), 6000);
-      // Limpiar params de URL sin recargar
       window.history.replaceState({}, '', window.location.pathname);
     }
-
-    // Fallback: si onAuthStateChange no disparó en 3s, cargar igual
-    setTimeout(() => {
-      if (!_authReady) {
-        _authReady = true;
-        loadStore();
-        loadBlockedSlots();
-      }
-    }, 3000);
   });
   </script>
 
