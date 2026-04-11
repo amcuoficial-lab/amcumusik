@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -77,6 +77,7 @@ nav.scrolled { background: rgba(2,2,2,.95); border-color: var(--border); backdro
   color: var(--muted2); text-decoration: none; transition: color .2s;
 }
 .nav-links a:hover { color: var(--white); }
+.mobile-auth { display: none; }
 .nav-cta {
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
   background: var(--red2); color: var(--white); border: none; padding: 10px 22px; cursor: none; transition: background .2s;
@@ -376,6 +377,7 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
   }
   .nav-links.open { display: flex !important; }
   .nav-links a { font-size: 16px; color: var(--white); }
+  .mobile-auth { display: block !important; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px; }
   .nav-cta { display: none; }
 
   /* HERO */
@@ -657,11 +659,12 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     <li><a href="#ghost">Ghost</a></li>
     <li><a href="#membership">Membresía</a></li>
     <li><a href="#clases">Clases</a></li>
+    <li class="mobile-auth"><a href="#" id="auth-btn-mobile" onclick="openAuthModal(true)">Iniciar sesión</a></li>
   </ul>
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú" onclick="toggleNav()">
     <span></span><span></span><span></span>
   </button>
-  <button class="nav-cta" id="auth-btn" onclick="openAuthModal()">Iniciar sesión</button>
+  <button class="nav-cta" id="auth-btn" onclick="openAuthModal(false)">Iniciar sesión</button>
 </nav>
 
 <!-- HERO -->
@@ -1098,17 +1101,17 @@ document.addEventListener('DOMContentLoaded', init);
         <li><strong>Géneros:</strong> Bass House, Tech House, Minimal, Acid</li>
         <li><strong>NDA disponible</strong> si necesitás confidencialidad total</li>
       </ul>
-      <button class="btn-main">Pedir cotización</button>
+      <button class="btn-main" onclick="sendGenericQuote()">Pedir cotización</button>
     </div>
     <div class="ghost-form reveal">
       <div class="form-title">Cotizá tu track</div>
       <div class="form-group">
         <label class="form-label">Tu nombre / alias</label>
-        <input class="form-input" type="text" placeholder="DJ XYZ">
+        <input class="form-input" id="ghost-name" type="text" placeholder="DJ XYZ">
       </div>
       <div class="form-group">
         <label class="form-label">Género / referencia</label>
-        <select class="form-select">
+        <select class="form-select" id="ghost-genre">
           <option>Bass House</option>
           <option>Tech House</option>
           <option>Minimal / Deep Tech</option>
@@ -1118,13 +1121,13 @@ document.addEventListener('DOMContentLoaded', init);
       </div>
       <div class="form-group">
         <label class="form-label">Referencias musicales</label>
-        <textarea class="form-textarea" placeholder="Tracks o artistas que te gusten como referencia..."></textarea>
+        <textarea class="form-textarea" id="ghost-refs" placeholder="Tracks o artistas que te gusten como referencia..."></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Email de contacto</label>
-        <input class="form-input" type="email" placeholder="tu@email.com">
+        <input class="form-input" id="ghost-email" type="email" placeholder="tu@email.com">
       </div>
-      <button class="btn-main" style="width:100%;text-align:center">Enviar solicitud</button>
+      <button class="btn-main" style="width:100%;text-align:center" onclick="sendGhostQuote()">Enviar solicitud</button>
     </div>
   </div>
 </section>
@@ -1443,9 +1446,39 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   a.addEventListener('click', () => {
     document.querySelector('.nav-links').classList.remove('open');
     document.getElementById('nav-hamburger').classList.remove('open');
-    document.body.style.overflow = '';
   });
 });
+
+function sendGenericQuote() {
+  const phone = '541136719066';
+  const text = `¡Hola AMCU! Te escribo desde la web porque vi tu servicio de Ghost Production y me gustaría averiguar por una cotización.`;
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+function sendGhostQuote() {
+  const name = document.getElementById('ghost-name').value.trim();
+  const genre = document.getElementById('ghost-genre').value;
+  const refs = document.getElementById('ghost-refs').value.trim();
+  const email = document.getElementById('ghost-email').value.trim();
+
+  if (!name || !email) {
+    alert('Por favor, ingresa al menos tu nombre y email de contacto para pedir la cotización.');
+    return;
+  }
+
+  const phone = '541136719066';
+  const text = `¡Hola AMCU! Te escribo desde la web para pedir una cotización de Ghost Production.\n\n` +
+               `*Mi nombre / alias:* ${name}\n` +
+               `*Género interesado:* ${genre}\n` +
+               `*Referencias:* ${refs || 'Ninguna ingresada'}\n` +
+               `*Email:* ${email}\n\n` +
+               `Espero la información, un saludo.`;
+
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
 </script>
 
   <!-- SUPABASE -->
@@ -1496,22 +1529,28 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   });
 
   function updateAuthUI() {
-    const btn = document.getElementById('auth-btn');
-    if (!btn) return;
-    if (currentUser) {
-      const name = currentProfile?.nombre || currentUser.email?.split('@')[0] || 'Mi cuenta';
-      btn.textContent = name;
-      btn.style.background = currentProfile?.role === 'admin' ? '#8b0000' : 'var(--red2)';
-    } else {
-      btn.textContent = 'Iniciar sesión';
-      btn.style.background = 'var(--red2)';
-    }
+    const btns = [document.getElementById('auth-btn'), document.getElementById('auth-btn-mobile')];
+    btns.forEach(btn => {
+      if (!btn) return;
+      if (currentUser) {
+        const name = currentProfile?.nombre || currentUser.email?.split('@')[0] || 'Mi cuenta';
+        btn.textContent = name;
+        if (btn.tagName === 'BUTTON') {
+          btn.style.background = currentProfile?.role === 'admin' ? '#8b0000' : 'var(--red2)';
+        }
+      } else {
+        btn.textContent = 'Iniciar sesión';
+        if (btn.tagName === 'BUTTON') {
+          btn.style.background = 'var(--red2)';
+        }
+      }
+    });
   }
 
   // ---- MODAL ---- (sincrónico — currentUser ya está listo desde onAuthStateChange)
-  function openAuthModal() {
+  function openAuthModal(isMobile) {
     if (currentUser) {
-      showAccountMenu();
+      showAccountMenu(isMobile);
       return;
     }
     document.getElementById('auth-modal').style.display = 'flex';
@@ -1523,14 +1562,21 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     document.getElementById('auth-modal').style.display = 'none';
   }
 
-  function showAccountMenu() {
+  function showAccountMenu(isMobile) {
     const existing = document.getElementById('account-menu');
     if (existing) { existing.remove(); return; }
-    const btn = document.getElementById('auth-btn');
-    const rect = btn.getBoundingClientRect();
+    
     const menu = document.createElement('div');
     menu.id = 'account-menu';
-    menu.style.cssText = `position:fixed;top:${rect.bottom+8}px;right:${window.innerWidth-rect.right}px;z-index:10000;background:#0a0a0a;border:1px solid var(--border);min-width:200px;`;
+    
+    if (isMobile === true || window.innerWidth <= 768) {
+      menu.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:10000;background:#0a0a0a;border:1px solid var(--border);width:90%;max-width:300px;`;
+    } else {
+      const btn = document.getElementById('auth-btn');
+      const rect = btn.getBoundingClientRect();
+      menu.style.cssText = `position:fixed;top:${rect.bottom+8}px;right:${window.innerWidth-rect.right}px;z-index:10000;background:#0a0a0a;border:1px solid var(--border);min-width:200px;`;
+    }
+    
     menu.innerHTML = `
       <div style="padding:16px;border-bottom:1px solid var(--border);">
         <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser?.email}</p>
