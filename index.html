@@ -1888,7 +1888,10 @@ function sendGhostQuote() {
       </div>` : ''}
       <div class="p-footer">
         <div class="p-price">$${p.precio} <span>USD</span></div>
-        <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-buy" onclick="shareToIG('${p.id}')" style="padding:10px 12px;font-size:14px;" title="Compartir en Instagram">📲</button>
+          <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
+        </div>
       </div>
     </div>
   `).join('') + `
@@ -2086,6 +2089,169 @@ async function deleteProduct(id, nombre) {
   if (error) { alert('Error: ' + error.message); return; }
   openManageProductsModal();
   loadStore();
+}
+
+// ---- COMPARTIR EN INSTAGRAM ----
+async function shareToIG(productId) {
+  // Buscar datos del producto
+  const { data: p } = await sb.from('products').select('*').eq('id', productId).single();
+  if (!p) return;
+
+  // Capturar waveform del audio a la mitad (si hay preview cargado)
+  let waveformData = null;
+  const audio = window._audioElements?.[productId];
+  if (audio && audio.duration) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const url = window._audioRegistry?.get(productId);
+      if (url) {
+        const resp = await fetch(url);
+        const buf  = await resp.arrayBuffer();
+        const decoded = await ctx.decodeAudioData(buf);
+        const raw = decoded.getChannelData(0);
+        // Tomar 120 muestras centradas en el 50%
+        const samples = 120;
+        const mid = Math.floor(raw.length / 2);
+        const half = Math.floor(samples / 2);
+        waveformData = [];
+        for (let i = 0; i < samples; i++) {
+          const idx = mid - half * Math.floor(raw.length / raw.length) + Math.floor((i / samples) * raw.length);
+          waveformData.push(Math.abs(raw[Math.min(idx, raw.length - 1)]));
+        }
+      }
+    } catch(e) { /* sin waveform real, usar simulado */ }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = 1080;
+  canvas.height = 1920;
+  const c = canvas.getContext('2d');
+
+  // Fondo
+  c.fillStyle = '#080808';
+  c.fillRect(0, 0, 1080, 1920);
+
+  // Gradiente superior rojo
+  const grd = c.createLinearGradient(0, 0, 0, 400);
+  grd.addColorStop(0, 'rgba(192,23,15,0.18)');
+  grd.addColorStop(1, 'rgba(8,8,8,0)');
+  c.fillStyle = grd;
+  c.fillRect(0, 0, 1080, 400);
+
+  // Línea roja top
+  c.fillStyle = '#c0170f';
+  c.fillRect(0, 0, 1080, 6);
+
+  // Logo AMCU
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 180px Arial Black, Arial';
+  c.letterSpacing = '8px';
+  c.textAlign = 'center';
+  c.fillText('AMCU', 540, 220);
+
+  // Subtítulo
+  c.fillStyle = '#c0170f';
+  c.font = '600 38px Arial';
+  c.fillText('PRODUCCIÓN ELECTRÓNICA', 540, 280);
+
+  // Línea separadora
+  c.strokeStyle = '#222';
+  c.lineWidth = 2;
+  c.beginPath(); c.moveTo(80, 340); c.lineTo(1000, 340); c.stroke();
+
+  // Tipo de producto
+  const tipoLabel = { sample_pack: 'SAMPLE PACK', track_unreleased: 'TRACK UNRELEASED', bundle: 'BUNDLE' };
+  c.fillStyle = '#c0170f';
+  c.font = '500 44px Arial';
+  c.fillText(tipoLabel[p.tipo] || p.tipo.toUpperCase(), 540, 430);
+
+  // Nombre del producto
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 100px Arial Black, Arial';
+  // Ajustar tamaño si es muy largo
+  let fontSize = 100;
+  while (c.measureText(p.nombre).width > 900 && fontSize > 50) {
+    fontSize -= 5;
+    c.font = `bold ${fontSize}px Arial Black, Arial`;
+  }
+  c.fillText(p.nombre, 540, 580);
+
+  // Precio
+  c.fillStyle = '#ffffff';
+  c.font = 'bold 90px Arial';
+  c.fillText(`USD ${p.precio}`, 540, 700);
+
+  // Waveform
+  const waveY = 920;
+  const waveH = 300;
+  const waveW = 900;
+  const waveX = (1080 - waveW) / 2;
+  const bars  = waveformData || Array.from({length:120}, () => 0.1 + Math.random() * 0.9);
+  const barW  = waveW / bars.length - 1;
+
+  bars.forEach((val, i) => {
+    const h = Math.max(8, val * waveH);
+    const x = waveX + i * (barW + 1);
+    const pct = i / bars.length;
+    // Mitad izquierda = reproducida (roja), derecha = pendiente (gris)
+    c.fillStyle = pct <= 0.5 ? '#c0170f' : '#333';
+    c.fillRect(x, waveY + waveH/2 - h/2, barW, h);
+  });
+
+  // Línea de progreso (50%)
+  const midX = waveX + waveW / 2;
+  c.fillStyle = '#ffffff';
+  c.fillRect(midX - 2, waveY, 4, waveH + 10);
+
+  // Ícono play + "PREVIEW"
+  c.fillStyle = '#c0170f';
+  c.beginPath();
+  c.arc(540, 1330, 60, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = '#fff';
+  c.font = 'bold 50px Arial';
+  c.fillText('▶', 540, 1348);
+
+  c.fillStyle = '#888';
+  c.font = '36px Arial';
+  c.fillText('PREVIEW — 50%', 540, 1440);
+
+  // Footer
+  c.strokeStyle = '#222';
+  c.lineWidth = 2;
+  c.beginPath(); c.moveTo(80, 1720); c.lineTo(1000, 1720); c.stroke();
+
+  c.fillStyle = '#555';
+  c.font = '34px Arial';
+  c.fillText('amcustore.vercel.app', 540, 1800);
+
+  c.fillStyle = '#c0170f';
+  c.font = '28px Arial';
+  c.fillText('// Disponible ahora', 540, 1860);
+
+  // Compartir
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], `amcu_${p.nombre.replace(/\s+/g,'_')}.png`, { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `${p.nombre} — AMCU`,
+          text: `Nuevo ${tipoLabel[p.tipo] || p.tipo} disponible en amcustore.vercel.app`
+        });
+      } catch(e) { if (e.name !== 'AbortError') downloadCanvas(canvas, p.nombre); }
+    } else {
+      // Desktop: descargar imagen
+      downloadCanvas(canvas, p.nombre);
+    }
+  }, 'image/png');
+}
+
+function downloadCanvas(canvas, nombre) {
+  const a = document.createElement('a');
+  a.download = `amcu_${nombre.replace(/\s+/g,'_')}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
 }
 
 // ---- DROPBOX URL → DESCARGA DIRECTA ----
