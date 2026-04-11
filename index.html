@@ -1461,16 +1461,18 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     return data;
   }
 
-  // onAuthStateChange es la única fuente de verdad del estado de sesión
+  // onAuthStateChange maneja el estado inicial y todos los cambios
   sb.auth.onAuthStateChange(async (event, session) => {
     if (session?.user) {
       currentUser = session.user;
+      updateAuthUI(); // actualizar botón de inmediato con el email
       currentProfile = await loadProfile(currentUser);
+      updateAuthUI(); // actualizar de nuevo con el nombre del perfil
     } else {
       currentUser = null;
       currentProfile = null;
+      updateAuthUI();
     }
-    updateAuthUI();
     if (currentProfile?.role === 'admin') renderAdminPanel();
   });
 
@@ -1487,21 +1489,12 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     }
   }
 
-  // ---- MODAL ----
-  async function openAuthModal() {
-    // Check fresco de sesión para evitar estado desincronizado
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      if (!currentUser) {
-        currentUser = session.user;
-        currentProfile = await loadProfile(currentUser);
-        updateAuthUI();
-      }
+  // ---- MODAL ---- (sincrónico — currentUser ya está listo desde onAuthStateChange)
+  function openAuthModal() {
+    if (currentUser) {
       showAccountMenu();
       return;
     }
-    currentUser = null;
-    updateAuthUI();
     document.getElementById('auth-modal').style.display = 'flex';
     document.getElementById('auth-email').focus();
     document.getElementById('auth-msg').textContent = '';
