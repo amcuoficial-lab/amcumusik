@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -259,6 +259,34 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+/* ===== PREVIEW PLAYER (audio protegido) ===== */
+.preview-player {
+  display:flex; align-items:center; gap:10px;
+  background:#050505; border:1px solid var(--border);
+  padding:10px 14px; margin-bottom:20px;
+  user-select:none; -webkit-user-select:none;
+}
+.pp-btn {
+  background:var(--red2); border:none; color:var(--white);
+  width:28px; height:28px; display:flex; align-items:center;
+  justify-content:center; font-size:10px; cursor:pointer;
+  flex-shrink:0; transition:background .2s;
+}
+.pp-btn:hover { background:#ff2010; }
+.pp-bar { flex:1; height:3px; background:var(--border); position:relative; overflow:hidden; cursor:pointer; }
+.pp-progress { height:100%; background:var(--red2); width:0%; transition:width .1s linear; pointer-events:none; }
+.pp-time { font-family:var(--font-mono); font-size:10px; color:var(--muted2); flex-shrink:0; width:32px; }
+.pp-label { font-family:var(--font-mono); font-size:8px; letter-spacing:2px; color:var(--muted2); border:1px solid var(--border); padding:2px 6px; flex-shrink:0; }
+
+/* ===== MEMBERSHIP MODAL ===== */
+#club-modal { display:none; position:fixed; inset:0; z-index:10001; background:rgba(0,0,0,.92); align-items:center; justify-content:center; }
+#club-modal.show { display:flex !important; }
+.club-modal-box { background:#0a0a0a; border:1px solid var(--border); width:90%; max-width:480px; max-height:90vh; overflow-y:auto; position:relative; }
+.club-modal-header { padding:28px 32px 0; border-bottom:1px solid var(--border); }
+.club-modal-body { padding:28px 32px; }
+.club-step { display:none; }
+.club-step.active { display:block; }
 
 /* ===== NAV HAMBURGER ===== */
 .nav-hamburger {
@@ -1107,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', init);
         <li><span class="chk off">—</span>Feedback de tus producciones</li>
         <li><span class="chk off">—</span>Clases exclusivas</li>
       </ul>
-      <button class="btn-outline" style="width:100%;text-align:center;padding:14px">Registrarse gratis</button>
+      <button class="btn-outline" onclick="openAuthModal();switchTab('register')" style="width:100%;text-align:center;padding:14px">Registrarse gratis</button>
     </div>
     <div class="member-card featured">
       <div class="m-plan">Producer Club</div>
@@ -1121,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', init);
         <li><span class="chk">✓</span><strong>Feedback mensual</strong> de tus producciones</li>
         <li><span class="chk">✓</span><strong>Clases exclusivas</strong> de producción Bass House</li>
       </ul>
-      <button class="btn-main" style="width:100%;text-align:center;padding:14px">Unirse al club</button>
+      <button class="btn-main" onclick="openClubModal()" style="width:100%;text-align:center;padding:14px">Unirse al club</button>
     </div>
   </div>
 
@@ -1760,6 +1788,8 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   }
 
   const tipoLabel = { sample_pack: 'Sample Pack', track_unreleased: 'Track Unreleased', bundle: 'Bundle' };
+  if (!window._audioRegistry) window._audioRegistry = new Map();
+  data.forEach(p => { if (p.archivo_url) window._audioRegistry.set(p.id, p.archivo_url); });
 
   grid.innerHTML = data.map(p => `
     <div class="product-card">
@@ -1768,10 +1798,11 @@ document.querySelectorAll('.nav-links a').forEach(a => {
       <div class="p-name">${p.nombre}</div>
       <p class="p-desc">${p.descripcion || ''}</p>
       ${p.archivo_url ? `
-      <div style="margin-bottom:20px;">
-        <audio controls style="width:100%;filter:invert(1);height:32px;opacity:.7;">
-          <source src="${p.archivo_url}" type="audio/wav">
-        </audio>
+      <div class="preview-player" id="player-${p.id}" oncontextmenu="return false">
+        <button class="pp-btn" onclick="togglePreview('${p.id}')"><span class="pp-icon">&#9654;</span></button>
+        <div class="pp-bar" onclick="seekPreview(event,'${p.id}')"><div class="pp-progress" id="progress-${p.id}"></div></div>
+        <span class="pp-time" id="time-${p.id}">0:00</span>
+        <span class="pp-label">PREVIEW</span>
       </div>` : ''}
       <div class="p-footer">
         <div class="p-price">$${p.precio} <span>USD</span></div>
@@ -1793,6 +1824,90 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   });
 }
 
+// ===== AUDIO REGISTRY (URLs protegidas - nunca en el DOM) =====
+window._audioRegistry = new Map();
+window._audioElements = {};
+window._audioLoading = new Set();
+
+async function togglePreview(productId) {
+  const url = window._audioRegistry.get(productId);
+  if (!url) return;
+
+  // Pausar cualquier otro preview activo
+  Object.keys(window._audioElements).forEach(id => {
+    if (id !== productId) {
+      const a = window._audioElements[id];
+      if (!a.paused) {
+        a.pause();
+        const icon = document.querySelector('#player-' + id + ' .pp-icon');
+        if (icon) icon.innerHTML = '&#9654;';
+      }
+    }
+  });
+
+  // Si no está cargado, fetchear como blob (URL nunca expuesta en DOM)
+  if (!window._audioElements[productId]) {
+    if (window._audioLoading.has(productId)) return;
+    window._audioLoading.add(productId);
+    const icon = document.querySelector('#player-' + productId + ' .pp-icon');
+    if (icon) icon.textContent = '...';
+    try {
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const audio = new Audio();
+      audio.src = blobUrl;
+      audio.preload = 'auto';
+      audio.ontimeupdate = () => {
+        if (!audio.duration) return;
+        const pct = (audio.currentTime / audio.duration) * 100;
+        const prog = document.getElementById('progress-' + productId);
+        if (prog) prog.style.width = pct + '%';
+        const secs = Math.floor(audio.currentTime);
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        const timeEl = document.getElementById('time-' + productId);
+        if (timeEl) timeEl.textContent = m + ':' + String(s).padStart(2, '0');
+      };
+      audio.onended = () => {
+        const i = document.querySelector('#player-' + productId + ' .pp-icon');
+        if (i) i.innerHTML = '&#9654;';
+        const prog = document.getElementById('progress-' + productId);
+        if (prog) prog.style.width = '0%';
+        const timeEl = document.getElementById('time-' + productId);
+        if (timeEl) timeEl.textContent = '0:00';
+        audio.currentTime = 0;
+      };
+      window._audioElements[productId] = audio;
+    } catch(e) {
+      const icon2 = document.querySelector('#player-' + productId + ' .pp-icon');
+      if (icon2) icon2.innerHTML = '&#9654;';
+      window._audioLoading.delete(productId);
+      return;
+    }
+    window._audioLoading.delete(productId);
+  }
+
+  const audio = window._audioElements[productId];
+  const icon = document.querySelector('#player-' + productId + ' .pp-icon');
+  if (audio.paused) {
+    audio.play();
+    if (icon) icon.innerHTML = '&#9646;&#9646;';
+  } else {
+    audio.pause();
+    if (icon) icon.innerHTML = '&#9654;';
+  }
+}
+
+function seekPreview(event, productId) {
+  const audio = window._audioElements[productId];
+  if (!audio || !audio.duration) return;
+  const bar = event.currentTarget;
+  const rect = bar.getBoundingClientRect();
+  const pct = (event.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     refreshAuth();
     loadBlockedSlots();
@@ -1800,6 +1915,105 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   </script>
 
+<!-- CLUB PRO MODAL -->
+<div id="club-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--border);width:90%;max-width:500px;max-height:90vh;overflow-y:auto;position:relative;">
+    <div style="padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:4px;">// Producer Club</p>
+        <p style="font-family:var(--font-display);font-size:22px;letter-spacing:1px;">Sumate al club</p>
+      </div>
+      <button onclick="closeClubModal()" style="background:none;border:none;color:var(--muted2);font-size:28px;cursor:pointer;line-height:1;padding:4px;">&times;</button>
+    </div>
+    <div id="club-step-1" style="padding:28px;">
+      <div style="background:#0c0000;border:1px solid rgba(192,23,15,.25);padding:20px;margin-bottom:24px;">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+          <span style="font-family:var(--font-display);font-size:52px;color:var(--white);">0</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);">USD / mes</span>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">Sin contratos &mdash; cancelas cuando quieras</p>
+      </div>
+      <ul style="list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:10px;"><span style="width:16px;height:16px;background:var(--red2);color:var(--white);font-size:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">&#10003;</span>Chat con IA de AMCU &mdash; tecnicas y consejos 24/7</li>
+        <li style="font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:10px;"><span style="width:16px;height:16px;background:var(--red2);color:var(--white);font-size:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">&#10003;</span>1 Sample Pack exclusivo por mes</li>
+        <li style="font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:10px;"><span style="width:16px;height:16px;background:var(--red2);color:var(--white);font-size:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">&#10003;</span>Feedback mensual de tus producciones</li>
+        <li style="font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:10px;"><span style="width:16px;height:16px;background:var(--red2);color:var(--white);font-size:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">&#10003;</span>Clases exclusivas de produccion Bass House</li>
+      </ul>
+      <div style="background:#111;border:1px solid var(--border);border-left:2px solid var(--red2);padding:16px;margin-bottom:24px;">
+        <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);margin-bottom:8px;">// Como funciona</p>
+        <p style="font-size:13px;color:var(--muted2);line-height:1.7;font-weight:300;">Completa el formulario con tu email y WhatsApp. AMCU te contacta para procesar el pago y <strong style="color:var(--white);font-weight:400;">te activa la membresia en menos de 24hs.</strong></p>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
+        <input id="club-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu nombre / alias</label>
+        <input id="club-nombre" type="text" placeholder="DJ XYZ" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">WhatsApp <span style="color:var(--red2);">*</span></label>
+        <div style="display:flex;align-items:center;border:1px solid var(--border);background:var(--black);">
+          <span style="font-family:var(--font-mono);font-size:13px;color:var(--muted2);padding:12px 6px 12px 14px;">+</span>
+          <input id="club-phone" type="tel" placeholder="5491136719066" style="flex:1;background:transparent;border:none;color:var(--white);padding:12px 14px 12px 0;font-family:var(--font-body);font-size:14px;outline:none;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+        <p style="font-family:var(--font-mono);font-size:9px;color:var(--muted2);margin-top:5px;">Ej: 5491136719066 (sin + ni espacios). Tu numero: 1136719066</p>
+      </div>
+      <p id="club-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);min-height:16px;margin:10px 0 16px;"></p>
+      <button onclick="submitClubRequest()" id="club-submit" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#ff2010'" onmouseout="this.style.background='var(--red2)'">Quiero unirme al club</button>
+    </div>
+    <div id="club-step-2" style="display:none;padding:48px 28px;text-align:center;">
+      <div style="font-family:var(--font-display);font-size:56px;color:var(--red2);line-height:1;margin-bottom:20px;">OK</div>
+      <p style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;margin-bottom:12px;">Solicitud enviada!</p>
+      <p style="font-size:14px;color:var(--muted2);line-height:1.8;font-weight:300;margin-bottom:28px;">AMCU recibe tu solicitud y te contacta por WhatsApp<br>para procesar el pago y activar tu membresia.<br><br><strong style="color:var(--white);font-weight:400;">Tiempo estimado: menos de 24hs.</strong></p>
+      <div style="background:#0c0000;border:1px solid rgba(192,23,15,.3);padding:16px;margin-bottom:24px;">
+        <p id="club-confirm-info" style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--white);"></p>
+      </div>
+      <button onclick="closeClubModal()" style="background:transparent;border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;cursor:pointer;">Cerrar</button>
+    </div>
+  </div>
+</div>
+<script>
+function openClubModal() {
+  document.getElementById('club-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  if (window.currentUser && window.currentUser.email) {
+    document.getElementById('club-email').value = window.currentUser.email;
+  }
+  document.getElementById('club-step-1').style.display = 'block';
+  document.getElementById('club-step-2').style.display = 'none';
+  document.getElementById('club-msg').textContent = '';
+  var btn = document.getElementById('club-submit');
+  if (btn) { btn.textContent = 'Quiero unirme al club'; btn.disabled = false; }
+}
+function closeClubModal() {
+  document.getElementById('club-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.getElementById('club-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeClubModal();
+});
+async function submitClubRequest() {
+  var email  = document.getElementById('club-email').value.trim();
+  var nombre = document.getElementById('club-nombre').value.trim();
+  var phone  = document.getElementById('club-phone').value.trim();
+  var msg    = document.getElementById('club-msg');
+  if (!email) { msg.textContent = 'Ingresa tu email.'; return; }
+  if (!phone || phone.length < 8) { msg.textContent = 'Ingresa tu WhatsApp (sin + ni espacios).'; return; }
+  var btn = document.getElementById('club-submit');
+  btn.textContent = 'Enviando...'; btn.disabled = true;
+  try {
+    await window.sb.from('membership_requests').insert({
+      email: email, nombre: nombre || null, whatsapp: phone,
+      plan: 'producer_club', estado: 'pendiente',
+      user_id: window.currentUser ? window.currentUser.id : null
+    });
+  } catch(e) { console.warn('membership_requests:', e.message); }
+  document.getElementById('club-step-1').style.display = 'none';
+  document.getElementById('club-step-2').style.display = 'block';
+  document.getElementById('club-confirm-info').textContent = email + '  |  WA: +' + phone;
+}
+</script>
 <!-- AUTH MODAL -->
 <!-- AUTH MODAL -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
