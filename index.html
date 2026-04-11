@@ -259,6 +259,182 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+/* ===== NAV HAMBURGER ===== */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  z-index: 210;
+  position: relative;
+}
+.nav-hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--white);
+  transition: transform .3s, opacity .2s;
+}
+.nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ===== DISPOSITIVOS TÁCTILES: deshabilitar cursor personalizado ===== */
+@media (hover: none) and (pointer: coarse) {
+  body { cursor: auto !important; }
+  .cursor { display: none !important; }
+  button, a, .btn-main, .btn-outline, .btn-buy, .nav-cta, .chat-btn,
+  .form-select, input, textarea, select { cursor: pointer !important; }
+  .cal-day.available, .slot-btn:not(.booked) { cursor: pointer !important; }
+}
+
+/* ===== TABLET: hasta 900px ===== */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  section { padding: 80px 24px; }
+
+  .hero { grid-template-columns: 1fr; }
+  .hero-left { padding: 100px 24px 60px; }
+  .hero-right { display: none; }
+  .stats-bar { position: static; grid-column: unset; }
+
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .about-photos { order: -1; }
+
+  .store-grid { grid-template-columns: repeat(2,1fr) !important; }
+
+  .ghost-grid { grid-template-columns: 1fr; gap: 40px; }
+  .member-grid { grid-template-columns: 1fr; }
+
+  footer { flex-direction: column; gap: 24px; text-align: center; padding: 40px 24px; }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 20px; }
+
+  /* Inline grids 1fr 1fr → 1 columna */
+  [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; gap: 40px !important; }
+  [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; gap: 40px !important; }
+}
+
+/* ===== MÓVIL: hasta 640px ===== */
+@media (max-width: 640px) {
+  /* NAV */
+  nav { padding: 14px 16px; }
+  .nav-hamburger { display: flex; }
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(2,2,2,.97);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    z-index: 205;
+    backdrop-filter: blur(8px);
+  }
+  .nav-links.open { display: flex !important; }
+  .nav-links a { font-size: 16px; color: var(--white); }
+  .nav-cta { display: none; }
+
+  /* HERO */
+  .hero { grid-template-columns: 1fr; min-height: 90vh; }
+  .hero-left { padding: 90px 16px 50px; }
+  .hero-right { display: none; }
+  .hero-logo { width: min(320px, 88%); }
+  .hero-desc { font-size: 14px; }
+  .hero-actions { gap: 12px; }
+  .btn-main, .btn-outline { padding: 12px 20px; font-size: 10px; }
+
+  /* STATS */
+  .stats-bar { position: static; grid-column: unset; grid-template-columns: repeat(3,1fr); }
+  .stat { padding: 14px 10px; }
+  .stat-n { font-size: 26px; }
+  .stat-l { font-size: 9px; }
+
+  /* SECCIONES */
+  section { padding: 56px 16px; }
+  .s-title { font-size: clamp(36px, 10vw, 56px); margin-bottom: 36px; }
+
+  /* ABOUT */
+  .about-grid { grid-template-columns: 1fr; gap: 32px; }
+  .about-photos { order: -1; grid-template-columns: 1fr 1fr; }
+
+  /* TIENDA */
+  .store-grid { grid-template-columns: 1fr !important; }
+  .product-card { padding: 24px; }
+
+  /* GHOST */
+  .ghost-grid { grid-template-columns: 1fr; gap: 32px; }
+  .ghost-form { padding: 24px; }
+
+  /* MEMBRESÍA */
+  .member-grid { grid-template-columns: 1fr; }
+  .member-card { padding: 28px; }
+  .m-price { font-size: 48px; }
+
+  /* CHAT */
+  .chat-box { padding: 20px; }
+  .msg { max-width: 90%; }
+
+  /* FOOTER */
+  footer { flex-direction: column; gap: 20px; text-align: center; padding: 40px 16px; }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+
+  /* INLINE GRIDS — override con !important */
+  [style*="grid-template-columns:1fr 1fr"],
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  /* Calendario: auto 1fr → columna única */
+  [style*="grid-template-columns:auto 1fr"],
+  [style*="grid-template-columns: auto 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* min-width fijo del calendario */
+  [style*="min-width:320px"],
+  [style*="min-width: 320px"] {
+    min-width: unset !important;
+    width: 100%;
+  }
+  /* Slots: 4 col → 3 col */
+  [style*="grid-template-columns:repeat(4,1fr)"],
+  [style*="grid-template-columns: repeat(4, 1fr)"] {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  /* Filas de precio en tabla de clases */
+  [style*="grid-template-columns:1fr auto auto"],
+  [style*="grid-template-columns: 1fr auto auto"] {
+    gap: 8px !important;
+  }
+
+  /* Gap grande reducido */
+  [style*="gap:80px"] { gap: 32px !important; }
+  [style*="gap: 80px"] { gap: 32px !important; }
+  [style*="gap:40px"] { gap: 24px !important; }
+
+  /* Iframe Spotify */
+  iframe { min-height: 280px !important; }
+
+  /* Stats-bar en mobile */
+  .stats-bar {
+    position: static !important;
+    grid-template-columns: repeat(3,1fr) !important;
+    border-top: 1px solid var(--border);
+  }
+  .stat { padding: 14px 8px !important; }
+
+  /* Padding interior de cajas */
+  .ghost-form { padding: 24px !important; }
+  .chat-box { padding: 20px !important; }
+  [style*="padding:40px"] { padding: 20px !important; }
+  [style*="padding: 40px"] { padding: 20px !important; }
+  [style*="padding:32px"] { padding: 20px !important; }
+  [style*="padding: 32px"] { padding: 20px !important; }
+}
 </style>
 </head>
 <body>
@@ -443,6 +619,9 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
     <li><a href="#membership">Membresía</a></li>
     <li><a href="#clases">Clases</a></li>
   </ul>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </button>
   <button class="nav-cta" id="auth-btn" onclick="openAuthModal()">Iniciar sesión</button>
 </nav>
 
@@ -1189,20 +1368,45 @@ Reglas:
 
 <script>
 const cur = document.getElementById('cur');
-document.addEventListener('mousemove', e => {
-  cur.style.left = e.clientX + 'px';
-  cur.style.top = e.clientY + 'px';
-});
-document.querySelectorAll('a,button,.product-card,.member-card').forEach(el => {
-  el.addEventListener('mouseenter', () => cur.classList.add('big'));
-  el.addEventListener('mouseleave', () => cur.classList.remove('big'));
-});
+// Cursor personalizado solo en desktop (no en táctil)
+const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+if (!isTouchDevice) {
+  document.addEventListener('mousemove', e => {
+    cur.style.left = e.clientX + 'px';
+    cur.style.top = e.clientY + 'px';
+  });
+  document.querySelectorAll('a,button,.product-card,.member-card').forEach(el => {
+    el.addEventListener('mouseenter', () => cur.classList.add('big'));
+    el.addEventListener('mouseleave', () => cur.classList.remove('big'));
+  });
+} else {
+  cur.style.display = 'none';
+  document.body.style.cursor = 'auto';
+}
+
 const nav = document.getElementById('nav');
 window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 60));
 const obs = new IntersectionObserver(entries => {
   entries.forEach((e,i) => { if(e.isIntersecting) setTimeout(()=>e.target.classList.add('in'), i*80); });
 }, {threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// HAMBURGER NAV
+function toggleNav() {
+  const links = document.querySelector('.nav-links');
+  const btn = document.getElementById('nav-hamburger');
+  const isOpen = links.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+// Cerrar menú al hacer click en un link
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelector('.nav-links').classList.remove('open');
+    document.getElementById('nav-hamburger').classList.remove('open');
+    document.body.style.overflow = '';
+  });
+});
 </script>
 
   <!-- SUPABASE -->
