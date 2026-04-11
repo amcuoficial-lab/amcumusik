@@ -2189,7 +2189,19 @@ async function initMercadoPago() {
 
     // 3. Redirigir a checkout de MercadoPago
     btn.textContent = 'Redirigiendo...';
-    window.location.href = fnData.init_point;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile && fnData.preference_id) {
+      // Intentar abrir la app de MercadoPago
+      const appLink = `mercadopago://checkout?pref_id=${fnData.preference_id}`;
+      // Fallback a web si la app no está instalada (2 segundos)
+      const fallbackTimer = setTimeout(() => {
+        window.location.href = fnData.init_point;
+      }, 2000);
+      window.addEventListener('blur', () => clearTimeout(fallbackTimer), { once: true });
+      window.location.href = appLink;
+    } else {
+      window.location.href = fnData.init_point;
+    }
 
   } catch(e) {
     console.error('MP error:', e);
