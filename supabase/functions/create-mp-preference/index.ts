@@ -39,7 +39,7 @@ serve(async (req) => {
       },
       auto_return: "approved",
       external_reference: order_id,
-      notification_url: `https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/mp-webhook`,
+      notification_url: `https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/rapid-endpoint`,
       statement_descriptor: "AMCU STORE",
     };
 

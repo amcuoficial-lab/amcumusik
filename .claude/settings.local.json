@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \":*)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"e:/amcuweb/_inject_club_modal.ps1\")",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"e:/amcuweb/_fix_audio_mp.ps1\")",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"e:/amcuweb/_fix_mp_invoke.ps1\")"
+    ]
+  }
+}
