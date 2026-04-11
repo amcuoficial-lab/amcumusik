@@ -1528,17 +1528,11 @@ document.querySelectorAll('.nav-links a').forEach(a => {
         <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">${currentUser?.email}</p>
         ${currentProfile?.role === 'admin' ? '<p style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red2);margin-top:4px;">ADMIN</p>' : ''}
       </div>
-      <button id="logout-btn" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
+      <button onclick="doLogout()" style="width:100%;background:none;border:none;color:var(--white);font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;">Cerrar sesión</button>
     `;
     document.body.appendChild(menu);
 
-    // Botón logout con stopPropagation para evitar que se cierre el menú antes del click
-    document.getElementById('logout-btn').addEventListener('click', function(e) {
-      e.stopPropagation();
-      doLogout();
-    });
-
-    // Cerrar menú al click fuera, con delay para no interferir con el botón logout
+    // Cerrar menú al click fuera
     setTimeout(() => {
       function closeOnOutsideClick(e) {
         if (!menu.contains(e.target)) {
@@ -2176,7 +2170,7 @@ async function initMercadoPago() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token || ''}`,
+          'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'}`,
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
         },
         body: JSON.stringify({
