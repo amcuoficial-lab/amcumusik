@@ -2091,7 +2091,7 @@ async function deleteProduct(id, nombre) {
 
 // ---- UPLOAD HELPER (URL firmada → sube directo a Supabase Storage) ----
 async function uploadFileViaAPI(file, folder) {
-  // 1. Pedir URL firmada al servidor
+  // 1. Pedir token de subida firmado al servidor
   const urlRes = await fetch('/api/get-upload-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2100,13 +2100,11 @@ async function uploadFileViaAPI(file, folder) {
   const urlData = await urlRes.json();
   if (!urlRes.ok) throw new Error(urlData.error || 'Error al generar URL de subida');
 
-  // 2. Subir archivo directo a Supabase (sin pasar por Vercel)
-  const uploadRes = await fetch(urlData.signedUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file
-  });
-  if (!uploadRes.ok) throw new Error('Error al subir archivo al storage');
+  // 2. Subir usando el cliente Supabase (maneja el formato correcto)
+  const { error } = await sb.storage
+    .from('amcu-files')
+    .uploadToSignedUrl(urlData.path, urlData.token, file, { upsert: true });
+  if (error) throw new Error('Error al subir: ' + error.message);
 
   return urlData.publicUrl;
 }
