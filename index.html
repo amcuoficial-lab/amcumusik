@@ -2024,10 +2024,10 @@ async function submitAddProduct() {
     const ext   = file.name.split('.').pop();
     const path  = `products/${Date.now()}_${nombre.replace(/\s+/g,'_')}.${ext}`;
     status.textContent = 'Subiendo archivo principal...';
-    const { error: upErr } = await sb.storage.from('files').upload(path, file, { upsert: true });
+    const { error: upErr } = await sb.storage.from('amcu-files').upload(path, file, { upsert: true });
     if (upErr) throw new Error('Error al subir archivo: ' + upErr.message);
 
-    const { data: { publicUrl } } = sb.storage.from('files').getPublicUrl(path);
+    const { data: { publicUrl } } = sb.storage.from('amcu-files').getPublicUrl(path);
 
     // 2. Subir preview de audio (si hay)
     let previewUrl = null;
@@ -2035,9 +2035,9 @@ async function submitAddProduct() {
       status.textContent = 'Subiendo preview...';
       const pext  = preview.name.split('.').pop();
       const ppath = `previews/${Date.now()}_${nombre.replace(/\s+/g,'_')}_preview.${pext}`;
-      const { error: pErr } = await sb.storage.from('files').upload(ppath, preview, { upsert: true });
+      const { error: pErr } = await sb.storage.from('amcu-files').upload(ppath, preview, { upsert: true });
       if (!pErr) {
-        const { data: { publicUrl: pUrl } } = sb.storage.from('files').getPublicUrl(ppath);
+        const { data: { publicUrl: pUrl } } = sb.storage.from('amcu-files').getPublicUrl(ppath);
         previewUrl = pUrl;
       }
     }
