@@ -260,6 +260,14 @@ footer { border-top:1px solid var(--border); padding:60px 48px; display:flex;ali
 @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
 
+/* Cursor visible dentro de todos los modales */
+#auth-modal *, #mp-modal *, #club-modal * { cursor: auto; }
+#auth-modal button, #auth-modal a,
+#mp-modal button, #mp-modal a,
+#club-modal button, #club-modal a { cursor: pointer; }
+#auth-modal input, #auth-modal select, #auth-modal textarea,
+#mp-modal input, #club-modal input { cursor: text; }
+
 /* ===== PREVIEW PLAYER (audio protegido) ===== */
 .preview-player {
   display:flex; align-items:center; gap:10px;
@@ -1930,7 +1938,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div id="club-step-1" style="padding:28px;">
       <div style="background:#0c0000;border:1px solid rgba(192,23,15,.25);padding:20px;margin-bottom:24px;">
         <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
-          <span style="font-family:var(--font-display);font-size:52px;color:var(--white);">0</span>
+          <span style="font-family:var(--font-display);font-size:52px;color:var(--white);">USD 50</span>
           <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);">USD / mes</span>
         </div>
         <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--muted2);">Sin contratos &mdash; cancelas cuando quieras</p>
