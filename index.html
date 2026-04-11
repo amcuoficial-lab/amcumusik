@@ -1677,6 +1677,7 @@ function sendGhostQuote() {
         <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
           <p style="font-size:9px;letter-spacing:1px;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">Tienda</p>
           <button onclick="openAddProductModal()" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;text-align:left;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--red2)'" onmouseout="this.style.borderColor='var(--border)'">+ Agregar producto</button>
+          <button onclick="openManageProductsModal()" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;cursor:pointer;text-align:left;margin-top:6px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--red2)'" onmouseout="this.style.borderColor='var(--border)'">✎ Editar / eliminar productos</button>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
           <button onclick="toggleAdminPanel()" id="admin-toggle-btn" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--muted2);padding:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;cursor:pointer;">Minimizar panel</button>
@@ -1986,6 +1987,114 @@ function seekPreview(event, productId) {
   audio.currentTime = pct * audio.duration;
 }
 
+// ---- MANAGE / EDIT / DELETE PRODUCTS ----
+async function openManageProductsModal() {
+  const modal = document.getElementById('manage-products-modal');
+  const list  = document.getElementById('manage-products-list');
+  modal.style.display = 'flex';
+  list.innerHTML = '<p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);">Cargando...</p>';
+
+  const { data, error } = await sb.from('products').select('*').order('created_at', { ascending: false });
+  if (error || !data?.length) {
+    list.innerHTML = '<p style="font-family:var(--font-mono);font-size:11px;color:var(--muted2);">No hay productos.</p>';
+    return;
+  }
+
+  list.innerHTML = data.map(p => `
+    <div style="border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <p style="font-family:var(--font-mono);font-size:12px;color:var(--white);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.nombre}</p>
+        <p style="font-family:var(--font-mono);font-size:10px;color:var(--muted2);">USD ${p.precio} · ${p.tipo} · ${p.activo ? '<span style="color:#3fff2a">visible</span>' : '<span style="color:#ff4444">oculto</span>'}</p>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="openEditProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="background:none;border:1px solid var(--border);color:var(--white);font-family:var(--font-mono);font-size:10px;padding:6px 10px;cursor:pointer;" onmouseover="this.style.borderColor='var(--red2)'" onmouseout="this.style.borderColor='var(--border)'">✎ Editar</button>
+        <button onclick="deleteProduct('${p.id}','${p.nombre.replace(/'/g,"\\'")}')" style="background:none;border:1px solid #ff4444;color:#ff4444;font-family:var(--font-mono);font-size:10px;padding:6px 10px;cursor:pointer;">✕ Borrar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openEditProduct(p) {
+  document.getElementById('ep-id').value       = p.id;
+  document.getElementById('ep-tipo').value     = p.tipo;
+  document.getElementById('ep-nombre').value   = p.nombre;
+  document.getElementById('ep-desc').value     = p.descripcion || '';
+  document.getElementById('ep-precio').value   = p.precio;
+  document.getElementById('ep-activo').checked = p.activo;
+  document.getElementById('ep-file').value     = '';
+  document.getElementById('ep-preview').value  = '';
+  document.getElementById('ep-status').textContent = '';
+  document.getElementById('edit-product-modal').style.display = 'flex';
+}
+
+async function submitEditProduct() {
+  const id     = document.getElementById('ep-id').value;
+  const nombre = document.getElementById('ep-nombre').value.trim();
+  const tipo   = document.getElementById('ep-tipo').value;
+  const desc   = document.getElementById('ep-desc').value.trim();
+  const precio = parseFloat(document.getElementById('ep-precio').value);
+  const activo = document.getElementById('ep-activo').checked;
+  const file   = document.getElementById('ep-file').files[0];
+  const preview= document.getElementById('ep-preview').files[0];
+  const status = document.getElementById('ep-status');
+  const btn    = document.getElementById('ep-btn');
+
+  if (!nombre || !precio) { status.textContent = 'Completá nombre y precio'; status.style.color = '#ff4444'; return; }
+
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+  status.style.color = 'var(--muted2)';
+
+  try {
+    const updates = { nombre, tipo, descripcion: desc || null, precio, activo };
+
+    if (file) {
+      status.textContent = 'Subiendo archivo...';
+      const ext  = file.name.split('.').pop();
+      const path = `products/${Date.now()}_${nombre.replace(/\s+/g,'_')}.${ext}`;
+      const { error: upErr } = await sb.storage.from('amcu-files').upload(path, file, { upsert: true });
+      if (upErr) throw new Error('Error archivo: ' + upErr.message);
+      const { data: { publicUrl } } = sb.storage.from('amcu-files').getPublicUrl(path);
+      updates.archivo_url = publicUrl;
+    }
+
+    if (preview) {
+      status.textContent = 'Subiendo preview...';
+      const pext  = preview.name.split('.').pop();
+      const ppath = `previews/${Date.now()}_${nombre.replace(/\s+/g,'_')}_preview.${pext}`;
+      const { error: pErr } = await sb.storage.from('amcu-files').upload(ppath, preview, { upsert: true });
+      if (!pErr) {
+        const { data: { publicUrl: pUrl } } = sb.storage.from('amcu-files').getPublicUrl(ppath);
+        updates.preview_url = pUrl;
+      }
+    }
+
+    status.textContent = 'Guardando...';
+    const { error } = await sb.from('products').update(updates).eq('id', id);
+    if (error) throw new Error(error.message);
+
+    status.style.color = '#3fff2a';
+    status.textContent = '¡Guardado!';
+    btn.textContent = 'Guardar cambios'; btn.disabled = false;
+    setTimeout(() => {
+      document.getElementById('edit-product-modal').style.display = 'none';
+      openManageProductsModal();
+      loadStore();
+    }, 1000);
+
+  } catch(e) {
+    status.textContent = e.message; status.style.color = '#ff4444';
+    btn.textContent = 'Guardar cambios'; btn.disabled = false;
+  }
+}
+
+async function deleteProduct(id, nombre) {
+  if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const { error } = await sb.from('products').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  openManageProductsModal();
+  loadStore();
+}
+
 // ---- ADD PRODUCT ----
 function openAddProductModal() {
   document.getElementById('add-product-modal').style.display = 'flex';
@@ -2093,6 +2202,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   </script>
+
+<!-- MANAGE PRODUCTS MODAL -->
+<div id="manage-products-modal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--red2);width:90%;max-width:560px;max-height:90vh;overflow-y:auto;position:relative;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);">// Productos en tienda</p>
+      <button onclick="document.getElementById('manage-products-modal').style.display='none'" style="background:none;border:none;color:var(--muted2);font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div id="manage-products-list"></div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div id="edit-product-modal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.95);align-items:center;justify-content:center;">
+  <div style="background:#0a0a0a;border:1px solid var(--red2);width:90%;max-width:480px;max-height:90vh;overflow-y:auto;position:relative;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <p style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red2);">// Editar producto</p>
+      <button onclick="document.getElementById('edit-product-modal').style.display='none'" style="background:none;border:none;color:var(--muted2);font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <input type="hidden" id="ep-id">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tipo</label>
+        <select id="ep-tipo" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-mono);font-size:12px;outline:none;cursor:pointer;">
+          <option value="track_unreleased">Track (WAV)</option>
+          <option value="sample_pack">Sample Pack (RAR/ZIP)</option>
+          <option value="bundle">Bundle</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
+        <input id="ep-nombre" type="text" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Descripción</label>
+        <input id="ep-desc" type="text" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Precio (USD)</label>
+        <input id="ep-precio" type="number" min="1" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Reemplazar archivo principal (opcional)</label>
+        <input id="ep-file" type="file" accept=".wav,.rar,.zip" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;outline:none;cursor:pointer;">
+      </div>
+      <div>
+        <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Reemplazar preview de audio (opcional)</label>
+        <input id="ep-preview" type="file" accept=".mp3,.wav" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:10px;font-family:var(--font-mono);font-size:11px;outline:none;cursor:pointer;">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input id="ep-activo" type="checkbox" style="width:16px;height:16px;cursor:pointer;">
+        <label for="ep-activo" style="font-family:var(--font-mono);font-size:11px;color:var(--white);cursor:pointer;">Visible en tienda</label>
+      </div>
+      <p id="ep-status" style="font-family:var(--font-mono);font-size:11px;min-height:16px;"></p>
+      <button onclick="submitEditProduct()" id="ep-btn" style="width:100%;background:var(--red2);border:none;color:var(--white);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;">Guardar cambios</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADD PRODUCT MODAL -->
 <div id="add-product-modal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.92);align-items:center;justify-content:center;">
