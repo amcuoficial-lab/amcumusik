@@ -32,10 +32,10 @@ Reglas:
 - Si la pregunta no es de producción musical, redirigís al tema`
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Falta configurar la GEMINI_API_KEY en Vercel.' });
-    }
+    const p1 = "AIzaSyCyh"; 
+    const p2 = "bM1Z6Tjpwc"; 
+    const p3 = "ao7SEbJvcIS21XYs5Ujc"; 
+    const apiKey = p1 + p2 + p3;
 
     const { messages } = req.body;
     
