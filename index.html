@@ -2089,16 +2089,26 @@ async function deleteProduct(id, nombre) {
   loadStore();
 }
 
-// ---- UPLOAD HELPER (via API para archivos grandes) ----
+// ---- UPLOAD HELPER (URL firmada → sube directo a Supabase Storage) ----
 async function uploadFileViaAPI(file, folder) {
-  const form = new FormData();
-  form.append('file', file);
-  form.append('folder', folder);
-  form.append('name', file.name.split('.')[0]);
-  const res = await fetch('/api/upload-product-file', { method: 'POST', body: form });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error al subir archivo');
-  return data.url;
+  // 1. Pedir URL firmada al servidor
+  const urlRes = await fetch('/api/get-upload-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder, filename: file.name })
+  });
+  const urlData = await urlRes.json();
+  if (!urlRes.ok) throw new Error(urlData.error || 'Error al generar URL de subida');
+
+  // 2. Subir archivo directo a Supabase (sin pasar por Vercel)
+  const uploadRes = await fetch(urlData.signedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
+  });
+  if (!uploadRes.ok) throw new Error('Error al subir archivo al storage');
+
+  return urlData.publicUrl;
 }
 
 // ---- ADD PRODUCT ----
