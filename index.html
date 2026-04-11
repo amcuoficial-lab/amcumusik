@@ -1461,21 +1461,8 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     return data;
   }
 
-  async function refreshAuth() {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
-      currentProfile = await loadProfile(currentUser);
-    } else {
-      currentUser = null;
-      currentProfile = null;
-    }
-    updateAuthUI();
-    if (currentProfile?.role === 'admin') renderAdminPanel();
-  }
-
+  // onAuthStateChange es la única fuente de verdad del estado de sesión
   sb.auth.onAuthStateChange(async (event, session) => {
-    console.log('Auth event:', event);
     if (session?.user) {
       currentUser = session.user;
       currentProfile = await loadProfile(currentUser);
@@ -1501,11 +1488,20 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   }
 
   // ---- MODAL ----
-  function openAuthModal() {
-    if (currentUser) {
+  async function openAuthModal() {
+    // Check fresco de sesión para evitar estado desincronizado
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      if (!currentUser) {
+        currentUser = session.user;
+        currentProfile = await loadProfile(currentUser);
+        updateAuthUI();
+      }
       showAccountMenu();
       return;
     }
+    currentUser = null;
+    updateAuthUI();
     document.getElementById('auth-modal').style.display = 'flex';
     document.getElementById('auth-email').focus();
     document.getElementById('auth-msg').textContent = '';
@@ -1547,13 +1543,13 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   async function doLogout() {
     const menu = document.getElementById('account-menu');
     if (menu) menu.remove();
-    const { error } = await sb.auth.signOut();
-    if (error) { console.error(error); return; }
+    await sb.auth.signOut();
+    // onAuthStateChange dispara SIGNED_OUT y limpia el estado
     currentUser = null;
     currentProfile = null;
+    updateAuthUI();
     const panel = document.getElementById('admin-panel');
     if (panel) panel.remove();
-    updateAuthUI();
   }
 
   async function doLogin() {
@@ -1913,7 +1909,6 @@ function seekPreview(event, productId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    refreshAuth();
     loadBlockedSlots();
     loadStore();
   });
