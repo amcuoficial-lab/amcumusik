@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     auto_return: 'approved',
     external_reference: order_id,
     notification_url: `${SITE_URL}/api/mp-webhook`,
-    statement_descriptor: 'AMCU STORE',
+    statement_descriptor: 'AMCU_STORE',
   };
 
   try {
