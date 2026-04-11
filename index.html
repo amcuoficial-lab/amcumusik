@@ -2088,6 +2088,7 @@ async function submitClubRequest() {
       <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Tu nombre</label>
       <input id="mp-nombre" type="text" placeholder="Nombre completo" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
     </div>
+    <p id="mp-error" style="font-family:var(--font-mono);font-size:11px;color:#ff4444;text-align:center;margin-bottom:8px;min-height:16px;"></p>
     <!-- Botón oficial de Mercado Pago -->
     <button onclick="initMercadoPago()" id="mp-btn" style="width:100%;background:#009ee3;border:none;color:#fff;font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;" onmouseover="this.style.background='#007ab8'" onmouseout="this.style.background='#009ee3'">
       <svg width="20" height="20" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#009ee3"/><path d="M8 20.5c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2v.5c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2v-.5z" fill="#fff"/></svg>
@@ -2145,14 +2146,17 @@ async function initMercadoPago() {
   const email  = document.getElementById('mp-email').value.trim();
   const nombre = document.getElementById('mp-nombre').value.trim();
   const btn    = document.getElementById('mp-btn');
+  const errDiv = document.getElementById('mp-error');
 
-  if (!email || !nombre) { alert('Completa email y nombre'); return; }
+  if (!email || !nombre) { errDiv.textContent = 'Completá email y nombre'; return; }
   if (!mpCurrentProduct) return;
 
+  errDiv.textContent = '';
   btn.textContent = 'Procesando...'; btn.disabled = true;
 
   try {
-    // 1. Guardar orden en Supabase
+    // 1. Guardar orden en Supabase (no-fatal: si falla, igual continúa)
+    let orderId = null;
     const { data: order, error: orderErr } = await sb.from('orders').insert({
       user_id: currentUser?.id || null,
       product_id: mpCurrentProduct.id || null,
@@ -2160,35 +2164,44 @@ async function initMercadoPago() {
       monto: mpCurrentProduct.price,
       estado: 'pendiente'
     }).select().single();
-    if (orderErr) throw new Error(orderErr.message);
+    if (!orderErr) orderId = order?.id;
 
-    // 2. Llamar a Edge Function via fetch directo
+    // 2. Llamar a Edge Function con timeout de 15s
+    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
     const session = (await sb.auth.getSession()).data.session;
-    const fnRes = await fetch(
-      'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/create-mp-preference',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY'
-        },
-        body: JSON.stringify({
-          title: mpCurrentProduct.name,
-          price: mpCurrentProduct.price,
-          order_id: order.id,
-          payer_email: email,
-          payer_name: nombre
-        })
-      }
-    );
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    let fnRes;
+    try {
+      fnRes = await fetch(
+        'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/create-mp-preference',
+        {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ANON}`,
+            'apikey': ANON
+          },
+          body: JSON.stringify({
+            title: mpCurrentProduct.name,
+            price: mpCurrentProduct.price,
+            order_id: orderId || 'sin-orden',
+            payer_email: email,
+            payer_name: nombre
+          })
+        }
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const fnData = await fnRes.json();
-    if (!fnRes.ok) throw new Error(fnData.error || 'Error en Edge Function');
-    if (!fnData.init_point) throw new Error('No se recibio el link de pago');
+    if (!fnRes.ok) throw new Error(fnData.error || `Error ${fnRes.status}`);
+    if (!fnData.init_point) throw new Error('No se recibió el link de pago');
 
-    // 3. Redirigir a checkout de MercadoPago
-    // init_point funciona en PC y mobile — si la app MP está instalada, la abre automáticamente
+    // 3. Redirigir a MercadoPago (funciona en PC y mobile, abre app si está instalada)
     btn.textContent = 'Redirigiendo...';
     window.location.href = fnData.init_point;
 
@@ -2196,7 +2209,7 @@ async function initMercadoPago() {
     console.error('MP error:', e);
     btn.textContent = 'Pagar con Mercado Pago';
     btn.disabled = false;
-    alert('Error: ' + e.message);
+    errDiv.textContent = e.name === 'AbortError' ? 'Tiempo de espera agotado, intentá de nuevo' : 'Error: ' + e.message;
   }
 }
 </script>
