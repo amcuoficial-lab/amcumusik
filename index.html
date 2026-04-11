@@ -2054,23 +2054,12 @@ async function submitEditProduct() {
 
     if (file) {
       status.textContent = 'Subiendo archivo...';
-      const ext  = file.name.split('.').pop();
-      const path = `products/${Date.now()}_${nombre.replace(/\s+/g,'_')}.${ext}`;
-      const { error: upErr } = await sb.storage.from('amcu-files').upload(path, file, { upsert: true });
-      if (upErr) throw new Error('Error archivo: ' + upErr.message);
-      const { data: { publicUrl } } = sb.storage.from('amcu-files').getPublicUrl(path);
-      updates.archivo_url = publicUrl;
+      updates.archivo_url = await uploadFileViaAPI(file, 'products');
     }
 
     if (preview) {
       status.textContent = 'Subiendo preview...';
-      const pext  = preview.name.split('.').pop();
-      const ppath = `previews/${Date.now()}_${nombre.replace(/\s+/g,'_')}_preview.${pext}`;
-      const { error: pErr } = await sb.storage.from('amcu-files').upload(ppath, preview, { upsert: true });
-      if (!pErr) {
-        const { data: { publicUrl: pUrl } } = sb.storage.from('amcu-files').getPublicUrl(ppath);
-        updates.preview_url = pUrl;
-      }
+      updates.preview_url = await uploadFileViaAPI(preview, 'previews');
     }
 
     status.textContent = 'Guardando...';
@@ -2098,6 +2087,18 @@ async function deleteProduct(id, nombre) {
   if (error) { alert('Error: ' + error.message); return; }
   openManageProductsModal();
   loadStore();
+}
+
+// ---- UPLOAD HELPER (via API para archivos grandes) ----
+async function uploadFileViaAPI(file, folder) {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('folder', folder);
+  form.append('name', file.name.split('.')[0]);
+  const res = await fetch('/api/upload-product-file', { method: 'POST', body: form });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al subir archivo');
+  return data.url;
 }
 
 // ---- ADD PRODUCT ----
@@ -2134,26 +2135,15 @@ async function submitAddProduct() {
   status.style.color = 'var(--muted2)';
 
   try {
-    // 1. Subir archivo principal
-    const ext   = file.name.split('.').pop();
-    const path  = `products/${Date.now()}_${nombre.replace(/\s+/g,'_')}.${ext}`;
+    // 1. Subir archivo principal via API (soporta archivos grandes)
     status.textContent = 'Subiendo archivo principal...';
-    const { error: upErr } = await sb.storage.from('amcu-files').upload(path, file, { upsert: true });
-    if (upErr) throw new Error('Error al subir archivo: ' + upErr.message);
-
-    const { data: { publicUrl } } = sb.storage.from('amcu-files').getPublicUrl(path);
+    const publicUrl = await uploadFileViaAPI(file, 'products');
 
     // 2. Subir preview de audio (si hay)
     let previewUrl = null;
     if (preview) {
       status.textContent = 'Subiendo preview...';
-      const pext  = preview.name.split('.').pop();
-      const ppath = `previews/${Date.now()}_${nombre.replace(/\s+/g,'_')}_preview.${pext}`;
-      const { error: pErr } = await sb.storage.from('amcu-files').upload(ppath, preview, { upsert: true });
-      if (!pErr) {
-        const { data: { publicUrl: pUrl } } = sb.storage.from('amcu-files').getPublicUrl(ppath);
-        previewUrl = pUrl;
-      }
+      previewUrl = await uploadFileViaAPI(preview, 'previews');
     }
 
     // 3. Crear producto en BD
