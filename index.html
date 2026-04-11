@@ -1450,30 +1450,42 @@ document.querySelectorAll('.nav-links a').forEach(a => {
   <script>
   const SUPABASE_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
   let currentUser = null;
   let currentProfile = null;
+  let _authReady = false;
 
   async function loadProfile(user) {
-    const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    if (error) console.error('Error cargando perfil:', error);
-    return data;
+    try {
+      const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+      return data;
+    } catch(e) { return null; }
   }
 
   // onAuthStateChange maneja el estado inicial y todos los cambios
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-      currentUser = session.user;
-      updateAuthUI(); // actualizar botón de inmediato con el email
-      currentProfile = await loadProfile(currentUser);
-      updateAuthUI(); // actualizar de nuevo con el nombre del perfil
-    } else {
-      currentUser = null;
-      currentProfile = null;
-      updateAuthUI();
-    }
-    if (currentProfile?.role === 'admin') renderAdminPanel();
+    try {
+      if (session?.user) {
+        currentUser = session.user;
+        updateAuthUI();
+        currentProfile = await loadProfile(currentUser);
+        updateAuthUI();
+      } else {
+        currentUser = null;
+        currentProfile = null;
+        updateAuthUI();
+      }
+      if (!_authReady) {
+        _authReady = true;
+        // Primera vez: cargar tienda ahora que la sesión está lista
+        loadStore();
+        loadBlockedSlots();
+      }
+      if (currentProfile?.role === 'admin') renderAdminPanel();
+    } catch(e) { console.error('Auth error:', e); }
   });
 
   function updateAuthUI() {
@@ -1902,8 +1914,14 @@ function seekPreview(event, productId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadBlockedSlots();
-    loadStore();
+    // Fallback: si onAuthStateChange no disparó en 3s, cargar igual
+    setTimeout(() => {
+      if (!_authReady) {
+        _authReady = true;
+        loadStore();
+        loadBlockedSlots();
+      }
+    }, 3000);
   });
   </script>
 
