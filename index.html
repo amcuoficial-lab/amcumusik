@@ -2167,23 +2167,17 @@ async function initMercadoPago() {
     if (!orderErr) orderId = order?.id;
 
     // 2. Llamar a Edge Function con timeout de 15s
-    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
-    const session = (await sb.auth.getSession()).data.session;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
 
     let fnRes;
     try {
       fnRes = await fetch(
-        'https://anvkreqmsbzsfaepudlx.supabase.co/functions/v1/create-mp-preference',
+        '/api/create-mp-preference',
         {
           method: 'POST',
           signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ANON}`,
-            'apikey': ANON
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: mpCurrentProduct.name,
             price: mpCurrentProduct.price,
