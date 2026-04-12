@@ -1504,21 +1504,34 @@ function sendGhostQuote() {
     } catch(e) { return null; }
   }
 
-  // onAuthStateChange maneja el estado inicial y todos los cambios
-  sb.auth.onAuthStateChange(async (event, session) => {
+  // ---- INIT DE SESIÓN ----
+  // getSession() garantiza la restauración de sesión desde localStorage en cada recarga.
+  // Es síncrono con el storage y no depende de timing de eventos.
+  async function initAuth() {
     try {
+      const { data: { session } } = await sb.auth.getSession();
       if (session?.user) {
         currentUser = session.user;
         updateAuthUI();
         currentProfile = await loadProfile(currentUser);
         updateAuthUI();
-      } else {
-        currentUser = null;
-        currentProfile = null;
-        updateAuthUI();
+        if (currentProfile?.role === 'admin') renderAdminPanel();
       }
-      if (currentProfile?.role === 'admin') renderAdminPanel();
-    } catch(e) { console.error('Auth error:', e); }
+    } catch(e) { console.error('initAuth error:', e); }
+  }
+
+  // onAuthStateChange: SOLO para cambios reactivos (no para init).
+  // Evita race conditions usando el listener solo para SIGNED_OUT y TOKEN_REFRESHED.
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      currentProfile = null;
+      updateAuthUI();
+      const panel = document.getElementById('admin-panel');
+      if (panel) panel.remove();
+    } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+      currentUser = session.user;
+    }
   });
 
   function updateAuthUI() {
@@ -1594,13 +1607,14 @@ function sendGhostQuote() {
   async function doLogout() {
     const menu = document.getElementById('account-menu');
     if (menu) menu.remove();
-    await sb.auth.signOut();
-    // onAuthStateChange dispara SIGNED_OUT y limpia el estado
+    // Limpia estado local ANTES de signOut para evitar race conditions
     currentUser = null;
     currentProfile = null;
     updateAuthUI();
     const panel = document.getElementById('admin-panel');
     if (panel) panel.remove();
+    await sb.auth.signOut();
+    // onAuthStateChange(SIGNED_OUT) confirma el estado final
   }
 
   async function doLogin() {
@@ -2357,6 +2371,7 @@ async function submitAddProduct() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initAuth();      // restaura sesión desde localStorage sin depender de eventos async
     loadStore();
     loadBlockedSlots();
 
@@ -2543,8 +2558,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function openClubModal() {
   document.getElementById('club-modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  if (window.currentUser && window.currentUser.email) {
-    document.getElementById('club-email').value = window.currentUser.email;
+  if (currentUser && currentUser.email) {
+    document.getElementById('club-email').value = currentUser.email;
   }
   document.getElementById('club-step-1').style.display = 'block';
   document.getElementById('club-step-2').style.display = 'none';
@@ -2569,10 +2584,10 @@ async function submitClubRequest() {
   var btn = document.getElementById('club-submit');
   btn.textContent = 'Enviando...'; btn.disabled = true;
   try {
-    await window.sb.from('membership_requests').insert({
+    await sb.from('membership_requests').insert({
       email: email, nombre: nombre || null, whatsapp: phone,
       plan: 'producer_club', estado: 'pendiente',
-      user_id: window.currentUser ? window.currentUser.id : null
+      user_id: currentUser ? currentUser.id : null
     });
   } catch(e) { console.warn('membership_requests:', e.message); }
   document.getElementById('club-step-1').style.display = 'none';
