@@ -1,4 +1,9 @@
 {
+  "rewrites": [
+    { "source": "/admin", "destination": "/amcu_admin.html" },
+    { "source": "/tienda", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
