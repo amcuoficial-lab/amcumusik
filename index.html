@@ -1873,12 +1873,13 @@ function sendGhostQuote() {
     if (audioUrl) window._audioRegistry.set(p.id, audioUrl);
   });
 
+  window._productMeta = new Map(data.map(p => [p.id, p]));
   grid.innerHTML = data.map(p => `
     <div class="product-card">
       <div class="p-badge">${p.tipo === 'track_unreleased' ? 'UNRELEASED' : p.tipo === 'sample_pack' ? 'DISPONIBLE' : 'BUNDLE'}</div>
-      <div class="p-type">${tipoLabel[p.tipo] || p.tipo}</div>
-      <div class="p-name">${p.nombre}</div>
-      <p class="p-desc">${p.descripcion || ''}</p>
+      <div class="p-type">${escapeHtml(tipoLabel[p.tipo] || p.tipo)}</div>
+      <div class="p-name">${escapeHtml(p.nombre || '')}</div>
+      <p class="p-desc">${escapeHtml(p.descripcion || '')}</p>
       ${(p.preview_url || p.tipo === 'track_unreleased' && p.archivo_url) ? `
       <div class="preview-player" id="player-${p.id}" oncontextmenu="return false">
         <button class="pp-btn" onclick="togglePreview('${p.id}')"><span class="pp-icon">&#9654;</span></button>
@@ -1890,7 +1891,7 @@ function sendGhostQuote() {
         <div class="p-price">$${p.precio} <span>USD</span></div>
         <div style="display:flex;gap:6px;">
           <button class="btn-buy" onclick="shareToIG('${p.id}')" style="padding:10px 12px;font-size:14px;" title="Compartir en Instagram">📲</button>
-          <button class="btn-buy" onclick="openMPModal('${p.nombre.replace(/'/g,"\'")}', ${p.precio}, '${p.id}')">Comprar</button>
+          <button class="btn-buy" onclick="openMPModal('${p.id}')">Comprar</button>
         </div>
       </div>
     </div>
@@ -2612,17 +2613,17 @@ async function submitClubRequest() {
       <!-- Nombre (solo registro) -->
       <div id="field-nombre" style="display:none;margin-bottom:14px;">
         <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Nombre</label>
-        <input id="auth-nombre" type="text" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+        <input id="auth-nombre" type="text" name="name" autocomplete="name" placeholder="Tu nombre" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
 
       <div style="margin-bottom:14px;">
         <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Email</label>
-        <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
+        <input id="auth-email" type="email" name="email" autocomplete="email" placeholder="tu@email.com" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'">
       </div>
 
       <div style="margin-bottom:8px;">
         <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);display:block;margin-bottom:6px;">Contraseña</label>
-        <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
+        <input id="auth-pass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" style="width:100%;background:var(--black);border:1px solid var(--border);color:var(--white);padding:12px 14px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red2)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
 
       <p id="auth-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--red2);min-height:18px;margin:8px 0 16px;"></p>
@@ -2672,6 +2673,7 @@ function switchTab(tab) {
   document.getElementById('field-nombre').style.display = isReg ? 'block' : 'none';
   document.getElementById('auth-submit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
   document.getElementById('auth-msg').textContent = '';
+  document.getElementById('auth-pass').setAttribute('autocomplete', isReg ? 'new-password' : 'current-password');
 }
 
 async function loginWithGoogle() {
@@ -2689,11 +2691,13 @@ function toggleAuthMode() {
 // ---- MERCADO PAGO ----
 let mpCurrentProduct = null;
 
-function openMPModal(productName, productPrice, productId) {
+function openMPModal(productId) {
   if (!currentUser) { openAuthModal(); return; }
-  mpCurrentProduct = { name: productName, price: productPrice, id: productId };
-  document.getElementById('mp-product-name').textContent = productName;
-  document.getElementById('mp-product-price').textContent = '$' + productPrice + ' USD';
+  const p = window._productMeta?.get(productId);
+  if (!p) return;
+  mpCurrentProduct = { name: p.nombre, price: p.precio, id: productId };
+  document.getElementById('mp-product-name').textContent = p.nombre;
+  document.getElementById('mp-product-price').textContent = '$' + p.precio + ' USD';
   document.getElementById('mp-email').value = currentUser.email || '';
   document.getElementById('mp-nombre').value = currentProfile?.nombre || '';
   document.getElementById('mp-modal').style.display = 'flex';

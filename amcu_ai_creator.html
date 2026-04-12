@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMCU AI CREATOR | Offline Ultra Advanced</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #030303;
+      --card: #0a0a0a;
+      --border: #1a1a1a;
+      --red: #c0170f;
+      --red2: #e01a10;
+      --text: #ede9e4;
+      --muted: #666;
+    }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      overflow: hidden; /* Full app feeling */
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      height: 100vh;
+    }
+
+    /* Left Sidebar: Agent Creator */
+    .sidebar {
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
+    /* Scrollbar invisible para look limpo */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+    /* Custom Inputs */
+    .amcu-input, .amcu-textarea, .amcu-select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      border-radius: 4px;
+    }
+    .amcu-input:focus, .amcu-textarea:focus, .amcu-select:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 15px rgba(192,23,15,0.2);
+    }
+    .amcu-textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    /* Status Dot */
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .status-dot.online {
+      background: #3fff2a;
+      box-shadow: 0 0 10px rgba(63, 255, 42, 0.5);
+    }
+
+    /* Main Chat Area */
+    .chat-container {
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #0c0202 0%, #030303 100%);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .chat-header {
+      padding: 1.5rem 3rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10,10,10,0.8);
+      backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+
+    .messages-area {
+      flex: 1;
+      padding: 2rem 3rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Message Bubbles */
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+    }
+    .msg-wrapper.us {
+      align-self: flex-end;
+    }
+    .msg-wrapper.ai {
+      align-self: flex-start;
+    }
+
+    .msg-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .msg-wrapper.us .msg-badge { color: var(--muted); text-align: right; }
+    .msg-wrapper.ai .msg-badge { color: var(--red); }
+
+    .msg-box {
+      padding: 16px 24px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      line-height: 1.6;
+      border-radius: 8px;
+    }
+    .msg-wrapper.us .msg-box {
+      background: #111;
+      border-color: #222;
+    }
+    .msg-wrapper.ai .msg-box {
+      background: #080000;
+      border-color: rgba(192,23,15,0.3);
+      box-shadow: 0 4px 20px rgba(192,23,15,0.05);
+    }
+
+    /* Chat Input Component */
+    .input-area {
+      padding: 2rem 3rem;
+      background: rgba(10,10,10,0.9);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    
+    .input-box {
+      display: flex;
+      gap: 1rem;
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px;
+      transition: border-color 0.3s;
+    }
+    .input-box:focus-within {
+      border-color: var(--red);
+    }
+    .input-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: white;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      padding: 10px;
+      outline: none;
+    }
+    .btn-upload {
+      background: #111;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .btn-upload:hover { border-color: var(--red); color: white; }
+    .thumbnail-box {
+      width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); display: inline-block; margin-top: 8px; margin-right: 8px;
+    }
+
+    .btn-send {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 0 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-send:hover { background: var(--red2); }
+
+    /* Typing Indie */
+    .typing {
+      display: inline-flex;
+      gap: 5px;
+    }
+    .typing span {
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing span:nth-child(1) { animation-delay: -0.32s; }
+    .typing span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  
+  <!-- LEFT PANEL: AGENT CREATOR -->
+  <div class="sidebar">
+    <div class="flex items-center gap-3 mb-8 pb-8 border-b border-white/5">
+      <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+        <span class="text-black font-bold text-xl">A</span>
+      </div>
+      <div>
+        <h1 class="font-['Bebas_Neue'] text-3xl tracking-widest leading-none">AMCU <span class="text-red-600">AI</span></h1>
+        <p class="font-['DM_Mono'] text-[9px] text-gray-500 tracking-[0.3em] uppercase">Private Offline Creator</p>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="flex items-center gap-4 mb-10 p-4 bg-black border border-white/10 rounded">
+      <div class="status-dot" id="server-status"></div>
+      <div class="font-['DM_Mono'] text-xs text-gray-400">
+        <div id="server-text" class="text-white">Desconectado</div>
+        <div class="text-[9px] uppercase tracking-widest mt-1">Local API (Port 3050)</div>
+      </div>
+    </div>
+
+    <h2 class="font-['Bebas_Neue'] text-2xl tracking-widest mb-6 text-white/90">CONFIGURACIÓN DEL AGENTE</h2>
+
+    <div class="space-y-6 flex-1">
+      <!-- Agent Name -->
+      <div>
+        <label class="block text-[10px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">Nombre del Agente</label>
+        <input type="text" id="agent-name" class="amcu-input" value="AMCU Alpha Bot">
+      </div>
+
+      <!-- Engine Model -->
+      <div>
+        <label class="block text-[10px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">Motor de Inteligencia (Local)</label>
+        <select id="model-select" class="amcu-select">
+          <option value="">Cargando modelos...</option>
+        </select>
+        <p class="text-[9px] text-gray-600 font-['DM_Mono'] mt-2 inline-block">Requiere Ollama corriendo en tu PC</p>
+      </div>
+
+      <!-- System Prompt -->
+      <div>
+        <label class="block text-[10px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">System Prompt (El Cerebro)</label>
+        <textarea id="system-prompt" class="amcu-textarea" placeholder="Escribe aquí las instrucciones de la IA, su personalidad, y secretos...">Eres AMCU Alpha, la IA privada del dueño de AMCU STORE. Eres ultra inteligente, directo, y tienes un tono sarcástico pero muy técnico. Ayudas a organizar campañas, crear textos de canciones, y estructurar arquitecturas musicales. Siempre hablas con estilo cyberpunk y técnico.</textarea>
+      </div>
+
+      <!-- Identidad Visual -->
+      <div>
+        <label class="block text-[10px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">Memoria Visual (Tus Rasgos)</label>
+        <div class="flex items-center justify-between bg-[#111] border border-[#333] rounded px-3 py-2">
+          <button onclick="document.getElementById('sys-upload').click()" class="font-['DM_Mono'] text-[10px] text-gray-400 hover:text-white uppercase tracking-widest">
+            📎 CARGAR RETRATOS
+          </button>
+        </div>
+        <input type="file" id="sys-upload" accept="image/*" multiple class="hidden">
+        <div id="sys-preview" class="flex flex-wrap gap-2 mt-2"></div>
+      </div>
+
+      <button onclick="saveAgent()" class="w-full py-3 border border-red-600/50 hover:bg-black transition-all rounded font-['DM_Mono'] text-xs tracking-[0.2em] uppercase text-red-600 mt-4">
+        Guardar Configuración
+      </button>
+
+      <!-- CLONE STUDIO (Híbrido) -->
+      <div class="mt-6 pt-6 border-t border-white/10 pb-4">
+        <h2 class="font-['Bebas_Neue'] text-xl tracking-widest mb-4 text-white/90">⚡ CLONE STUDIO (Híbrido)</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-[10px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">API KEY (Replicate/Fal.ai)</label>
+            <input type="password" id="cloud-api-key" class="amcu-input" placeholder="Ej: r8_xxx...">
+          </div>
+          
+          <div class="flex gap-2">
+             <div class="flex-1 bg-[#111] border border-[#333] rounded p-2 text-center relative hover:border-red-600/50 transition">
+               <span class="block text-[9px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">Rostro</span>
+               <button onclick="document.getElementById('clone-face-upload').click()" class="text-xs font-bold text-white/70 hover:text-white transition">📸 CARGAR</button>
+               <input type="file" id="clone-face-upload" accept="image/*" class="hidden">
+               <div id="clone-face-preview" class="mt-2 text-center flex justify-center"></div>
+             </div>
+             <div class="flex-1 bg-[#111] border border-[#333] rounded p-2 text-center relative hover:border-red-600/50 transition">
+               <span class="block text-[9px] font-['DM_Mono'] text-gray-500 uppercase tracking-widest mb-2">Cuerpo/Fondo</span>
+               <button onclick="document.getElementById('clone-env-upload').click()" class="text-xs font-bold text-white/70 hover:text-white transition">🏞️ CARGAR</button>
+               <input type="file" id="clone-env-upload" accept="image/*" class="hidden">
+               <div id="clone-env-preview" class="mt-2 text-center flex justify-center"></div>
+             </div>
+          </div>
+          
+          <button onclick="executeClone()" class="w-full py-2 bg-[#111] border border-gray-600 hover:border-green-500 transition-all rounded font-['DM_Mono'] text-xs tracking-[0.2em] uppercase text-white shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+            🪄 FUSIONAR FOTOS (NUBE)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: TERMINAL CHAT -->
+  <div class="chat-container">
+    
+    <div class="chat-header">
+      <div>
+        <h2 class="font-['Outfit'] font-bold text-2xl tracking-tight" id="header-agent-name">AMCU Alpha Bot</h2>
+        <p class="font-['DM_Mono'] text-[10px] text-red-600 uppercase tracking-[0.2em]">Modo Desarrollo Activo</p>
+      </div>
+      <button onclick="clearChat()" class="text-xs font-['DM_Mono'] text-gray-500 hover:text-white uppercase tracking-widest">
+        [ Limpiar Consola ]
+      </button>
+    </div>
+
+    <div class="messages-area" id="chat-history">
+      <!-- Init message -->
+      <div class="msg-wrapper ai">
+        <div class="msg-badge" id="init-bot-name">AMCU Alpha Bot</div>
+        <div class="msg-box text-gray-300">
+          Sistemas inicializados en entorno local estricto. Soy tu IA privada. Puedes configurar mi cerebro en el panel izquierdo. ¿Qué construimos hoy?
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Box -->
+    <div class="input-area">
+      <div id="chat-image-preview" class="flex gap-2 max-w-[80%] mb-3 empty:hidden overflow-x-auto pb-1"></div>
+      <div class="input-box">
+        <button onclick="document.getElementById('chat-upload').click()" class="btn-upload" title="Adjuntar Imagen">📎</button>
+        <input type="file" id="chat-upload" accept="image/*" multiple class="hidden">
+        <input type="text" id="chat-input" placeholder="Comando visual o texto..." autocomplete="off">
+        <button id="send-btn" class="btn-send">Ejecutar</button>
+      </div>
+      <p class="text-[9px] font-['DM_Mono'] text-center text-gray-600 uppercase mt-4 tracking-[0.2em]">Soporte LLaVA: Capacidad de visión multimodal activada</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let chatContext = [];
+  const API_URL = 'http://127.0.0.1:3050/api';
+
+  // Sanitización OWASP: nunca insertar input del usuario sin escapar
+  function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = String(t);
+    return d.innerHTML;
+  }
+  
+  // Elements
+  const statusDot = document.getElementById('server-status');
+  const serverText = document.getElementById('server-text');
+  const modelSelect = document.getElementById('model-select');
+  const agentNameInput = document.getElementById('agent-name');
+  const headerAgentName = document.getElementById('header-agent-name');
+  const initBotName = document.getElementById('init-bot-name');
+  
+  const chatHistory = document.getElementById('chat-history');
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+
+  // Image Upload Variables
+  let storedSystemImages = [];
+  let currentChatImages = [];
+
+  // Helper to downscale image and convert to Base64 (compressing saves RAM locally)
+  function compressImageToBase64(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 512;
+        let p = 1.0;
+        if(img.width > MAX_SIZE || img.height > MAX_SIZE){
+            p = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height);
+        }
+        canvas.width = img.width * p;
+        canvas.height = img.height * p;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Base64 limpia para Ollama y con prefijo para el DOM
+        const b64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        callback(b64, canvas.toDataURL('image/jpeg', 0.8));
+      }
+      img.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+
+  // Event Listeners for file uploads
+  document.getElementById('sys-upload').addEventListener('change', (e) => {
+    storedSystemImages = []; // Si se suben nuevas, reiniciamos el contexto base
+    document.getElementById('sys-preview').innerHTML = '';
+    Array.from(e.target.files).forEach(file => {
+      compressImageToBase64(file, (b64, src) => {
+        storedSystemImages.push(b64);
+        const img = document.createElement('img');
+        img.className = 'thumbnail-box border border-red-600/50 shadow-[0_0_10px_rgba(192,23,15,0.3)] mt-2 hover:opacity-80 transition cursor-pointer'; 
+        img.src = src;
+        img.title = "Doble clic para borrar"
+        img.ondblclick = () => { img.remove(); storedSystemImages = storedSystemImages.filter(i => i !== b64); };
+        document.getElementById('sys-preview').appendChild(img);
+      });
+    });
+  });
+
+  document.getElementById('chat-upload').addEventListener('change', (e) => {
+    Array.from(e.target.files).forEach(file => {
+      compressImageToBase64(file, (b64, src) => {
+        currentChatImages.push(b64);
+        const img = document.createElement('img');
+        img.className = 'thumbnail-box cursor-pointer hover:border-red-600 transition-colors tooltip flex-shrink-0'; 
+        img.title = 'Click para eliminar del envío';
+        img.src = src;
+        img.onclick = () => { img.remove(); currentChatImages = currentChatImages.filter(i => i !== b64); };
+        document.getElementById('chat-image-preview').appendChild(img);
+      });
+    });
+  });
+
+  // Initialization
+  async function init() {
+    // Ping API models to check server status
+    try {
+      const res = await fetch(`${API_URL}/models`);
+      if (res.ok) {
+        statusDot.classList.add('online');
+        serverText.textContent = "Servidor Activo";
+        serverText.classList.replace('text-gray-400', 'text-green-400');
+        
+        const data = await res.json();
+        if(data.success && data.models.length > 0) {
+          modelSelect.innerHTML = data.models.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        } else {
+          modelSelect.innerHTML = `<option value="">No se detectan modelos. Instala Llama3 en Ollama.</option>`;
+        }
+      }
+    } catch {
+      modelSelect.innerHTML = `<option value="">⚠️ Backend Local (Port 3050) no responde</option>`;
+    }
+  }
+
+  // Update Visuals when saving Agent
+  window.saveAgent = function() {
+    const name = agentNameInput.value || "AMCU AI";
+    headerAgentName.textContent = name;
+    initBotName.textContent = name;
+    // Clear chat history as we have new system prompt
+    clearChat();
+    appendMessage(name, "Identidad y parámetros reiniciados. Cerebro actualizado. Listo para recibir comandos.", 'ai');
+  };
+
+  window.clearChat = function() {
+    chatHistory.innerHTML = '';
+    chatContext = []; // Reset context
+  };
+
+  function appendMessage(sender, text, role) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg-wrapper ${role === 'ai' ? 'ai' : 'us'}`;
+
+    // Sanitizar antes de insertar en DOM (OWASP A03 - XSS Prevention)
+    const safeSender = escapeHtml(sender);
+    const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
+
+    wrapper.innerHTML = `
+      <div class="msg-badge">${safeSender}</div>
+      <div class="msg-box text-gray-300">${formattedText}</div>
+    `;
+
+    chatHistory.appendChild(wrapper);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    return wrapper;
+  }
+
+  function appendTyping(sender) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg-wrapper ai`;
+    wrapper.id = 'typing-indicator';
+    wrapper.innerHTML = `
+      <div class="msg-badge">${sender}</div>
+      <div class="msg-box text-gray-300">
+        <div class="typing"><span></span><span></span><span></span></div>
+      </div>
+    `;
+    chatHistory.appendChild(wrapper);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  function removeTyping() {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+  }
+
+  async function sendMessage() {
+    const text = chatInput.value.trim();
+    
+    // Si no hay texto ni imagen, ignora envío
+    if (!text && currentChatImages.length === 0) return;
+    
+    const curAgentName = agentNameInput.value || 'AI';
+    const curModel = modelSelect.value;
+    const curSystemPrompt = document.getElementById('system-prompt').value;
+    
+    let displayHtml = text;
+    if (currentChatImages.length > 0) {
+       displayHtml += '<br><span style="color:#e01a10; font-size:10px; font-family:\'DM Mono\'">[🖼️ Adjunto Visual Incluido]</span>';
+    }
+
+    // Add User message a UI
+    appendMessage("Admin (Tú)", displayHtml, 'us');
+    
+    // Objeto en formato Ollama Messages
+    const msgObj = { role: 'user', content: text || '¿Puedes describir/analizar la imagen?' };
+    if (currentChatImages.length > 0) {
+      msgObj.images = [...currentChatImages];
+    }
+    chatContext.push(msgObj);
+    
+    // Limpiar Input y UI Base
+    chatInput.value = '';
+    currentChatImages = [];
+    document.getElementById('chat-image-preview').innerHTML = '';
+    document.getElementById('chat-upload').value = '';
+    
+    // Add Loader
+    appendTyping(curAgentName);
+
+    try {
+      const res = await fetch(`${API_URL}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: curModel,
+          system: curSystemPrompt,
+          systemImages: storedSystemImages,
+          messages: chatContext
+        })
+      });
+
+      const data = await res.json();
+      removeTyping();
+
+      if (data.success) {
+        appendMessage(curAgentName, data.response, 'ai');
+        chatContext.push({ role: 'assistant', content: data.response });
+      } else {
+        appendMessage("ERROR DE SISTEMA", data.error || "No hubo respuesta del Backend", 'ai');
+      }
+
+    } catch (err) {
+      removeTyping();
+      appendMessage("ERROR DE SISTEMA", "El backend local no está ejecutándose. Inicia Node.js.", 'ai');
+    }
+  }
+
+  // Events
+  sendBtn.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // --- CLONE STUDIO LOGIC ---
+  let cloneFaceB64 = null;
+  let cloneEnvB64 = null;
+
+  document.getElementById('clone-face-upload').addEventListener('change', (e) => {
+    if(!e.target.files[0]) return;
+    compressImageToBase64(e.target.files[0], (b64, src) => {
+      cloneFaceB64 = b64;
+      document.getElementById('clone-face-preview').innerHTML = `<img src="${src}" class="w-12 h-12 object-cover rounded border border-gray-500">`;
+    });
+  });
+
+  document.getElementById('clone-env-upload').addEventListener('change', (e) => {
+    if(!e.target.files[0]) return;
+    compressImageToBase64(e.target.files[0], (b64, src) => {
+      cloneEnvB64 = b64;
+      document.getElementById('clone-env-preview').innerHTML = `<img src="${src}" class="w-12 h-12 object-cover rounded border border-gray-500">`;
+    });
+  });
+
+  async function executeClone() {
+    const apiKey = document.getElementById('cloud-api-key').value.trim();
+    if (!apiKey) return alert("Necesitas ingresar una API Key válida (de Replicate o Fal.ai) para acceder a la Nube.");
+    if (!cloneFaceB64 || !cloneEnvB64) return alert("Faltan imágenes: Carga tu Rostro y la foto del Cuerpo/Fondo.");
+
+    const curAgentName = agentNameInput.value || 'AI';
+    appendMessage("Admin (Tú)", "🪄 He solicitado una Clonación Visual usando API Externa. Iniciando protocolo hiperrápido...", 'us');
+    appendTyping("AMCU CLONE ENGINE");
+
+    try {
+      const res = await fetch(`${API_URL}/clone-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey,
+          faceImage: cloneFaceB64,
+          referenceImage: cloneEnvB64
+        })
+      });
+      const data = await res.json();
+      removeTyping();
+
+      if (data.success) {
+         appendMessage(curAgentName, `✅ **Petición en camino a la Nube.** \n\n*Nota del sistema:* La conexión HTTP se logró. Replicate procesará la solicitud. Su id de respuesta cruda es: \n\`\`\`json\n${JSON.stringify(data.data || {})}\n\`\`\` \n(Asegúrate de que tu Token API sea válido para ver resultados).`, 'ai');
+      } else {
+         appendMessage(curAgentName, `❌ Error en la Nube Replicate/Fal: ${data.error}`, 'ai');
+      }
+    } catch (e) {
+      removeTyping();
+      appendMessage("ERROR DE SISTEMA", "El puente Backend-Nube no está activo. Error: " + e.message, 'ai');
+    }
+  }
+
+  // Start
+  init();
+
+</script>
+
+</body>
+</html>

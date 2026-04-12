@@ -14,7 +14,9 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "Content-Security-Policy", "value": "upgrade-insecure-requests; default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://anvkreqmsbzsfaepudlx.supabase.co wss://anvkreqmsbzsfaepudlx.supabase.co https://api.mercadopago.com https://accounts.google.com; img-src 'self' data: blob: https://anvkreqmsbzsfaepudlx.supabase.co https://lh3.googleusercontent.com https://dl.dropboxusercontent.com; media-src 'self' blob: https://anvkreqmsbzsfaepudlx.supabase.co https://dl.dropboxusercontent.com; frame-src https://open.spotify.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(self)" }
       ]
     }
   ]
