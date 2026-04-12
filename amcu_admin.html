@@ -183,11 +183,11 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <p class="login-sub">// Admin Panel</p>
     <div class="field">
       <label>Email</label>
-      <input type="email" id="l-email" placeholder="amcuoficial@gmail.com" onkeydown="if(event.key==='Enter')login()">
+      <input type="email" id="l-email" name="email" autocomplete="email" placeholder="amcuoficial@gmail.com" onkeydown="if(event.key==='Enter')login()">
     </div>
     <div class="field">
       <label>Contraseña</label>
-      <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      <input type="password" id="l-pass" name="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
     </div>
     <button class="btn-red" id="l-btn" onclick="login()">Entrar</button>
     <p id="login-msg"></p>
@@ -405,6 +405,7 @@ let currentUser = null;
 let selectedFile = null;
 
 // ---- INIT ----
+// 1) getSession(): restaura sesión desde localStorage al refrescar la página
 window.addEventListener('load', async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
@@ -415,6 +416,22 @@ window.addEventListener('load', async () => {
     } else {
       showMsg('No tenés permisos de admin', 'error');
     }
+  }
+});
+
+// 2) onAuthStateChange: listener reactivo para token refresh, expiración y logout externo
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    // Limpia estado y vuelve al login (ej: sesión expirada o signOut desde otra pestaña)
+    currentUser = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-msg').textContent = '';
+    document.getElementById('l-email').value = '';
+    document.getElementById('l-pass').value = '';
+  } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+    // Actualiza el usuario local cuando Supabase renueva el token automáticamente
+    currentUser = session.user;
   }
 });
 
@@ -445,9 +462,14 @@ async function login() {
 
 async function logout() {
   await sb.auth.signOut();
+  // onAuthStateChange dispara SIGNED_OUT y limpia la UI automáticamente.
+  // Las líneas siguientes son fallback por si el listener tarda en disparar.
+  currentUser = null;
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
-  currentUser = null;
+  document.getElementById('login-msg').textContent = '';
+  document.getElementById('l-email').value = '';
+  document.getElementById('l-pass').value = '';
 }
 
 function showDashboard() {
