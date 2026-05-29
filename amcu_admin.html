@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="/amcu-logo.PNG">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -217,6 +218,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
       <div class="nav-item" onclick="showPage('products')"><div class="nav-dot"></div>Productos</div>
       <div class="nav-item" onclick="showPage('orders')"><div class="nav-dot"></div>Órdenes</div>
       <div class="nav-item" onclick="showPage('members')"><div class="nav-dot"></div>Miembros</div>
+      <div class="nav-item" onclick="showPage('promos')"><div class="nav-dot"></div>Promos</div>
     </div>
 
     <!-- MAIN -->
@@ -388,7 +390,100 @@ tr:hover td { background: rgba(255,255,255,.02); }
             <tbody id="members-tbody"></tbody>
           </table>
         </div>
+        <!-- PROMOS -->
+      <div class="page" id="page-promos">
+        <div class="page-title">Promo Delivery</div>
+        <div class="page-sub">// Envío de tracks a DJs y feedback</div>
+        
+        <div class="stats-row">
+          <div class="stat-card"><div class="num" id="stat-djs">0</div><div class="label">DJs en lista</div></div>
+          <div class="stat-card"><div class="num green" id="stat-promo-sent">0</div><div class="label">Envíos totales</div></div>
+          <div class="stat-card"><div class="num" id="stat-promo-feedback">0</div><div class="label">Feedback recibido</div></div>
+          <div class="stat-card"><div class="num red" id="stat-promo-rating">0.0</div><div class="label">Rating promedio</div></div>
+        </div>
+
+        <div class="block-grid">
+          <div class="block-card" style="grid-column: span 2;">
+            <h3>Subir Nuevo WAV y Enviar Promo Automáticamente</h3>
+            <div class="form-grid" style="margin-top:12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label>Nombre del Track</label>
+                <input class="inp full" type="text" id="promo-upload-name" placeholder="Ej: Dark Energy (Promo Mix)">
+              </div>
+              <div class="form-group">
+                <label>Asunto del Email</label>
+                <input type="text" id="promo-upload-subject" class="inp full" placeholder="NUEVO PROMO: Track Name — AMCU">
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Descripción</label>
+                <input class="inp full" type="text" id="promo-upload-desc" placeholder="Descripción corta del promo...">
+              </div>
+            </div>
+            <div class="upload-zone" id="promo-upload-zone" onclick="document.getElementById('promo-upload-file').click()" style="border: 1px dashed var(--muted2); padding: 20px; text-align: center; margin-top: 12px; cursor: pointer;">
+              <div class="big">↑</div>
+              <p>Click o arrastrá tu archivo WAV acá</p>
+              <p id="promo-upload-filename" style="color:var(--white);margin-top:8px;font-weight:500;"></p>
+              <div class="progress-bar"><div class="progress-fill" id="promo-upload-progress-fill"></div></div>
+            </div>
+            <input type="file" id="promo-upload-file" accept=".wav,.mp3,.aiff" style="display:none" onchange="onPromoFileSelect(this)">
+            <button class="btn-sm red" id="btn-upload-send-promo" onclick="uploadAndSendPromo()" style="margin-top:12px;width:100%;padding:10px;">
+              Subir y Enviar Promo a DJs Seleccionados
+            </button>
+          </div>
+
+          <div class="block-card">
+            <h3>1. Seleccionar Track Existente</h3>
+            <select id="promo-track-select" class="inp full" style="margin-bottom:12px;">
+              <option value="">Cargando tracks...</option>
+            </select>
+            <div id="promo-track-preview" style="font-size:11px;color:var(--muted2);"></div>
+          </div>
+          
+          <div class="block-card">
+            <h3>2. Enviar Track Existente</h3>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Asunto del Email</label>
+              <input type="text" id="promo-subject" class="inp full" placeholder="NUEVO PROMO: Track Title — AMCU">
+            </div>
+            <button class="btn-sm red" id="btn-send-promos" onclick="sendPromosBatch()" style="width:100%;">
+              Enviar Promos a los Seleccionados
+            </button>
+            <div id="send-progress-container" style="display:none;margin-top:12px;">
+              <div class="progress-bar"><div class="progress-fill" id="send-progress-fill"></div></div>
+              <p id="send-status" style="font-size:10px;font-family:var(--font-mono);margin-top:4px;text-align:center;"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-header">
+            <span class="table-title">Lista de DJs</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <input type="file" id="dj-excel-file" accept=".xlsx,.xls" style="display:none;" onchange="importDJsExcel(this)">
+              <button class="btn-sm outline" onclick="document.getElementById('dj-excel-file').click()">Importar Excel</button>
+              <button class="btn-sm outline" onclick="loadDJs()">Actualizar</button>
+              <button class="btn-sm red" onclick="toggleSelectAllDJs()">Seleccionar Todos</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px;">Sel.</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>País</th>
+                <th>Feedback</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="djs-tbody">
+              <tr><td colspan="6" class="empty">Cargando DJs...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+    </div>
 
     </div>
   </div>
@@ -487,7 +582,7 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   event.currentTarget.classList.add('active');
-  const loaders = { bookings: loadBookings, calendar: loadBlocked, tracks: loadTracks, products: loadProducts, orders: loadOrders, members: loadMembers, overview: loadOverview };
+  const loaders = { bookings: loadBookings, calendar: loadBlocked, tracks: loadTracks, products: loadProducts, orders: loadOrders, members: loadMembers, overview: loadOverview, promos: loadPromos };
   if (loaders[name]) loaders[name]();
 }
 
@@ -778,6 +873,331 @@ async function makeAdmin(id) {
   if (error) { toast(error.message, 'error'); return; }
   toast('Admin asignado');
   loadMembers();
+}
+
+// ---- PROMOS ----
+async function loadPromos() {
+  loadDJs();
+  loadPromoTracks();
+  loadPromoStats();
+}
+
+async function loadDJs() {
+  const { data, error } = await sb.from('promos_djs').select('*, promos_feedback(rating, comentario)').order('nombre');
+  if (error) { toast(error.message, 'error'); return; }
+  const tbody = document.getElementById('djs-tbody');
+  if (!data?.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay DJs en la lista. Importá el Excel primero.</td></tr>'; return; }
+  
+  tbody.innerHTML = data.map(dj => {
+    const feedback = dj.promos_feedback?.[0];
+    const hasFeedback = !!feedback;
+    return `
+      <tr>
+        <td><input type="checkbox" class="dj-check" value="${dj.id}" data-email="${dj.email}" data-nombre="${dj.nombre}"></td>
+        <td><strong>${dj.nombre || 'DJ'}</strong></td>
+        <td style="color:var(--muted2);font-size:12px;">${dj.email}</td>
+        <td>${dj.pais || '—'}</td>
+        <td>
+          ${hasFeedback ? 
+            `<span class="badge confirmada">${feedback.rating} ★</span>` : 
+            `<span class="badge pendiente">Pendiente</span>`}
+        </td>
+        <td><button class="act-btn delete" onclick="deleteDJ('${dj.id}')">Eliminar</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function loadPromoTracks() {
+  const { data } = await sb.from('products').select('id, nombre, archivo_url').eq('tipo', 'track_unreleased').eq('activo', true);
+  const select = document.getElementById('promo-track-select');
+  if (!data?.length) { select.innerHTML = '<option value="">Sin unreleased tracks</option>'; return; }
+  
+  select.innerHTML = '<option value="">— Seleccionar Track —</option>' + 
+    data.map(p => `<option value="${p.id}" data-url="${p.archivo_url}">${p.nombre}</option>`).join('');
+  
+  select.onchange = () => {
+    const opt = select.selectedOptions[0];
+    if (!opt) return;
+    document.getElementById('promo-track-preview').textContent = opt.dataset.url ? '✓ Link WAV listo' : '⚠ Sin link WAV';
+    document.getElementById('promo-subject').value = `NUEVO PROMO: ${opt.text} — AMCU`;
+  };
+}
+
+async function loadPromoStats() {
+  const [djs, feedback] = await Promise.all([
+    sb.from('promos_djs').select('id', { count: 'exact' }),
+    sb.from('promos_feedback').select('rating')
+  ]);
+  
+  const totalDJs = djs.count || 0;
+  const totalFeedback = feedback.data?.length || 0;
+  const avgRating = totalFeedback > 0 ? 
+    (feedback.data.reduce((s, h) => s + h.rating, 0) / totalFeedback).toFixed(1) : '0.0';
+    
+  document.getElementById('stat-djs').textContent = totalDJs;
+  document.getElementById('stat-promo-feedback').textContent = totalFeedback;
+  document.getElementById('stat-promo-rating').textContent = avgRating;
+}
+
+function toggleSelectAllDJs() {
+  const checks = document.querySelectorAll('.dj-check');
+  const anyUnchecked = Array.from(checks).some(c => !c.checked);
+  checks.forEach(c => c.checked = anyUnchecked);
+}
+
+async function sendPromosBatch() {
+  const trackId = document.getElementById('promo-track-select').value;
+  const subject = document.getElementById('promo-subject').value.trim();
+  const selected = Array.from(document.querySelectorAll('.dj-check:checked')).map(c => ({
+    id: c.value,
+    email: c.dataset.email,
+    nombre: c.dataset.nombre
+  }));
+
+  if (!trackId) return toast('Seleccioná un track', 'error');
+  if (selected.length === 0) return toast('Seleccioná al menos un DJ', 'error');
+  if (!confirm(`¿Enviar promos a ${selected.length} DJs?`)) return;
+
+  const btn = document.getElementById('btn-send-promos');
+  const progContainer = document.getElementById('send-progress-container');
+  const progFill = document.getElementById('send-progress-fill');
+  const status = document.getElementById('send-status');
+
+  btn.disabled = true;
+  progContainer.style.display = 'block';
+  
+  let sentCount = 0;
+  
+  for (const dj of selected) {
+    status.textContent = `Enviando a ${dj.email}... (${sentCount + 1}/${selected.length})`;
+    
+    try {
+      const res = await fetch('/api/send-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          djId: dj.id,
+          djEmail: dj.email,
+          djNombre: dj.nombre,
+          trackId: trackId,
+          subject: subject
+        })
+      });
+      
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Error al enviar');
+      sentCount++;
+    } catch (e) {
+      console.error('Failed to send to', dj.email, e);
+    }
+    
+    progFill.style.width = `${((sentCount) / selected.length) * 100}%`;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  toast(`Proceso finalizado: ${sentCount} enviados`, 'success');
+  btn.disabled = false;
+  setTimeout(() => progContainer.style.display = 'none', 3000);
+  loadPromoStats();
+}
+
+async function deleteDJ(id) {
+  if (!confirm('¿Eliminar DJ de la lista?')) return;
+  const { error } = await sb.from('promos_djs').delete().eq('id', id);
+  if (error) return toast(error.message, 'error');
+  toast('DJ eliminado');
+  loadDJs();
+  loadPromoStats();
+}
+
+// ---- NUEVAS FUNCIONES DE PROMOS ----
+let selectedPromoFile = null;
+
+function onPromoFileSelect(input) {
+  selectedPromoFile = input.files[0];
+  if (selectedPromoFile) {
+    document.getElementById('promo-upload-filename').textContent = selectedPromoFile.name + ' (' + (selectedPromoFile.size/1024/1024).toFixed(1) + ' MB)';
+    const trackName = selectedPromoFile.name.replace(/\.[^/.]+$/, "");
+    if (!document.getElementById('promo-upload-name').value) {
+      document.getElementById('promo-upload-name').value = trackName;
+    }
+    document.getElementById('promo-upload-subject').value = `NUEVO PROMO: ${trackName} — AMCU`;
+  }
+}
+
+// Configurar arrastrar y soltar para la zona de promo
+window.addEventListener('load', () => {
+  const pZone = document.getElementById('promo-upload-zone');
+  if (pZone) {
+    pZone.addEventListener('dragover', e => { e.preventDefault(); pZone.classList.add('dragover'); });
+    pZone.addEventListener('dragleave', () => pZone.classList.remove('dragover'));
+    pZone.addEventListener('drop', e => {
+      e.preventDefault(); pZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        selectedPromoFile = e.dataTransfer.files[0];
+        document.getElementById('promo-upload-filename').textContent = selectedPromoFile.name + ' (' + (selectedPromoFile.size/1024/1024).toFixed(1) + ' MB)';
+        const trackName = selectedPromoFile.name.replace(/\.[^/.]+$/, "");
+        if (!document.getElementById('promo-upload-name').value) {
+          document.getElementById('promo-upload-name').value = trackName;
+        }
+        document.getElementById('promo-upload-subject').value = `NUEVO PROMO: ${trackName} — AMCU`;
+      }
+    });
+  }
+});
+
+async function uploadAndSendPromo() {
+  const nombre = document.getElementById('promo-upload-name').value.trim();
+  const subject = document.getElementById('promo-upload-subject').value.trim();
+  const desc = document.getElementById('promo-upload-desc').value.trim();
+  const selected = Array.from(document.querySelectorAll('.dj-check:checked')).map(c => ({
+    id: c.value,
+    email: c.dataset.email,
+    nombre: c.dataset.nombre
+  }));
+
+  if (!nombre) { toast('Poné el nombre del track', 'error'); return; }
+  if (!selectedPromoFile) { toast('Seleccioná un archivo WAV', 'error'); return; }
+  if (selected.length === 0) { toast('Seleccioná al menos un DJ de la lista', 'error'); return; }
+  if (!confirm(`¿Subir track y enviar como promo a ${selected.length} DJs?`)) return;
+
+  const btn = document.getElementById('btn-upload-send-promo');
+  const fill = document.getElementById('promo-upload-progress-fill');
+  btn.disabled = true;
+  fill.style.width = '15%';
+
+  // Subir archivo a Supabase Storage
+  const fileName = `tracks/${Date.now()}_${selectedPromoFile.name.replace(/\s/g,'_')}`;
+  const { data: uploadData, error: uploadError } = await sb.storage
+    .from('amcu-files')
+    .upload(fileName, selectedPromoFile, { contentType: 'audio/wav', upsert: false });
+
+  if (uploadError) {
+    toast('Error subiendo archivo: ' + uploadError.message, 'error');
+    btn.disabled = false;
+    fill.style.width = '0%';
+    return;
+  }
+
+  fill.style.width = '50%';
+
+  // Obtener URL pública
+  const { data: urlData } = sb.storage.from('amcu-files').getPublicUrl(fileName);
+  const archivo_url = urlData?.publicUrl;
+
+  fill.style.width = '70%';
+
+  // Guardar en tabla products
+  const { data: productData, error: dbError } = await sb.from('products').insert({
+    nombre, tipo: 'track_unreleased',
+    descripcion: desc || 'Promo Track exclusivo',
+    precio: 5,
+    archivo_url,
+    activo: true
+  }).select('id').single();
+
+  if (dbError) {
+    toast('Error guardando en BD: ' + dbError.message, 'error');
+    btn.disabled = false;
+    fill.style.width = '0%';
+    return;
+  }
+
+  const trackId = productData.id;
+  fill.style.width = '85%';
+
+  // Enviar batch a los DJs
+  let sentCount = 0;
+  for (const dj of selected) {
+    try {
+      const res = await fetch('/api/send-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          djId: dj.id,
+          djEmail: dj.email,
+          djNombre: dj.nombre,
+          trackId: trackId,
+          subject: subject
+        })
+      });
+      if (res.ok) sentCount++;
+      
+      // Actualizar el progreso proporcionalmente
+      const progressPercent = 85 + Math.floor((sentCount / selected.length) * 15);
+      fill.style.width = `${progressPercent}%`;
+    } catch (e) {
+      console.error('Error al enviar promo a', dj.email, e);
+    }
+    // Pequeño retardo entre envíos para evitar rate limits
+    await new Promise(r => setTimeout(r, 800));
+  }
+
+  fill.style.width = '100%';
+  toast(`¡Listo! Subido y enviado a ${sentCount} DJs`, 'success');
+  
+  // Limpiar campos
+  document.getElementById('promo-upload-name').value = '';
+  document.getElementById('promo-upload-subject').value = '';
+  document.getElementById('promo-upload-desc').value = '';
+  document.getElementById('promo-upload-filename').textContent = '';
+  selectedPromoFile = null;
+  setTimeout(() => fill.style.width = '0%', 1500);
+
+  btn.disabled = false;
+  loadPromoStats();
+  loadPromoTracks();
+  loadDJs();
+  setTimeout(() => window.location.reload(), 1500);
+}
+
+async function importDJsExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  toast('Leyendo archivo Excel...');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+      
+      const formattedDJs = json.map(row => {
+        let email = row.Email || row.email || row['E-mail'] || row['Correo'] || row['correo'] || row.CORREO;
+        let nombre = row.Nombre || row.nombre || row.Name || row.name || row.DJ || row.dj;
+        let pais = row.Pais || row.pais || row.Country || row.country || row.PAIS;
+
+        return {
+          email: email ? email.toString().trim() : null,
+          nombre: nombre ? nombre.toString().trim() : 'DJ',
+          pais: pais ? pais.toString().trim() : null
+        };
+      }).filter(dj => dj.email && dj.email.includes('@'));
+
+      if (formattedDJs.length === 0) {
+        toast('No se encontraron DJs válidos con email', 'error');
+        return;
+      }
+
+      toast(`Subiendo ${formattedDJs.length} DJs a la base de datos...`);
+      const { error } = await sb.from('promos_djs').upsert(formattedDJs, { onConflict: 'email' });
+      
+      if (error) throw error;
+      
+      toast(`✅ Importados ${formattedDJs.length} DJs exitosamente.`, 'success');
+      loadDJs();
+      loadPromoStats();
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      console.error(err);
+      toast('Error al importar Excel: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = ''; // reset file input
 }
 </script>
 </body>
