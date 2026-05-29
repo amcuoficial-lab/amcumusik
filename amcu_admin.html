@@ -182,7 +182,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">AM<span>C</span>U</div>
+    <div class="login-logo"><img src="/amcu-logo.PNG" style="max-height: 60px; object-fit: contain;"></div>
     <p class="login-sub">// Admin Panel</p>
     <div class="field">
       <label>Email</label>
@@ -201,7 +201,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
 <div id="dashboard">
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-logo">AM<span>C</span>U</div>
+    <div class="topbar-logo" style="display:flex; align-items:center;"><img src="/amcu-logo.PNG" style="height:32px; object-fit:contain;"></div>
     <div class="topbar-right">
       <span class="topbar-user" id="topbar-email"></span>
       <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
@@ -492,6 +492,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
 <div id="toast"></div>
 
 <script>
+window.onerror = function(msg, url, line, col, error) {
+  alert("Error de JS: " + msg + "\nLínea: " + line + "\nArchivo: " + url);
+};
 const SB_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
 const sb = supabase.createClient(SB_URL, SB_KEY, {

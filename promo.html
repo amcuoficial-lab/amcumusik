@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMCU — Private Promo Link</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --black: #050505;
+  --white: #ede9e4;
+  --red: #e01a10;
+  --muted: #666;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background: var(--black); color: var(--white); font-family: var(--font-body); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+
+.promo-container { max-width: 500px; width: 100%; text-align: center; opacity: 0; transform: translateY(20px); transition: all .8s ease-out; }
+.promo-container.show { opacity: 1; transform: translateY(0); }
+
+.logo { font-family: var(--font-display); font-size: 32px; letter-spacing: 4px; margin-bottom: 40px; }
+.logo span { color: var(--red); }
+
+.art-container { width: 240px; height: 240px; background: #111; margin: 0 auto 30px; position: relative; border: 1px solid #222; overflow: hidden; }
+.art-container img { width: 100%; height: 100%; object-fit: cover; }
+.art-overlay { position: absolute; inset: 0; background: linear-gradient(transparent, rgba(0,0,0,.8)); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; }
+
+.track-title { font-family: var(--font-display); font-size: 42px; letter-spacing: 2px; line-height: 1; margin-bottom: 8px; }
+.track-artist { font-size: 14px; color: var(--red); text-transform: uppercase; letter-spacing: 3px; font-weight: 500; margin-bottom: 30px; }
+
+.player-box { background: #111; padding: 24px; border-radius: 4px; margin-bottom: 40px; }
+audio { width: 100%; filter: invert(1); height: 36px; outline: none; }
+
+.feedback-box { text-align: left; background: #111; padding: 32px; border: 1px solid #222; }
+.feedback-box h3 { font-family: var(--font-display); font-size: 20px; letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
+
+.rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.rating input { display: none; }
+.rating label { font-size: 32px; color: #333; cursor: pointer; transition: color .2s; }
+.rating label:hover, .rating label:hover ~ label, .rating input:checked ~ label { color: var(--red); }
+
+textarea { width: 100%; background: #000; border: 1px solid #333; color: var(--white); padding: 12px; font-family: var(--font-body); font-size: 14px; resize: none; outline: none; margin-bottom: 20px; transition: border-color .3s; }
+textarea:focus { border-color: var(--red); }
+
+.btn-send { width: 100%; background: var(--red); color: white; border: none; padding: 16px; font-family: var(--font-display); font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: background .3s; }
+.btn-send:hover { background: #ff2010; }
+.btn-send:disabled { background: #333; cursor: not-allowed; }
+
+.success-box { display: none; margin-top: 30px; color: #3fff2a; font-size: 14px; font-weight: 500; }
+.btn-download { display: none; margin-top: 20px; background: white; color: black; text-decoration: none; display: block; padding: 16px; font-family: var(--font-display); font-size: 18px; letter-spacing: 2px; }
+
+#loading { font-family: var(--font-display); font-size: 24px; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+
+<div id="loading">LOADING PROMO...</div>
+
+<div class="promo-container" id="main-container">
+  <div class="logo" style="display:flex; justify-content:center; margin-bottom: 30px;"><img src="/amcu-logo.PNG" style="height:48px; object-fit:contain;"></div>
+  
+  <div class="art-container">
+    <img src="/amcu-logo.PNG" alt="Artwork">
+    <div class="art-overlay"></div>
+  </div>
+
+  <div class="track-title" id="track-name">TRACK NAME</div>
+  <div class="track-artist">EXCLUSIVE PRE-RELEASE</div>
+
+  <div class="player-box">
+    <audio id="audio-player" controls controlsList="nodownload"></audio>
+  </div>
+
+  <div class="feedback-box" id="feedback-area">
+    <h3>LEAVE YOUR FEEDBACK</h3>
+    
+    <div class="rating">
+      <input type="radio" name="star" id="star5" value="5"><label for="star5">★</label>
+      <input type="radio" name="star" id="star4" value="4"><label for="star4">★</label>
+      <input type="radio" name="star" id="star3" value="3"><label for="star3">★</label>
+      <input type="radio" name="star" id="star2" value="2"><label for="star2">★</label>
+      <input type="radio" name="star" id="star1" value="1"><label for="star1">★</label>
+    </div>
+
+    <textarea id="comment" rows="4" placeholder="Your thoughts on the track..."></textarea>
+    
+    <button class="btn-send" id="btn-submit" onclick="submitFeedback()">UNLOCK DOWNLOAD</button>
+
+    <div class="success-box" id="success-msg">✓ FEEDBACK RECEIVED. DOWNLOAD UNLOCKED.</div>
+    <a href="#" id="download-link" class="btn-download" style="display:none" download>DOWNLOAD WAV</a>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const trackId = params.get('t');
+const djId = params.get('d');
+
+let trackData = null;
+let djData = null;
+
+async function init() {
+  if (!trackId || !djId) {
+    document.body.innerHTML = '<h1>Invalid Link</h1>';
+    return;
+  }
+
+  const [trackRes, djRes] = await Promise.all([
+    sb.from('products').select('*').eq('id', trackId).single(),
+    sb.from('promos_djs').select('nombre, email').eq('id', djId).single()
+  ]);
+
+  if (trackRes.error || !trackRes.data) {
+    document.body.innerHTML = '<h1>Promo not found</h1>';
+    return;
+  }
+
+  trackData = trackRes.data;
+  if (djRes.data) djData = djRes.data;
+
+  document.getElementById('track-name').textContent = trackData.nombre;
+  document.getElementById('audio-player').src = trackData.archivo_url;
+  document.getElementById('download-link').href = trackData.archivo_url;
+  
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main-container').classList.add('show');
+}
+
+async function submitFeedback() {
+  const rating = document.querySelector('input[name="star"]:checked')?.value;
+  const comment = document.getElementById('comment').value.trim();
+
+  if (!rating) return alert('Please select a star rating');
+  if (!comment) return alert('Please leave a comment');
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
+
+  const { error } = await sb.from('promos_feedback').insert({
+    track_id: trackId,
+    dj_id: djId,
+    rating: parseInt(rating),
+    comentario: comment,
+    descargado: false
+  });
+
+  if (error) {
+    alert('Error saving feedback: ' + error.message);
+    btn.disabled = false;
+    btn.textContent = 'UNLOCK DOWNLOAD';
+    return;
+  }
+
+  document.getElementById('success-msg').style.display = 'block';
+  document.getElementById('download-link').style.display = 'block';
+  btn.style.display = 'none';
+  document.getElementById('comment').disabled = true;
+  document.querySelectorAll('input[name="star"]').forEach(i => i.disabled = true);
+  
+  // Track download
+  document.getElementById('download-link').onclick = async () => {
+    await sb.from('promos_feedback').update({ descargado: true }).match({ track_id: trackId, dj_id: djId });
+    
+    if (trackData && djData) {
+      fetch('/api/notify-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackNombre: trackData.nombre,
+          djNombre: djData.nombre,
+          djEmail: djData.email
+        })
+      }).catch(e => console.error('Error notifying download:', e));
+    }
+  };
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1856,6 +1856,13 @@ function sendGhostQuote() {
       return;
     }
 
+    // Notificar al administrador por email
+    fetch('/api/notify-booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, email, fecha, hora, modalidad, mensaje: msg })
+    }).catch(e => console.error('Error enviando notificación al admin:', e));
+
     const h2 = String(hora+1).padStart(2,'0');
     bookedSlots.add(selectedSlot);
     bookedSlots.add(`${dy}-${dm}-${dd}-${h2}`);
