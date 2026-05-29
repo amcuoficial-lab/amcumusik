@@ -570,17 +570,37 @@ async function importDJsExcel(input) {
       const sheetName = workbook.SheetNames[0];
       const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
       
-      const formattedDJs = json.map(row => {
-        let email = row.Email || row.email || row['E-mail'] || row['Correo'] || row['correo'] || row.CORREO;
-        let nombre = row.Nombre || row.nombre || row.Name || row.name || row.DJ || row.dj;
-        let pais = row.Pais || row.pais || row.Country || row.country || row.PAIS;
+      const formattedDJs = [];
+      json.forEach(row => {
+        const candidates = [
+          { email: row['Artist Email'], nombre: row['Artist Name'] },
+          { email: row['Label Email'], nombre: row['Label Name'] || 'Label' },
+          { email: row['Music Companies'], nombre: 'Music Company' },
+          { email: row['__EMPTY_7'], nombre: row['Send Promos Too:'] }
+        ];
 
-        return {
-          email: email ? email.toString().trim() : null,
-          nombre: nombre ? nombre.toString().trim() : 'DJ',
-          pais: pais ? pais.toString().trim() : null
-        };
-      }).filter(dj => dj.email && dj.email.includes('@'));
+        candidates.forEach(c => {
+          if (!c.email) return;
+          const emailStr = c.email.toString().trim().toLowerCase();
+          const nombreStr = c.nombre ? c.nombre.toString().trim() : 'DJ';
+
+          if (emailStr.includes('@') && 
+              emailStr !== 'artist email' && 
+              emailStr !== 'label email' && 
+              !emailStr.includes('email@') &&
+              nombreStr !== 'Artist Name' &&
+              nombreStr !== 'Label Name') {
+            
+            if (!formattedDJs.some(dj => dj.email === emailStr)) {
+              formattedDJs.push({
+                email: emailStr,
+                nombre: nombreStr,
+                pais: row['Pais'] || row['pais'] || row['Country'] || row['country'] || row['PAIS'] || null
+              });
+            }
+          }
+        });
+      });
 
       if (formattedDJs.length === 0) {
         toast('No se encontraron DJs válidos con email', 'error');
