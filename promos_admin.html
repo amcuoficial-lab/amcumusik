@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMCU — Promos Admin</title>
+<link rel="icon" href="/amcu-logo.PNG" type="image/png">
+<link rel="apple-touch-icon" href="/amcu-logo.PNG">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black: #020202;
+  --white: #ede9e4;
+  --red: #e01a10;
+  --green: #3fff2a;
+  --muted: #282828;
+  --muted2: #666;
+  --card: #0a0a0a;
+  --border: #1a1a1a;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+body { background: var(--black); color: var(--white); font-family: var(--font-body); min-height: 100vh; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { font-family: var(--font-display); font-size: 22px; letter-spacing: 3px; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-user { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--muted2); }
+.btn-logout { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: none; border: 1px solid var(--border); color: var(--muted2); padding: 6px 14px; cursor: pointer; transition: all .2s; }
+.btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 200px 1fr; min-height: calc(100vh - 56px); }
+
+/* SIDEBAR */
+.sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 24px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 24px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted2); transition: all .2s; border-left: 2px solid transparent;
+  text-decoration: none;
+}
+.nav-item:hover { color: var(--white); background: rgba(255,255,255,.03); }
+.nav-item.active { color: var(--red); border-left-color: var(--red); background: rgba(224,26,16,.05); }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* MAIN */
+.main { padding: 32px; overflow-y: auto; }
+.page-title { font-family: var(--font-display); font-size: 36px; letter-spacing: 2px; margin-bottom: 8px; }
+.page-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted2); margin-bottom: 28px; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: var(--border); margin-bottom: 32px; }
+.stat-card { background: var(--card); padding: 24px; }
+.stat-card .num { font-family: var(--font-display); font-size: 40px; color: var(--white); line-height: 1; }
+.stat-card .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted2); margin-top: 6px; }
+.stat-card .num.green { color: var(--green); }
+.stat-card .num.red { color: var(--red); }
+
+/* BLOCKS */
+.block-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+.block-card { background: var(--card); border: 1px solid var(--border); padding: 32px; }
+.block-card h3 { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; margin-bottom: 20px; text-transform: uppercase; }
+
+/* FORM ELEMENTS */
+.inp { background: var(--black); border: 1px solid var(--border); color: var(--white); padding: 10px 14px; font-family: var(--font-body); font-size: 13px; outline: none; transition: border-color .2s; }
+.inp:focus { border-color: var(--red); }
+.inp.full { width: 100%; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted2); }
+
+/* UPLOAD ZONE */
+.upload-zone { border: 1px dashed var(--muted2); background: rgba(255,255,255,.01); padding: 32px; text-align: center; cursor: pointer; transition: all .2s; position: relative; }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--red); background: rgba(224,26,16,.02); }
+.upload-zone .big { font-size: 32px; color: var(--muted2); margin-bottom: 12px; }
+.upload-zone p { font-size: 12px; color: var(--muted2); }
+.progress-bar { width: 100%; height: 2px; background: var(--border); margin-top: 16px; position: relative; overflow: hidden; }
+.progress-fill { width: 0%; height: 100%; background: var(--red); transition: width .3s; }
+
+/* BUTTONS */
+.btn-sm { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 10px 20px; cursor: pointer; border: none; transition: all .2s; }
+.btn-sm.red { background: var(--red); color: var(--white); }
+.btn-sm.red:hover { background: #ff2010; }
+.btn-sm.red:disabled { background: var(--muted); cursor: not-allowed; }
+.btn-sm.outline { background: none; border: 1px solid var(--border); color: var(--white); }
+.btn-sm.outline:hover { border-color: var(--white); }
+
+/* TABLES */
+.table-wrap { background: var(--card); border: 1px solid var(--border); }
+.table-header { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.table-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; text-transform: uppercase; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted2); padding: 16px 32px; border-bottom: 1px solid var(--border); }
+td { padding: 16px 32px; border-bottom: 1px solid var(--border); font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.01); }
+.empty { text-align: center; color: var(--muted2); padding: 48px !important; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; }
+
+/* BADGES */
+.badge { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; display: inline-block; }
+.badge.confirmada { background: #003300; color: var(--green); }
+.badge.pendiente { background: #1a1a00; color: #c9a84c; }
+
+/* TOAST */
+#toast { position: fixed; bottom: 32px; right: 32px; background: #003300; border: 1px solid var(--green); color: var(--green); padding: 14px 24px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; transform: translateY(100px); opacity: 0; transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; }
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.error { background: #1a0000; border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo" style="display:flex; align-items:center;"><img src="/amcu-logo.PNG" style="height:32px; object-fit:contain;"></div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topbar-email"></span>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Overview</a>
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Reservas</a>
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Calendario</a>
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Tracks</a>
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Productos</a>
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Órdenes</a>
+    <a href="/admin" class="nav-item"><div class="nav-dot"></div>Miembros</a>
+    <a href="/promos_admin.html" class="nav-item active"><div class="nav-dot"></div>Promos</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="page-title">Promo Delivery</div>
+    <div class="page-sub">// Envío de tracks a DJs y feedback</div>
+    
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="stat-djs">0</div><div class="label">DJs en lista</div></div>
+      <div class="stat-card"><div class="num green" id="stat-promo-sent">0</div><div class="label">Envíos totales</div></div>
+      <div class="stat-card"><div class="num" id="stat-promo-feedback">0</div><div class="label">Feedback recibido</div></div>
+      <div class="stat-card"><div class="num red" id="stat-promo-rating">0.0</div><div class="label">Rating promedio</div></div>
+    </div>
+
+    <div class="block-grid">
+      <div class="block-card" style="grid-column: span 2;">
+        <h3>Subir Nuevo WAV y Enviar Promo Automáticamente</h3>
+        <div class="form-grid" style="margin-top:12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Nombre del Track</label>
+            <input class="inp full" type="text" id="promo-upload-name" placeholder="Ej: Dark Energy (Promo Mix)">
+          </div>
+          <div class="form-group">
+            <label>Asunto del Email</label>
+            <input type="text" id="promo-upload-subject" class="inp full" placeholder="NUEVO PROMO: Track Name — AMCU">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Descripción</label>
+            <input class="inp full" type="text" id="promo-upload-desc" placeholder="Descripción corta del promo...">
+          </div>
+        </div>
+        <div class="upload-zone" id="promo-upload-zone" onclick="document.getElementById('promo-upload-file').click()" style="border: 1px dashed var(--muted2); padding: 20px; text-align: center; margin-top: 12px; cursor: pointer;">
+          <div class="big">↑</div>
+          <p>Click o arrastrá tu archivo WAV acá</p>
+          <p id="promo-upload-filename" style="color:var(--white);margin-top:8px;font-weight:500;"></p>
+          <div class="progress-bar"><div class="progress-fill" id="promo-upload-progress-fill"></div></div>
+        </div>
+        <input type="file" id="promo-upload-file" accept=".wav,.mp3,.aiff" style="display:none" onchange="onPromoFileSelect(this)">
+        <button class="btn-sm red" id="btn-upload-send-promo" onclick="uploadAndSendPromo()" style="margin-top:12px;width:100%;padding:10px;">
+          Subir y Enviar Promo a DJs Seleccionados
+        </button>
+      </div>
+
+      <div class="block-card">
+        <h3>1. Seleccionar Track Existente</h3>
+        <select id="promo-track-select" class="inp full" style="margin-bottom:12px;">
+          <option value="">Cargando tracks...</option>
+        </select>
+        <div id="promo-track-preview" style="font-size:11px;color:var(--muted2);"></div>
+      </div>
+      
+      <div class="block-card">
+        <h3>2. Enviar Track Existente</h3>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Asunto del Email</label>
+          <input type="text" id="promo-subject" class="inp full" placeholder="NUEVO PROMO: Track Title — AMCU">
+        </div>
+        <button class="btn-sm red" id="btn-send-promos" onclick="sendPromosBatch()" style="width:100%;">
+          Enviar Promos a los Seleccionados
+        </button>
+        <div id="send-progress-container" style="display:none;margin-top:12px;">
+          <div class="progress-bar"><div class="progress-fill" id="send-progress-fill"></div></div>
+          <p id="send-status" style="font-size:10px;font-family:var(--font-mono);margin-top:4px;text-align:center;"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Lista de DJs</span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="file" id="dj-excel-file" accept=".xlsx,.xls" style="display:none;" onchange="importDJsExcel(this)">
+          <button class="btn-sm outline" onclick="document.getElementById('dj-excel-file').click()">Importar Excel</button>
+          <button class="btn-sm outline" onclick="loadDJs()">Actualizar</button>
+          <button class="btn-sm red" onclick="toggleSelectAllDJs()">Seleccionar Todos</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">Sel.</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>País</th>
+            <th>Feedback</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="djs-tbody">
+          <tr><td colspan="6" class="empty">Cargando DJs...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+window.onerror = function(msg, url, line, col, error) {
+  alert("Error de JS: " + msg + "\nLínea: " + line + "\nArchivo: " + url);
+};
+
+const SB_URL = 'https://anvkreqmsbzsfaepudlx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudmtyZXFtc2J6c2ZhZXB1ZGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIyODYsImV4cCI6MjA5MDQ1ODI4Nn0.mX58ZTWLgEXyYRk92RlwzaaFdmTxVn6PGygsnXDsHeY';
+const sb = supabase.createClient(SB_URL, SB_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+let currentUser = null;
+
+// ---- INIT ----
+window.addEventListener('load', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+    if (profile?.role === 'admin') {
+      currentUser = session.user;
+      document.getElementById('topbar-email').textContent = currentUser.email;
+      loadPromos();
+    } else {
+      window.location.href = '/admin';
+    }
+  } else {
+    window.location.href = '/admin';
+  }
+});
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/admin';
+}
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ---- PROMOS ----
+async function loadPromos() {
+  loadDJs();
+  loadPromoTracks();
+  loadPromoStats();
+}
+
+async function loadDJs() {
+  const { data, error } = await sb.from('promos_djs').select('*, promos_feedback(rating, comentario)').order('nombre');
+  if (error) { toast(error.message, 'error'); return; }
+  const tbody = document.getElementById('djs-tbody');
+  if (!data?.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay DJs en la lista. Importá el Excel primero.</td></tr>'; return; }
+  
+  tbody.innerHTML = data.map(dj => {
+    const feedback = dj.promos_feedback?.[0];
+    const hasFeedback = !!feedback;
+    return `
+      <tr>
+        <td><input type="checkbox" class="dj-check" value="${dj.id}" data-email="${dj.email}" data-nombre="${dj.nombre}"></td>
+        <td><strong>${dj.nombre || 'DJ'}</strong></td>
+        <td style="color:var(--muted2);font-size:12px;">${dj.email}</td>
+        <td>${dj.pais || '—'}</td>
+        <td>
+          ${hasFeedback ? 
+            `<span class="badge confirmada">${feedback.rating} ★</span>` : 
+            `<span class="badge pendiente">Pendiente</span>`}
+        </td>
+        <td><button class="btn-sm outline" style="padding:4px 8px;border-color:var(--red);color:var(--red);" onclick="deleteDJ('${dj.id}')">Eliminar</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function loadPromoTracks() {
+  const { data } = await sb.from('products').select('id, nombre, archivo_url').eq('tipo', 'track_unreleased').eq('activo', true);
+  const select = document.getElementById('promo-track-select');
+  if (!data?.length) { select.innerHTML = '<option value="">Sin unreleased tracks</option>'; return; }
+  
+  select.innerHTML = '<option value="">— Seleccionar Track —</option>' + 
+    data.map(p => `<option value="${p.id}" data-url="${p.archivo_url}">${p.nombre}</option>`).join('');
+  
+  select.onchange = () => {
+    const opt = select.selectedOptions[0];
+    if (!opt) return;
+    document.getElementById('promo-track-preview').textContent = opt.dataset.url ? '✓ Link WAV listo' : '⚠ Sin link WAV';
+    document.getElementById('promo-subject').value = `NUEVO PROMO: ${opt.text} — AMCU`;
+  };
+}
+
+async function loadPromoStats() {
+  const [djs, feedback] = await Promise.all([
+    sb.from('promos_djs').select('id', { count: 'exact' }),
+    sb.from('promos_feedback').select('rating')
+  ]);
+  
+  const totalDJs = djs.count || 0;
+  const totalFeedback = feedback.data?.length || 0;
+  const avgRating = totalFeedback > 0 ? 
+    (feedback.data.reduce((s, h) => s + h.rating, 0) / totalFeedback).toFixed(1) : '0.0';
+    
+  document.getElementById('stat-djs').textContent = totalDJs;
+  document.getElementById('stat-promo-feedback').textContent = totalFeedback;
+  document.getElementById('stat-promo-rating').textContent = avgRating;
+}
+
+function toggleSelectAllDJs() {
+  const checks = document.querySelectorAll('.dj-check');
+  const anyUnchecked = Array.from(checks).some(c => !c.checked);
+  checks.forEach(c => c.checked = anyUnchecked);
+}
+
+async function sendPromosBatch() {
+  const trackId = document.getElementById('promo-track-select').value;
+  const subject = document.getElementById('promo-subject').value.trim();
+  const selected = Array.from(document.querySelectorAll('.dj-check:checked')).map(c => ({
+    id: c.value,
+    email: c.dataset.email,
+    nombre: c.dataset.nombre
+  }));
+
+  if (!trackId) return toast('Seleccioná un track', 'error');
+  if (selected.length === 0) return toast('Seleccioná al menos un DJ', 'error');
+  if (!confirm(`¿Enviar promos a ${selected.length} DJs?`)) return;
+
+  const btn = document.getElementById('btn-send-promos');
+  const progContainer = document.getElementById('send-progress-container');
+  const progFill = document.getElementById('send-progress-fill');
+  const status = document.getElementById('send-status');
+
+  btn.disabled = true;
+  progContainer.style.display = 'block';
+  
+  let sentCount = 0;
+  
+  for (const dj of selected) {
+    status.textContent = `Enviando a ${dj.email}... (${sentCount + 1}/${selected.length})`;
+    
+    try {
+      const res = await fetch('/api/send-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          djId: dj.id,
+          djEmail: dj.email,
+          djNombre: dj.nombre,
+          trackId: trackId,
+          subject: subject
+        })
+      });
+      
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Error al enviar');
+      sentCount++;
+    } catch (e) {
+      console.error('Failed to send to', dj.email, e);
+    }
+    
+    progFill.style.width = `${((sentCount) / selected.length) * 100}%`;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  toast(`Proceso finalizado: ${sentCount} enviados`, 'success');
+  btn.disabled = false;
+  setTimeout(() => progContainer.style.display = 'none', 3000);
+  loadPromoStats();
+  setTimeout(() => window.location.reload(), 1500);
+}
+
+async function deleteDJ(id) {
+  if (!confirm('¿Eliminar DJ de la lista?')) return;
+  const { error } = await sb.from('promos_djs').delete().eq('id', id);
+  if (error) return toast(error.message, 'error');
+  toast('DJ eliminado');
+  loadDJs();
+  loadPromoStats();
+}
+
+// ---- NUEVAS FUNCIONES DE PROMOS ----
+let selectedPromoFile = null;
+
+function onPromoFileSelect(input) {
+  selectedPromoFile = input.files[0];
+  if (selectedPromoFile) {
+    document.getElementById('promo-upload-filename').textContent = selectedPromoFile.name + ' (' + (selectedPromoFile.size/1024/1024).toFixed(1) + ' MB)';
+    const trackName = selectedPromoFile.name.replace(/\.[^/.]+$/, "");
+    if (!document.getElementById('promo-upload-name').value) {
+      document.getElementById('promo-upload-name').value = trackName;
+    }
+    document.getElementById('promo-upload-subject').value = `NUEVO PROMO: ${trackName} — AMCU`;
+  }
+}
+
+// Configurar arrastrar y soltar para la zona de promo
+window.addEventListener('load', () => {
+  const pZone = document.getElementById('promo-upload-zone');
+  if (pZone) {
+    pZone.addEventListener('dragover', e => { e.preventDefault(); pZone.classList.add('dragover'); });
+    pZone.addEventListener('dragleave', () => pZone.classList.remove('dragover'));
+    pZone.addEventListener('drop', e => {
+      e.preventDefault(); pZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        selectedPromoFile = e.dataTransfer.files[0];
+        document.getElementById('promo-upload-filename').textContent = selectedPromoFile.name + ' (' + (selectedPromoFile.size/1024/1024).toFixed(1) + ' MB)';
+        const trackName = selectedPromoFile.name.replace(/\.[^/.]+$/, "");
+        if (!document.getElementById('promo-upload-name').value) {
+          document.getElementById('promo-upload-name').value = trackName;
+        }
+        document.getElementById('promo-upload-subject').value = `NUEVO PROMO: ${trackName} — AMCU`;
+      }
+    });
+  }
+});
+
+async function uploadAndSendPromo() {
+  const nombre = document.getElementById('promo-upload-name').value.trim();
+  const subject = document.getElementById('promo-upload-subject').value.trim();
+  const desc = document.getElementById('promo-upload-desc').value.trim();
+  const selected = Array.from(document.querySelectorAll('.dj-check:checked')).map(c => ({
+    id: c.value,
+    email: c.dataset.email,
+    nombre: c.dataset.nombre
+  }));
+
+  if (!nombre) { toast('Poné el nombre del track', 'error'); return; }
+  if (!selectedPromoFile) { toast('Seleccioná un archivo WAV', 'error'); return; }
+  if (selected.length === 0) { toast('Seleccioná al menos un DJ de la lista', 'error'); return; }
+  if (!confirm(`¿Subir track y enviar como promo a ${selected.length} DJs?`)) return;
+
+  const btn = document.getElementById('btn-upload-send-promo');
+  const fill = document.getElementById('promo-upload-progress-fill');
+  btn.disabled = true;
+  fill.style.width = '15%';
+
+  // Subir archivo a Supabase Storage
+  const fileName = `tracks/${Date.now()}_${selectedPromoFile.name.replace(/\s/g,'_')}`;
+  const { data: uploadData, error: uploadError } = await sb.storage
+    .from('amcu-files')
+    .upload(fileName, selectedPromoFile, { contentType: 'audio/wav', upsert: false });
+
+  if (uploadError) {
+    toast('Error subiendo archivo: ' + uploadError.message, 'error');
+    btn.disabled = false;
+    fill.style.width = '0%';
+    return;
+  }
+
+  fill.style.width = '50%';
+
+  // Obtener URL pública
+  const { data: urlData } = sb.storage.from('amcu-files').getPublicUrl(fileName);
+  const archivo_url = urlData?.publicUrl;
+
+  fill.style.width = '70%';
+
+  // Guardar en tabla products
+  const { data: productData, error: dbError } = await sb.from('products').insert({
+    nombre, tipo: 'track_unreleased',
+    descripcion: desc || 'Promo Track exclusivo',
+    precio: 5,
+    archivo_url,
+    activo: true
+  }).select('id').single();
+
+  if (dbError) {
+    toast('Error guardando en BD: ' + dbError.message, 'error');
+    btn.disabled = false;
+    fill.style.width = '0%';
+    return;
+  }
+
+  const trackId = productData.id;
+  fill.style.width = '85%';
+
+  // Enviar batch a los DJs
+  let sentCount = 0;
+  for (const dj of selected) {
+    try {
+      const res = await fetch('/api/send-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          djId: dj.id,
+          djEmail: dj.email,
+          djNombre: dj.nombre,
+          trackId: trackId,
+          subject: subject
+        })
+      });
+      if (res.ok) sentCount++;
+      
+      // Actualizar el progreso proporcionalmente
+      const progressPercent = 85 + Math.floor((sentCount / selected.length) * 15);
+      fill.style.width = `${progressPercent}%`;
+    } catch (e) {
+      console.error('Error al enviar promo a', dj.email, e);
+    }
+    // Pequeño retardo entre envíos para evitar rate limits
+    await new Promise(r => setTimeout(r, 800));
+  }
+
+  fill.style.width = '100%';
+  toast(`¡Listo! Subido y enviado a ${sentCount} DJs`, 'success');
+  
+  // Limpiar campos
+  document.getElementById('promo-upload-name').value = '';
+  document.getElementById('promo-upload-subject').value = '';
+  document.getElementById('promo-upload-desc').value = '';
+  document.getElementById('promo-upload-filename').textContent = '';
+  selectedPromoFile = null;
+  setTimeout(() => fill.style.width = '0%', 1500);
+
+  btn.disabled = false;
+  loadPromoStats();
+  loadPromoTracks();
+  loadDJs();
+  setTimeout(() => window.location.reload(), 1500);
+}
+
+async function importDJsExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  toast('Leyendo archivo Excel...');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+      
+      const formattedDJs = json.map(row => {
+        let email = row.Email || row.email || row['E-mail'] || row['Correo'] || row['correo'] || row.CORREO;
+        let nombre = row.Nombre || row.nombre || row.Name || row.name || row.DJ || row.dj;
+        let pais = row.Pais || row.pais || row.Country || row.country || row.PAIS;
+
+        return {
+          email: email ? email.toString().trim() : null,
+          nombre: nombre ? nombre.toString().trim() : 'DJ',
+          pais: pais ? pais.toString().trim() : null
+        };
+      }).filter(dj => dj.email && dj.email.includes('@'));
+
+      if (formattedDJs.length === 0) {
+        toast('No se encontraron DJs válidos con email', 'error');
+        return;
+      }
+
+      toast(`Subiendo ${formattedDJs.length} DJs a la base de datos...`);
+      const { error } = await sb.from('promos_djs').upsert(formattedDJs, { onConflict: 'email' });
+      
+      if (error) throw error;
+      
+      toast(`✅ Importados ${formattedDJs.length} DJs exitosamente.`, 'success');
+      loadDJs();
+      loadPromoStats();
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      console.error(err);
+      toast('Error al importar Excel: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = ''; // reset file input
+}
+</script>
+</body>
+</html>
